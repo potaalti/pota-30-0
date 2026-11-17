@@ -30,7 +30,12 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
     Sonuç iki telefonda da aynı çıkar (odanın tohumu ortak). `site/firebase-ayar.js` boşken yalnız aynı tarayıcının
     sekmeleri arasında çalışır (yerel test). Veritabanı kuralları: `firebase-kurallar.json` (anonim giriş gerekir;
     yalnız odadaki iki kişi hamle yazar, yazılan hamle değişmez).
+    Sıra kimdeyse saha onun beşini gösterir: rakibin seçimini izlersin, dokunduğu oyuncu ("X bakıyor") ve konabileceği
+    yerler canlı görünür (oyuncular/{i}/bakiyor alanı). Beşler dolunca sonuç iki telefonda da kendiliğinden açılır;
+    "Rövanş" aynı odada yeni oyun başlatır (ilk seçen sırayla değişir, oda skoru tutulur), "Odadan çık" odayı bırakır.
   - *Bu cihazda*: aynı telefonda sırayla; sıra kimdeyse saha onun beşini gösterir.
+- İki taraflı modlarda (vs AI, 2 kişi) her oyuncunun oyun başına 1 atlama hakkı var: "Başka takım" ya da "Başka sezon"
+  (tek takım-sezon havuzunda yok).
 - Günlük mod şimdilik kapalı (kodu duruyor; `oyun.js` MODLAR ve `index.html` düğmesi).
 - Beş tamamlanınca sezon simüle edilir: BSL 30 maç (hedef 30-0), TBL 32 maç (hedef 32-0).
 - **Günlük**: herkese aynı tohum (Türkiye tarihi + lig) → aynı takım-sezon sırası; sonuç tarayıcıda saklanır, paylaşılabilir metin kopyalanır.

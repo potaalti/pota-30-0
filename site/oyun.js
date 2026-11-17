@@ -76,7 +76,7 @@
   // taraflar[0] her zaman ilk oyuncu (tek başına "Sen"); iki taraflı modlarda taraflar[1] AI ya da ikinci oyuncu.
   // gorunen: sahada beşi gösterilen taraf; AI seçince birkaç saniye onunki, iki kişide sırası gelenin.
   let S;
-  function yeniTaraf(ad, yz, dizilis) { return { ad: ad, yz: yz, bes: [null, null, null, null, null], dizilis: DIZILISLER[dizilis] ? dizilis : "2-3", atla: { takim: 1, sezon: 1 } }; }
+  function yeniTaraf(ad, yz, dizilis) { return { ad: ad, yz: yz, bes: [null, null, null, null, null], dizilis: DIZILISLER[dizilis] ? dizilis : "2-3", atla: { takim: 1, sezon: 1 }, atlaHak: 1 }; }
 
   function yeniOyun() {
     const veri = window.VERI[ayar.lig];
@@ -133,7 +133,7 @@
   }
   function siradaki() { // sırası gelen taraf ya da null (tur bitti)
     if (!S.cift) return bosSayisi(S.taraflar[0]) > 0 && S.turdaSecen.length === 0 ? 0 : null;
-    const ilk = S.tur % 2 === 0 ? 0 : 1;
+    const ilk = (S.tur + (S.oyunNo || 0)) % 2 === 0 ? 0 : 1;
     const kalan = [ilk, 1 - ilk].filter((x) => bosSayisi(S.taraflar[x]) > 0 && S.turdaSecen.indexOf(x) < 0);
     return kalan.length ? kalan[0] : null;
   }
@@ -160,7 +160,11 @@
     return !!S.takim && S.veri.takimlar.some((x) => x.kulup === S.takim.kulup && x.id !== S.takim.id && !S.cekilen[x.id]);
   }
   function atlamaSerbest(tur) {
-    if (S.cift || S.bitti || S.cevriliyor || !S.takim || S.taraflar[0].atla[tur] < 1) return false;
+    if (S.bitti || S.cevriliyor || !S.takim) return false;
+    if (S.cift) { // iki taraflı: sırası gelen insan, oyun başına 1 hak (kulüp ya da sezon), tek kadro modunda yok
+      const a = aktif();
+      if (a === null || S.tut || S.kaynak === "sabit" || S.taraflar[a].atlaHak < 1) return false;
+    } else if (S.taraflar[0].atla[tur] < 1) return false;
     return tur === "takim" || baskaSezonVar();
   }
 
@@ -176,8 +180,8 @@
 
   function cevir(atlama) {
     if (S.cevriliyor || S.bitti) return;
-    if (S.cevrim) { cevrimCevir(); return; }
-    if (atlama) { if (!atlamaSerbest(atlama)) return; S.taraflar[0].atla[atlama]--; }
+    if (S.cevrim) { cevrimCevir(atlama || false); return; }
+    if (atlama) { if (!atlamaSerbest(atlama)) return; if (S.cift) S.taraflar[aktif()].atlaHak--; else S.taraflar[0].atla[atlama]--; }
     let hedef;
     if (atlama === "sezon") { const k = S.takim.kulup; hedef = cek((x) => x.kulup === k); }
     else hedef = cek();
@@ -220,7 +224,7 @@
   function yerlestir(i) {
     const a = aktif();
     if (a === null || a !== S.gorunen || !S.secili || S.taraflar[a].bes[i]) return;
-    if (S.cevrim) { hamleGonder({ tip: "sec", kim: a, k: S.secili.k, id: S.takim.id, i: i }); S.secili = null; ciz(); return; }
+    if (S.cevrim) { hamleGonder({ tip: "sec", kim: a, k: S.secili.k, id: S.takim.id, i: i }); S.secili = null; bakiyorGonder(null); ciz(); return; }
     secimYap(a, S.secili, i);
   }
 
@@ -368,7 +372,7 @@
   // ---- sonuç ----
   function sezonuOyna(hemen) {
     tutmayiBitir();
-    S.bitti = true; S.takim = null; S.gorunen = 0; ciz();
+    S.bitti = true; S.takim = null; S.gorunen = S.cevrim ? S.cevrim.ben : 0; ciz();
     const sonuclar = S.taraflar.map((t) => { const h = hesap(t), m = simule(t, h); return { taraf: t, h: h, maclar: m, g: m.filter((x) => x.g).length }; });
     if (ayar.mod === "gunluk") { const b = S.taraflar[0]; yaz("gunluk:" + S.tohum, { bes: b.bes, atla: b.atla, dizilis: b.dizilis }); }
     const sr = S.cift ? seri(sonuclar[0].h, sonuclar[1].h) : null;
@@ -402,11 +406,14 @@
     if (S.cift) {
       html = '<div class="iki">' + sonuclar.map((r, j) => "<div>" + skorbord(r, j) + ozet(r) + "</div>").join("") + "</div>";
       html += '<div class="seri">Seri: ' + kac(a[0]) + " " + sr.a + " – " + sr.b + " " + kac(a[1]) + " · " + kac(sr.a > sr.b ? a[0] : a[1]) + (sr.a > sr.b && a[0] === "Sen" ? " kazandın" : " kazandı") +
-        "<small>Maç başı " + kac(a[0]) + " kazanma olasılığı ~%" + Math.round(sr.p * 100) + " · " + sr.maclar.map((m) => m.biz + "-" + m.onlar).join(", ") + "</small></div>";
+        "<small>Maç başı " + kac(a[0]) + " kazanma olasılığı ~%" + Math.round(sr.p * 100) + " · " + sr.maclar.map((m) => m.biz + "-" + m.onlar).join(", ") +
+        (S.cevrim ? "<br>Oda skoru: " + kac(a[0]) + " " + S.odaSkor[0] + " – " + S.odaSkor[1] + " " + kac(a[1]) + " · " + (S.oyunNo + 1) + ". oyun" : "") + "</small></div>";
       html += '<div class="iki">' + sonuclar.map((r) => "<div>" + satirlar(r) + dokum(r) + "</div>").join("") + "</div>";
     } else html = skorbord(sonuclar[0], 0) + satirlar(sonuclar[0]) + ozet(sonuclar[0]) + dokum(sonuclar[0]);
     html += '<div class="dugmeler"><button class="ana-btn ikincil" id="paylas">Sonucu kopyala</button>' +
-      (ayar.mod === "gunluk" ? '<button class="ana-btn" id="serbeste">Serbest oyna</button>' : '<button class="ana-btn" id="tekrar">' + (S.cevrim ? "Yeni oda" : "Yeni oyun") + "</button>") + "</div>" +
+      (ayar.mod === "gunluk" ? '<button class="ana-btn" id="serbeste">Serbest oyna</button>'
+        : S.cevrim ? '<button class="ana-btn" id="rovans">Rövanş (aynı oda)</button><button class="ana-btn ikincil" id="tekrar">Odadan çık</button>'
+        : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
       ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı gerçek ilk beşlerin üst çeyreğini aşarsa aşan her birim −" + S.veri.kullanimKatsayi +
       "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu.</p>";
@@ -425,6 +432,7 @@
     $("paylas").onclick = () => paylas(sonuclar, sr);
     if ($("tekrar")) $("tekrar").onclick = () => { if (S.cevrim) odadanCik(); yeniOyun(); window.scrollTo({ top: 0, behavior: "smooth" }); };
     if ($("serbeste")) $("serbeste").onclick = () => ayarla("mod", "serbest");
+    if ($("rovans")) $("rovans").onclick = () => { $("rovans").disabled = true; hamleGonder({ tip: "yeni", kim: S.cevrim.ben }); window.scrollTo({ top: 0, behavior: "smooth" }); };
     if (!hemen) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   }
 
@@ -450,6 +458,8 @@
     const g = S.gorunen, taraf = S.taraflar[g], yerler = DZ()[taraf.dizilis].yerler;
     const yerlesebilir = aktif() === g && !S.tut;
     const sira = siradaki();
+    const izlenen = S.cevrim && S.rakipBakiyor && g !== S.cevrim.ben && sira === g && S.takim && !S.tut
+      ? S.takim.oyuncular.filter((x) => x.k === S.rakipBakiyor)[0] || null : null;
     $("sahaBaslik").innerHTML = S.cift
       ? kac(taraf.ad === "Sen" ? "Senin beşin" : taraf.ad + (taraf.yz ? " · beşi" : " · beşi")) + "<span>" +
         (S.bitti ? "" : S.tut && taraf.yz ? "seçimini yaptı" : sira === g && S.takim && !S.cevriliyor ? (taraf.yz ? "düşünüyor…" : "sıra burada") : "") + "</span>"
@@ -459,7 +469,7 @@
     $("pullar").innerHTML = taraf.bes.map((p, i) => {
       const yer = yerler[i], k = KONUM[i], stil = ' style="left:' + k[0] + "%;top:" + k[1] + '%"';
       if (!p) {
-        const hedef = S.secili && yerlesebilir, c = hedef ? uyumCarpan(S.secili, yer) : 1;
+        const aday = S.secili && yerlesebilir ? S.secili : izlenen, hedef = !!aday, c = hedef ? uyumCarpan(aday, yer) : 1;
         return '<button class="pul' + (hedef ? " hedef" + (c < 1 ? " komsu" : "") : "") + '" data-i="' + i + '"' + stil + ' title="' + yerAdi(yer) +
           (hedef && c < 1 ? " · " + uyumSoz(c) + " ×" + c : "") + '">' +
           '<span class="daire">' + yerKisa(yer) + '</span><span class="etiket">' + (hedef && c < 1 ? "×" + c : yerAdi(yer)) + "</span></button>";
@@ -486,7 +496,10 @@
     $("durum").innerHTML = '<span class="cip ' + (tr >= minTr() ? "tamam" : "eksik") + '">Türk ' + tr + "/" + minTr() + "</span>" +
       '<span class="cip">' + DZ()[taraf.dizilis].ad + "</span>" +
       (S.cift && !S.bitti && S.takim && !S.cevriliyor && sira !== null ? '<span class="cip sira">Sıra: ' + kac(S.taraflar[sira].ad) + "</span>" : "") +
-      (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" : "");
+      (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" : "") +
+      (S.cevrim && S.rakipBakiyor && sira === 1 - S.cevrim.ben && S.takim && S.takim.oyuncular.some((x) => x.k === S.rakipBakiyor)
+        ? '<span class="cip eksik">' + kac(S.taraflar[1 - S.cevrim.ben].ad) + " bakıyor: " + kac(soyad(S.takim.oyuncular.filter((x) => x.k === S.rakipBakiyor)[0].ad)) + "</span>" : "") +
+      (S.cevrim && (S.odaSkor[0] + S.odaSkor[1]) > 0 ? '<span class="cip">Oda: ' + S.odaSkor[0] + "-" + S.odaSkor[1] + "</span>" : "");
     Array.prototype.forEach.call($("dizSec").children, (b) => { b.classList.toggle("aktif", b.dataset.diz === taraf.dizilis); b.disabled = S.bitti || taraf.yz; });
     const dolu = hepsiDolu(), sabit = S.cift && S.kaynak === "sabit";
     $("cevir").disabled = !S.basladi || S.cevriliyor || !!S.takim || dolu || S.bitti;
@@ -498,10 +511,12 @@
     $("oyna").classList.toggle("gizli", !dolu || S.bitti);
     $("atlaTakim").disabled = !atlamaSerbest("takim");
     $("atlaSezon").disabled = !atlamaSerbest("sezon");
-    $("atlaTakim").textContent = "Başka takım (" + S.taraflar[0].atla.takim + ")";
-    $("atlaSezon").textContent = "Başka sezon (" + S.taraflar[0].atla.sezon + ")";
-    $("atlaSezon").title = S.takim && !baskaSezonVar() ? "Bu kulübün başka sezonu yok" : "Bir kez: aynı kulübün başka bir sezonu";
-    $("atlaTakim").classList.toggle("gizli", S.cift); $("atlaSezon").classList.toggle("gizli", S.cift);
+    const hakSahibi = S.cift ? S.taraflar[aktif() !== null ? aktif() : (S.cevrim ? S.cevrim.ben : g)] : null;
+    $("atlaTakim").textContent = "Başka takım (" + (S.cift ? hakSahibi.atlaHak : S.taraflar[0].atla.takim) + ")";
+    $("atlaSezon").textContent = "Başka sezon (" + (S.cift ? hakSahibi.atlaHak : S.taraflar[0].atla.sezon) + ")";
+    $("atlaSezon").title = S.takim && !baskaSezonVar() ? "Bu kulübün başka sezonu yok" : S.cift ? "Oyun başına 1 atlama: kulüp ya da sezon" : "Bir kez: aynı kulübün başka bir sezonu";
+    $("atlaTakim").title = S.cift ? "Oyun başına 1 atlama: kulüp ya da sezon" : "Bir kez: başka bir takım-sezon";
+    $("atlaTakim").classList.toggle("gizli", S.cift && S.kaynak === "sabit"); $("atlaSezon").classList.toggle("gizli", S.cift && S.kaynak === "sabit");
     if (S.cift) { // sahada görünmeyen öbür beş: dokununca sahaya gelir
       const o = 1 - g, ot = S.taraflar[o], yerler = DZ()[ot.dizilis].yerler;
       $("digerAd").textContent = ot.ad === "Sen" ? "Senin beşin" : ot.ad;
@@ -531,9 +546,11 @@
     if (!S.takim) {
       const dolu = hepsiDolu();
       k.innerHTML = dolu
-        ? '<div class="bos"><div class="buyuk">' + (S.cift ? "Beşler hazır" : "Beşin hazır") + "</div>" + (S.bitti ? "Sezon oynandı." : "“Sezonu oyna”ya bas.") + "</div>"
+        ? '<div class="bos"><div class="buyuk">' + (S.cift ? "Beşler hazır" : "Beşin hazır") + "</div>" + (S.bitti ? "Sezon oynandı." : "") +
+          (S.bitti ? "" : '<button class="ana-btn turuncu" id="oynaSag" style="margin-top:16px">Sezonu oyna ▶</button>') + "</div>"
         : '<div class="bos"><div class="buyuk">' + S.veri.mac + "-0</div>“Çevir”e bas: rastgele bir kulüp ve sezon çıksın, kadrosundan bir oyuncu seç." +
           '<div class="ipucu">' + S.veri.takimlar.length + " takım-sezon, " + S.veri.takimlar.reduce((a, t) => a + t.oyuncular.length, 0) + " oyuncu-sezon</div></div>";
+      if ($("oynaSag")) $("oynaSag").onclick = () => sezonuOyna(false);
       return;
     }
     const t = S.takim;
@@ -562,10 +579,12 @@
     const sag = (o) => zor ? '<div class="vp"><b>' + o.mac + "</b><span>maç</span></div>" : '<div class="vp" title="Verimlilik puanı"><b>' + sayi1(o.vp) + "</b><span>VP</span></div>";
     $("liste").innerHTML = oy.length ? oy.map((o) => {
       const neden = secilebilir(taraf, o), kim = S.alinan[alinanAnahtar(t, o)];
-      return '<button class="oy' + (neden || a === null ? " kapali" : "") + (S.secili && S.secili.k === o.k ? " sec" : "") + '" data-k="' + o.k + '" title="' +
+      const bakilan = S.cevrim && S.rakipBakiyor === o.k && sira === 1 - S.cevrim.ben;
+      return '<button class="oy' + (neden || a === null ? " kapali" : "") + (S.secili && S.secili.k === o.k ? " sec" : "") + (bakilan ? " bakiyor" : "") + '" data-k="' + o.k + '" title="' +
         kac(neden || (o.ulke || "") + (o.boy ? " · " + o.boy + " cm" : "") + (o.ts ? " · şut isabeti (TS) %" + Math.round(o.ts * 100) : "")) + '">' +
         mkRozet(o) + '<div style="min-width:0"><div class="isim">' + kac(o.ad) + trRozet(o) +
         (kim !== undefined ? '<span class="alindi">' + kac(S.taraflar[kim].ad === "Sen" ? "sende" : S.taraflar[kim].ad) + "</span>" : "") +
+        (bakilan ? '<span class="alindi">' + kac(S.taraflar[1 - S.cevrim.ben].ad) + " bakıyor</span>" : "") +
         '</div><div class="ust">' + mevkiUzun(o) + " · " + o.mac + " maç" + (zor ? "" : " · " + o.dk.toFixed(0) + " dk") + "</div>" + sayilar(o) + "</div>" + sag(o) + "</button>";
     }).join("") : '<div class="bos" style="padding:20px">Bu süzgeçle oyuncu yok</div>';
     $("kadroIpucu").innerHTML = sira !== null && S.taraflar[sira].yz ? "<b>AI düşünüyor…</b>"
@@ -580,6 +599,7 @@
         S.secili = S.secili && S.secili.k === o.k ? null : o;
         S.panelElle = null;
         tutmayiBitir(); gorunenYap(ak);
+        bakiyorGonder(S.secili ? S.secili.k : null);
         ustCiz(); sahaCiz(); listeCiz(); panelDurum();
         if (S.secili && dar()) $("saha").scrollIntoView({ behavior: "smooth", block: "center" });
       };
@@ -727,7 +747,8 @@
     }
     yeniOyun(); // iki modunda, lig odanınki
     S.tohum = oda.ayar.tohum; S.kaynak = oda.ayar.kaynak; S.basladi = false;
-    S.cevrim = { kod: kod, ben: ben, islenen: {}, kuyruk: [], kapat: null, toplu: true, yeniIstek: null };
+    S.cevrim = { kod: kod, ben: ben, uid: b.uid, islenen: {}, kuyruk: [], kapat: null, toplu: true, yeniIstek: null, tohumKok: oda.ayar.tohum };
+    S.oyunNo = 0; S.odaSkor = [0, 0]; S.rakipBakiyor = null;
     S.gorunen = ben;
     if (S.kaynak === "sabit") {
       const t = S.veri.takimlar.filter((x) => x.id === oda.ayar.sabit)[0];
@@ -739,17 +760,31 @@
   }
   function odadanCik() { if (S.cevrim && S.cevrim.kapat) S.cevrim.kapat(); S.cevrim = null; adresiAyarla(null); }
 
+  // çevrim içi görünüm: sıra kimdeyse saha onun beşi (rakibin seçimini izlersin), boşta kendi beşin
+  function gorunumGuncelle() {
+    if (!S.cevrim || S.tut) return;
+    const s = siradaki();
+    S.gorunen = s !== null && !S.bitti && S.basladi ? s : S.cevrim.ben;
+  }
+  function bakiyorGonder(k) { // rakip telefonunda "X bakıyor" görünsün diye seçili oyuncu odaya yazılır
+    if (!S.cevrim) return;
+    Baglanti.oyuncuYaz(S.cevrim.kod, S.cevrim.ben, { ad: S.taraflar[S.cevrim.ben].ad, uid: S.cevrim.uid, bakiyor: k || null }).catch(() => {});
+  }
   function hamleGonder(h) {
     Baglanti.hamleEkle(S.cevrim.kod, h).catch((e) => toast("Gönderilemedi: " + (e.message || e)));
   }
-  function cevrimCevir(yeni) {
+  // ozel: true = kadroda uygun oyuncu yok, yeniden çevir; "takim" / "sezon" = atlama hakkı
+  function cevrimCevir(ozel) {
     if (!S.cevrim || S.bitti || S.cevriliyor) return;
+    const atla = typeof ozel === "string" ? ozel : "", yeni = ozel === true || !!atla;
     if (S.takim && !yeni) return;
+    if (atla && !atlamaSerbest(atla)) return;
     const sira = siradaki();
     if (sira !== S.cevrim.ben) { toast("Çarkı " + (sira !== null ? S.taraflar[sira].ad : "rakip") + " çevirecek"); return; }
-    const aday = S.veri.takimlar.filter((x) => !S.cekilen[x.id]);
+    let aday = S.veri.takimlar.filter((x) => !S.cekilen[x.id]);
+    if (atla === "sezon") aday = aday.filter((x) => x.kulup === S.takim.kulup);
     if (!aday.length) { toast("Çekilecek takım kalmadı"); return; }
-    hamleGonder({ tip: "cevir", kim: S.cevrim.ben, id: aday[Math.floor(Math.random() * aday.length)].id, yeni: !!yeni });
+    hamleGonder({ tip: "cevir", kim: S.cevrim.ben, id: aday[Math.floor(Math.random() * aday.length)].id, yeni: yeni, atla: atla });
   }
 
   function yansit(oda) {
@@ -757,6 +792,7 @@
     const o = oda.oyuncular || {};
     if (o[0]) S.taraflar[0].ad = o[0].ad;
     if (o[1]) S.taraflar[1].ad = o[1].ad;
+    S.rakipBakiyor = (o[1 - S.cevrim.ben] || {}).bakiyor || null;
     if (!S.basladi && o[0] && o[1]) {
       S.basladi = true; kuralYaz();
       if (!S.cevrim.toplu) toast(S.taraflar[1 - S.cevrim.ben].ad + " odaya katıldı");
@@ -771,7 +807,10 @@
     while (S.cevrim && S.cevrim.kuyruk.length && !S.cevriliyor) uygula(S.cevrim.kuyruk.shift());
     if (S.cevriliyor) return;
     takildiMi();
+    gorunumGuncelle();
     ciz();
+    // beşler dolunca iki telefonda da sezon kendiliğinden oynanır (sonuç ortak tohumdan, iki tarafta aynı)
+    if (S.cevrim && S.basladi && hepsiDolu() && !S.bitti) sezonuOyna(S.cevrim.toplu);
   }
   // sıra bendeyse ve kadroda bana uygun oyuncu yoksa: tek kadroda Türk kuralı gevşer, çarkta yeni kadro çekilir
   function takildiMi() {
@@ -786,6 +825,12 @@
   function uygula(h) {
     if (h.tip === "cevir") {
       const t = S.veri.takimlar.filter((x) => x.id === h.id)[0];
+      if (h.atla) { // atlama hakkı: yalnız sırası gelen, hakkı varsa
+        const tr = S.taraflar[h.kim];
+        if (!S.takim || siradaki() !== h.kim || tr.atlaHak < 1) return;
+        tr.atlaHak--;
+        if (h.kim !== S.cevrim.ben && !S.cevrim.toplu) toast(tr.ad + " atlama hakkını kullandı");
+      }
       if (!t || (S.takim && !h.yeni) || S.bitti) return; // aynı anda iki çevirme: ilki geçerli
       S.cekilen[t.id] = 1; S.secili = null; S.ara = ""; S.suzgec = 0; S.panelElle = null;
       if (S.cevrim.toplu) { S.takim = t; makaraCiz(t, false); return; }
@@ -794,7 +839,7 @@
       const tik = setInterval(() => {
         adim++;
         if (adim < 12) makaraCiz(havuz[Math.floor(Math.random() * havuz.length)], true);
-        else { clearInterval(tik); S.cevriliyor = false; makaraCiz(t, false); S.takim = t; if (!S.tut) gorunenYap(S.cevrim.ben); isle(); }
+        else { clearInterval(tik); S.cevriliyor = false; makaraCiz(t, false); S.takim = t; isle(); }
       }, 75);
     } else if (h.tip === "sec") {
       if (!S.takim || S.takim.id !== h.id || siradaki() !== h.kim) return;
@@ -807,13 +852,38 @@
       if (h.kim !== S.cevrim.ben && !S.cevrim.toplu) { // rakibin seçimi: onun beşi birkaç saniye sahada
         toast(taraf.ad + ": " + o.ad + " → " + yerAdi(DZ()[taraf.dizilis].yerler[h.i]));
         S.secili = null; S.tut = true; gorunenYap(h.kim); clearTimeout(S.tutZ);
-        S.tutZ = setTimeout(() => { S.tut = false; gorunenYap(S.cevrim ? S.cevrim.ben : 0); ciz(); }, AI_GOSTER_MS);
+        S.tutZ = setTimeout(() => { S.tut = false; gorunumGuncelle(); ciz(); }, AI_GOSTER_MS);
       }
-      if (hepsiDolu()) { S.takim = null; return; }
+      if (hepsiDolu()) { // oyun bitti: oda skoruna işle (ortak tohumdan, iki tarafta aynı)
+        S.takim = null;
+        const sr = seri(hesap(S.taraflar[0]), hesap(S.taraflar[1]));
+        S.odaSkor[sr.a > sr.b ? 0 : 1]++;
+        return;
+      }
       if (siradaki() === null) { S.tur++; S.turdaSecen = []; if (S.kaynak !== "sabit") S.takim = null; }
     } else if (h.tip === "diz") {
       if (DZ()[h.d] && S.taraflar[h.kim]) S.taraflar[h.kim].dizilis = h.d;
+    } else if (h.tip === "yeni") { // rövanş: aynı odada yeni oyun (yalnız bitmiş oyundan sonra; çift basış tek sayılır)
+      if (!hepsiDolu()) return;
+      oyunSifirla();
+      if (!S.cevrim.toplu) toast("Rövanş başladı: oyun " + (S.oyunNo + 1));
     }
+  }
+  function oyunSifirla() {
+    tutmayiBitir();
+    S.oyunNo++;
+    S.tohum = S.cevrim.tohumKok + ":" + S.oyunNo;
+    S.taraflar.forEach((t) => { t.bes = [null, null, null, null, null]; t.atlaHak = 1; });
+    S.alinan = {}; S.cekilen = {}; S.tur = 0; S.turdaSecen = []; S.son = null; S.secili = null; S.bitti = false;
+    S.minTrOzel = null; S.takim = null; S.bosCevir = 0; S.cevrim.yeniIstek = null;
+    if (S.kaynak === "sabit" && S.sabit) {
+      S.cekilen[S.sabit.id] = 1; S.takim = S.sabit;
+      const turk = S.sabit.oyuncular.filter((x) => x.tr).length;
+      if (turk < 2 * minTr()) S.minTrOzel = Math.floor(turk / 2);
+    }
+    $("sonuc").classList.add("gizli"); $("sonuc").innerHTML = "";
+    makaraCiz(S.kaynak === "sabit" ? S.sabit : null);
+    kuralYaz();
   }
   function beklemeCiz() {
     const kod = S.cevrim.kod, adres = odaAdresi(kod);
