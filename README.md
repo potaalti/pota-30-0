@@ -39,7 +39,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 - Günlük mod şimdilik kapalı (kodu duruyor; `oyun.js` MODLAR ve `index.html` düğmesi).
 - Beş tamamlanınca sezon simüle edilir: BSL 30 maç (hedef 30-0), TBL 32 maç (hedef 32-0).
 - **Günlük**: herkese aynı tohum (Türkiye tarihi + lig) → aynı takım-sezon sırası; sonuç tarayıcıda saklanır, paylaşılabilir metin kopyalanır.
-- **Serbest**: sınırsız. **Gizli** modda sayı/ribaund/asist/VP ve dakika gizlenir.
+- **Serbest**: sınırsız. Kadroda yalnız en az 6 maç oynamış oyuncular var (`veri/isle.py` EN_AZ_MAC). **Gizli** modda sayı/ribaund/asist/VP ve dakika gizlenir.
 
 ## Güç modeli
 

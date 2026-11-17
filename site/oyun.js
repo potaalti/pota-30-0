@@ -617,6 +617,7 @@
   function kulupler() {
     const m = {};
     S.veri.takimlar.forEach((t) => {
+      if (t.oyuncular.length < 10) return; // tek kadrodan iki kişi 10 oyuncu seçer
       const x = m[t.kulup] || (m[t.kulup] = { kulup: t.kulup, ad: t.ad, son: t.sezon, sezonlar: [] });
       x.sezonlar.push(t); if (t.sezon > x.son) { x.son = t.sezon; x.ad = t.ad; }
     });

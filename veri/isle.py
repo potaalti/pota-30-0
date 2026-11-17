@@ -14,6 +14,7 @@ KOK = Path(__file__).resolve().parent
 SITE = KOK.parent / "site" / "veri"
 YEDEK = 5.0          # az maç oynayanların çekildiği güç
 GUVEN_MAC = 8        # bu kadar maçta güvenin yarısı
+EN_AZ_MAC = 6         # kadroda görünmek için en az maç
 # TBF bu sezonlarda yalnız sayı tutmuş (dakika, ribaund, asist yok): oyuna alınmaz
 EKSIK_SEZON = {("bsl", "2004-2005"), ("bsl", "2006-2007")}
 BETA = float(os.environ.get("BETA", "1.0"))  # takım averajından (maç başı sayı farkı × dakika/40) gelen pay
@@ -311,7 +312,7 @@ def main():
                     pr = profiller[p["code"]]
                     mac = int(p.get("macSayisi") or 0)
                     dk = dakika(p.get("sureOrtalama"))
-                    if mac < 3 or dk < 4:
+                    if mac < EN_AZ_MAC or dk < 4:  # az oynayanlar kadroda gösterilmez (kullanıcı isteği, 2026-11-17)
                         continue
                     rb, ast = sayi(p.get("trOrtalama")), sayi(p.get("asistOrtalama"))
                     if p["code"] not in wd_esles:
