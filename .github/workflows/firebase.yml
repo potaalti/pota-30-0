@@ -1,0 +1,18 @@
+# site/ klasörünü Firebase Hosting'e (https://pota-30-0.web.app) yayınlar (main'e her gönderimde).
+# Gerekli gizli ayar: FIREBASE_SERVICE_ACCOUNT (Firebase → Project settings → Service accounts → private key JSON).
+name: Firebase yayını
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  yayin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: pota-30-0
