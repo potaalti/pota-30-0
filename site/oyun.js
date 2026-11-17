@@ -26,7 +26,7 @@
   const BASLIK = { sy: "Sayı", rb: "Rib", as: "Ast", st: "TÇ", bl: "Blk", tk: "TK", kul: "Kul", vp: "VP" };
   const BASLIK_UZUN = { sy: "Sayı", rb: "Ribaund", as: "Asist", st: "Top çalma", bl: "Blok", tk: "Top kaybı",
     kul: "Top kullanımı: şut + 0,44×serbest atış + top kaybı (maç başı)", vp: "Verimlilik puanı" };
-  const SIRALAR = { dk: "Süre", vp: "VP", sy: "Sayı", rb: "Ribaund", as: "Asist", kul: "Kullanım" };
+  const SIRALAR = { vp: "VP", dk: "Süre", sy: "Sayı", rb: "Ribaund", as: "Asist", kul: "Kullanım" }; // ilki varsayılan
   const ILK_GUN = Date.UTC(2026, 10, 17);
   const MK_KAYNAK = { w: "Wikidata", b: "boy ve istatistikten tahmin (bütün sezonlarından)", o: "istatistikten tahmin (bütün sezonlarından)", e: "elle düzeltme" };
   const MODLAR = ["serbest", "yz", "iki"]; // "gunluk" şimdilik kapalı (2026-11-17); kodu duruyor, buraya ve index.html'e eklenince geri gelir
@@ -89,7 +89,7 @@
       taraflar: [yeniTaraf(iki ? oku("ad1", "Oyuncu 1") : "Sen", false, oku("dizilis", "2-3"))], cift: cift, yzMod: yz, iki: iki,
       sistem: ayar.lig === "tbl" ? "ao" : "bes", tur: 0, turdaSecen: [], alinan: {}, son: null, bosCevir: 0, gorunen: 0, tut: false, tutZ: null,
       kaynak: ayar.yzKaynak, zorluk: ayar.yzZorluk, sabit: null, basladi: !cift, minTrOzel: null,
-      ara: "", suzgec: 0, sirala: "dk", panelElle: null, cevrim: null, ikiTur: oku("ikiTur", "uzak"),
+      ara: "", suzgec: 0, sirala: "vp", panelElle: null, cevrim: null, ikiTur: oku("ikiTur", "uzak"),
     };
     if (cift) S.taraflar.push(yz ? yeniTaraf("AI", true, "2-3") : yeniTaraf(oku("ad2", "Oyuncu 2"), false, oku("dizilis2", "2-3")));
     $("baslik").textContent = veri.mac + "-0";
