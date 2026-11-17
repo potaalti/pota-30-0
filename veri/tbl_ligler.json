@@ -1,0 +1,122 @@
+[
+{
+"faaliyet": "TBL 2026-2027",
+"url": "tbl-2026-2027",
+"faaliyet_ID": 22215,
+"sezon_ID": 174,
+"logo": "https://tbf.org.tr/assets/images/sites-logo/tblrenkli.svg",
+"sezon": "2026-2027",
+"sezonGorunenAdi": null,
+"logoGray": "https://tbf.org.tr/assets/images/sites-logo/tblgri.svg"
+},
+{
+"faaliyet": "TBL 2025-2026",
+"url": "tbl-2025-2026",
+"faaliyet_ID": 20727,
+"sezon_ID": 172,
+"logo": "https://tbf.org.tr/assets/images/sites-logo/tbl-renkli.svg",
+"sezon": "2025-2026",
+"sezonGorunenAdi": null,
+"logoGray": "https://tbf.org.tr/assets/images/sites-logo/tbl-gri.svg"
+},
+{
+"faaliyet": "TBL 2024-2025",
+"url": "tbl-2024-2025",
+"faaliyet_ID": 19285,
+"sezon_ID": 170,
+"logo": "https://tbf.org.tr/assets/images/sites-logo/tbl-landscape-light.png",
+"sezon": "2024-2025",
+"sezonGorunenAdi": "2024-2025 İlkan Karaman Sezonu",
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2023-2024",
+"url": "tbl-2023-2024",
+"faaliyet_ID": 17822,
+"sezon_ID": 168,
+"logo": "",
+"sezon": "2023-2024",
+"sezonGorunenAdi": null,
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2022-2023",
+"url": "tbl-2022-2023",
+"faaliyet_ID": 16356,
+"sezon_ID": 166,
+"logo": "",
+"sezon": "2022-2023",
+"sezonGorunenAdi": "Özgür Adıgüzel Sezonu",
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2021-2022",
+"url": "tbl-2021-2022",
+"faaliyet_ID": 14921,
+"sezon_ID": 164,
+"logo": "",
+"sezon": "2021-2022",
+"sezonGorunenAdi": null,
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2020-2021",
+"url": "tbl-2020-2021",
+"faaliyet_ID": 13561,
+"sezon_ID": 162,
+"logo": "",
+"sezon": "2020-2021",
+"sezonGorunenAdi": null,
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2019-2020",
+"url": "tbl-2019-2020",
+"faaliyet_ID": 13312,
+"sezon_ID": 160,
+"logo": "",
+"sezon": "2019-2020",
+"sezonGorunenAdi": null,
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2018-2019",
+"url": "tbl-2018-2019",
+"faaliyet_ID": 11862,
+"sezon_ID": 158,
+"logo": "",
+"sezon": "2018-2019",
+"sezonGorunenAdi": null,
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2017-2018",
+"url": "tbl-2017-2018",
+"faaliyet_ID": 8793,
+"sezon_ID": 156,
+"logo": "",
+"sezon": "2017-2018",
+"sezonGorunenAdi": null,
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2016-2017",
+"url": "tbl-2016-2017",
+"faaliyet_ID": 8014,
+"sezon_ID": 154,
+"logo": "",
+"sezon": "2016-2017",
+"sezonGorunenAdi": null,
+"logoGray": ""
+},
+{
+"faaliyet": "TBL 2015-2016",
+"url": "tbl-2015-2016",
+"faaliyet_ID": 7179,
+"sezon_ID": 151,
+"logo": "",
+"sezon": "2015-2016",
+"sezonGorunenAdi": null,
+"logoGray": ""
+}
+]

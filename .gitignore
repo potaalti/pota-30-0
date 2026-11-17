@@ -1,0 +1,4 @@
+# ham TBF yanıtları (44 MB): yerelde kalır, veri/cek.py ile yeniden çekilir
+veri/ham/
+__pycache__/
+*.pyc

@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0a1214">
+<title>Pota Altı 30-0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --zemin:#0a1214; --kart:#111d20; --kart2:#0d181b; --yazi:#eef6f7; --soluk:#91a8ac; --cizgi:#1d2e32;
+  --vurgu:#4cc8d0; --vurgu-koyu:#097a88; --vurgu-acik:#0e2f34; --vurgu-uzeri:#062126;
+  --turuncu:#fb923c; --turuncu-acik:#3a2414; --yesil:#4ade80; --kirmizi:#f87171; --altin:#f5c451;
+  --parke:#0f2226; --parke-cizgi:rgba(76,200,208,.38);
+  --baslik:"Barlow Condensed",system-ui,sans-serif; --govde:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--zemin);color:var(--yazi);font:15px/1.4 var(--govde);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:disabled{cursor:not-allowed;opacity:.45}
+.gizli{display:none!important}
+.sar{max-width:1100px;margin:0 auto;padding:10px 16px 120px}
+
+/* üst bar */
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.logo{font-family:var(--baslik);font-weight:800;font-size:26px;letter-spacing:.5px;line-height:1;text-transform:uppercase}
+.logo b{color:var(--vurgu)}
+.logo small{display:block;font-family:var(--govde);font-size:11px;font-weight:600;color:var(--soluk);letter-spacing:.4px;text-transform:none;margin-top:2px}
+.bosluk{flex:1}
+.secici{display:inline-flex;background:var(--kart);border:1px solid var(--cizgi);border-radius:999px;padding:3px}
+.secici button{padding:6px 11px;border-radius:999px;font-weight:600;font-size:13px;color:var(--soluk)}
+.secici button.aktif{background:var(--vurgu);color:var(--vurgu-uzeri)}
+.ayarlar{display:flex;gap:6px;flex-wrap:wrap}
+details.kural{font-size:13px;color:var(--soluk);margin:0 0 10px}
+details.kural summary{cursor:pointer;font-weight:600}
+details.kural b{color:var(--yazi)}
+
+.izgara{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:899px){.izgara{grid-template-columns:minmax(0,1fr)}}
+
+/* tur göstergesi + makaralar */
+.tur{display:flex;align-items:center;justify-content:space-between;margin:0 2px 8px}
+.tur .ad{font-family:var(--baslik);font-weight:700;font-size:18px;letter-spacing:.6px;text-transform:uppercase}
+.tur .ad span{color:var(--soluk);font-weight:600}
+.cubuklar{display:flex;gap:4px}
+.cubuklar i{width:22px;height:4px;border-radius:2px;background:var(--cizgi)}
+.cubuklar i.dolu{background:var(--vurgu)}
+.makaralar{display:grid;grid-template-columns:1.6fr 1fr;gap:10px}
+.makara{background:var(--kart);border:1.5px solid var(--vurgu-koyu);border-radius:14px;padding:6px 8px 8px;position:relative}
+.makara .etk{font-size:11px;font-weight:700;color:var(--vurgu);text-transform:uppercase;letter-spacing:.8px;text-align:center}
+.pencere{margin-top:4px;height:64px;border-radius:9px;background:var(--kart2);border:1px solid var(--cizgi);display:flex;align-items:center;justify-content:center;gap:8px;padding:0 8px;overflow:hidden;position:relative}
+.pencere::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.45)}
+.pencere img{width:36px;height:36px;object-fit:contain;background:#fff;border-radius:8px;padding:2px;flex:none}
+.pencere .yazi{font-family:var(--baslik);font-weight:800;font-size:20px;line-height:1.02;text-transform:uppercase;text-align:center;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.makara.sezon .yazi{font-size:26px;letter-spacing:.5px;white-space:nowrap;display:block}
+.makara.akiyor .pencere .yazi,.makara.akiyor .pencere img{animation:flap .07s linear infinite}
+@keyframes flap{0%{transform:translateY(-35%);opacity:.3}100%{transform:translateY(25%);opacity:1}}
+.makara.kilit{border-color:var(--vurgu);box-shadow:0 0 0 3px rgba(76,200,208,.18)}
+.makara .alt{font-size:11px;color:var(--soluk);text-align:center;margin-top:4px;min-height:15px}
+.atla-btn{display:block;width:100%;margin-top:6px;padding:7px 6px;border-radius:9px;background:var(--vurgu-acik);color:var(--vurgu);font-weight:700;font-size:12.5px}
+.atla-btn:not(:disabled):hover{background:var(--vurgu-koyu);color:#fff}
+
+/* saha */
+.saha-kap{margin-top:12px;position:relative}
+.dizilis{display:flex;margin:0 0 8px}
+.dizilis button{flex:1}
+.saha{position:relative;width:100%;aspect-ratio:300/250;border-radius:16px;background:var(--parke);overflow:hidden;border:1px solid var(--cizgi)}
+.saha svg{position:absolute;inset:0;width:100%;height:100%}
+.pul{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;width:86px}
+.pul .daire{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;border:2px dashed rgba(145,168,172,.6);background:rgba(10,18,20,.55);font-family:var(--baslik);font-weight:800;font-size:22px;color:var(--soluk);position:relative;transition:transform .15s,box-shadow .15s}
+.pul .etiket{font-size:11.5px;font-weight:700;color:var(--soluk);background:rgba(10,18,20,.7);padding:1px 6px;border-radius:5px;max-width:86px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pul.hedef .daire{border:2px solid var(--vurgu);color:var(--vurgu);box-shadow:0 0 0 5px rgba(76,200,208,.2),0 0 18px rgba(76,200,208,.45);animation:nabiz 1.2s ease-in-out infinite}
+.pul.hedef.komsu .daire{border-color:var(--turuncu);color:var(--turuncu);box-shadow:0 0 0 5px rgba(251,146,60,.18)}
+.pul.hedef .etiket{color:var(--yazi)}
+@keyframes nabiz{50%{transform:scale(1.07)}}
+.pul.dolu .daire{border:2px solid var(--vurgu);background:#fff;padding:5px}
+.pul.dolu .daire img{width:100%;height:100%;object-fit:contain}
+.pul.dolu .daire .no{position:absolute;right:-6px;top:-6px;width:20px;height:20px;border-radius:50%;background:var(--vurgu);color:var(--vurgu-uzeri);font-size:12px;display:grid;place-items:center}
+.pul.dolu.disi .daire{border-color:var(--turuncu)}
+.pul.dolu.disi .daire .no{background:var(--turuncu)}
+.pul.dolu .etiket{color:var(--yazi);background:rgba(10,18,20,.85)}
+.pul.son .daire{animation:otur .45s ease-out}
+@keyframes otur{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+.pul .tr{position:absolute;left:-6px;top:-6px;font-size:9px;font-weight:800;background:#d22;color:#fff;border-radius:4px;padding:1px 3px}
+.durum{display:flex;gap:6px;flex-wrap:wrap;margin:10px 2px}
+.cip{border:1px solid var(--cizgi);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--soluk);font-weight:600}
+.cip.tamam{border-color:rgba(74,222,128,.5);color:var(--yesil)}
+.cip.eksik{border-color:rgba(251,146,60,.5);color:var(--turuncu)}
+.cip.sira{border-color:var(--vurgu);color:var(--vurgu)}
+.ana-btn{width:100%;padding:15px;border-radius:14px;background:var(--vurgu);color:var(--vurgu-uzeri);font-family:var(--baslik);font-weight:800;font-size:24px;letter-spacing:1.2px;text-transform:uppercase}
+.ana-btn:not(:disabled):active{transform:scale(.98)}
+.ana-btn.turuncu{background:var(--turuncu);color:#2a1406}
+.saha-bas{font-family:var(--baslik);font-weight:700;font-size:16px;letter-spacing:.5px;text-transform:uppercase;margin:0 2px 6px;display:flex;justify-content:space-between;align-items:center;min-height:20px}
+.saha-bas span{color:var(--soluk);font-size:13px;letter-spacing:.3px}
+.saha-bas.rakip{color:var(--turuncu)}
+.saha.rakip{border-color:var(--turuncu)}
+.yz-bes{display:block;width:100%;text-align:left;margin-top:12px;background:var(--kart);border:1px solid var(--cizgi);border-radius:14px;padding:10px}
+.yz-bes h3{margin:0 0 8px;font-family:var(--baslik);font-size:16px;letter-spacing:.5px;text-transform:uppercase;display:flex;justify-content:space-between}
+.yz-bes h3 span{color:var(--soluk);font-weight:600}
+.mini{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.mini div{background:var(--kart2);border:1px solid var(--cizgi);border-radius:10px;padding:6px 4px;text-align:center;font-size:11px;min-height:66px}
+.mini div.son{border-color:var(--turuncu)}
+.mini img{width:26px;height:26px;object-fit:contain;background:#fff;border-radius:6px;padding:1px;display:block;margin:0 auto 3px}
+.mini b{display:block;font-family:var(--baslik);font-size:15px;color:var(--soluk)}
+
+/* kadro paneli */
+.panel{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:12px;min-height:200px}
+.panel-tutamak{display:none}
+.panel-bas{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.panel-bas img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:10px;padding:3px;flex:none}
+.panel-bas .ad{font-family:var(--baslik);font-weight:800;font-size:20px;line-height:1.05;text-transform:uppercase}
+.panel-bas .alt{font-size:12.5px;color:var(--soluk)}
+.panel-bas .alt b{color:var(--yazi)}
+.panel-bas,.arac,.suzgec,.panel-tutamak{flex:none}
+.arac{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.arac input{flex:1 1 140px;min-width:0;background:var(--kart2);border:1px solid var(--cizgi);border-radius:10px;color:var(--yazi);padding:8px 10px;font:inherit;font-size:14px}
+.arac select{background:var(--kart2);border:1px solid var(--cizgi);border-radius:10px;color:var(--yazi);padding:8px;font:inherit;font-size:13px}
+.suzgec{display:flex;gap:4px;margin-bottom:8px;overflow-x:auto}
+.suzgec button{flex:none;min-width:38px;padding:6px 10px;border-radius:8px;background:var(--kart2);border:1px solid var(--cizgi);font-weight:700;font-size:13px;color:var(--soluk)}
+.suzgec button.aktif{background:var(--vurgu-acik);border-color:var(--vurgu);color:var(--vurgu)}
+.liste{display:flex;flex-direction:column;gap:6px;max-height:560px;overflow-y:auto;padding-right:2px}
+.oy{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;flex:none;width:100%;text-align:left;background:var(--kart2);border:1px solid var(--cizgi);border-radius:12px;padding:8px 10px}
+.oy:hover:not(.kapali){border-color:var(--vurgu-koyu)}
+.oy.sec{border-color:var(--vurgu);background:var(--vurgu-acik)}
+.oy.kapali{opacity:.4}
+.mk{font-family:var(--baslik);font-weight:800;font-size:15px;min-width:34px;height:34px;padding:0 5px;border-radius:9px;display:grid;place-items:center;background:var(--vurgu-acik);color:var(--vurgu)}
+.oy .isim{font-weight:700;font-size:14px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oy .ust{font-size:11.5px;color:var(--soluk)}
+.rozet-tr{display:inline-block;font-size:9.5px;font-weight:800;background:#d22;color:#fff;border-radius:4px;padding:1px 4px;margin-left:5px;vertical-align:2px}
+.alindi{font-size:10.5px;font-weight:800;color:var(--turuncu);margin-left:5px;text-transform:uppercase}
+.oy .sayilar{font-size:12px;color:var(--yazi);margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oy .sayilar span{color:var(--soluk)}
+.vp{text-align:center;min-width:44px}
+.vp b{display:block;font-family:var(--baslik);font-weight:800;font-size:22px;line-height:1;color:var(--vurgu)}
+.vp span{font-size:9.5px;color:var(--soluk);text-transform:uppercase;letter-spacing:.4px}
+.ipucu{font-size:12px;color:var(--soluk);margin-top:8px}
+.bos{color:var(--soluk);text-align:center;padding:40px 10px}
+.bos .buyuk{font-family:var(--baslik);font-size:56px;font-weight:800;color:var(--vurgu);letter-spacing:1px;line-height:1}
+
+/* telefonda kadro paneli alttan açılır */
+@media (max-width:899px){
+  .panel{position:fixed;left:0;right:0;bottom:0;z-index:20;border-radius:18px 18px 0 0;max-height:64vh;display:flex;flex-direction:column;
+    transform:translateY(105%);transition:transform .28s ease;box-shadow:0 -10px 30px rgba(0,0,0,.45);padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+  .panel.acik{transform:none}
+  .panel.kucuk{transform:translateY(calc(100% - 64px))}
+  .panel-tutamak{display:block;width:100%;padding:2px 0 8px}
+  .panel-tutamak i{display:block;width:42px;height:4px;border-radius:2px;background:var(--cizgi);margin:0 auto}
+  .liste{max-height:none;flex:1;min-height:0}
+  .panel-govde{display:flex;flex-direction:column;min-height:0;flex:1}
+}
+
+/* sonuç */
+.sonuc{margin-top:18px;background:var(--kart);border:1px solid var(--cizgi);border-radius:18px;padding:16px}
+.iki{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:760px){.iki{grid-template-columns:1fr}}
+.skorbord{background:var(--kart2);border:1.5px solid var(--vurgu-koyu);border-radius:16px;padding:14px;text-align:center}
+.skorbord h2{margin:0 0 4px;font-family:var(--baslik);font-size:15px;letter-spacing:.6px;text-transform:uppercase;color:var(--soluk)}
+.skor{font-family:var(--baslik);font-weight:800;font-size:76px;line-height:1;letter-spacing:2px;font-variant-numeric:tabular-nums}
+.skor .tire{color:var(--vurgu);margin:0 6px}
+.not-sat{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;font-weight:700}
+.harf{font-family:var(--baslik);font-weight:800;font-size:22px;min-width:40px;height:34px;border-radius:9px;display:inline-grid;place-items:center;background:var(--vurgu);color:var(--vurgu-uzeri);padding:0 6px}
+.unvan{color:var(--altin);text-transform:uppercase;letter-spacing:.5px;font-family:var(--baslik);font-size:18px}
+.skor-alt{font-size:12px;color:var(--soluk);margin-top:6px}
+.isiklar{display:grid;grid-template-columns:repeat(auto-fill,minmax(16px,1fr));gap:4px;margin-top:12px}
+.isik{aspect-ratio:1;border-radius:50%;background:var(--cizgi)}
+.isik.G{background:var(--yesil);box-shadow:0 0 6px rgba(74,222,128,.6)}
+.isik.M{background:var(--kirmizi)}
+.satirlar{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.sat{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--kart2);border:1px solid var(--cizgi);border-radius:12px;padding:8px 10px}
+.sat .no{font-family:var(--baslik);font-weight:800;font-size:22px;width:34px;text-align:center;color:var(--vurgu)}
+.sat.disi .no{color:var(--turuncu)}
+.sat img{width:30px;height:30px;object-fit:contain;background:#fff;border-radius:7px;padding:2px}
+.sat .isim{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sat .ust{font-size:11.5px;color:var(--soluk)}
+.sat .guc{font-family:var(--baslik);font-weight:800;font-size:22px;color:var(--vurgu)}
+.ozet{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+@media (max-width:520px){.ozet{grid-template-columns:1fr}}
+.ozet div{background:var(--kart2);border:1px solid var(--cizgi);border-radius:12px;padding:9px 11px;font-size:13px}
+.ozet b{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--soluk);margin-bottom:2px}
+.etkiler{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.etkiler span{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;border:1px solid var(--cizgi)}
+.etkiler .arti{color:var(--yesil);border-color:rgba(74,222,128,.4)}
+.etkiler .eksi{color:var(--kirmizi);border-color:rgba(248,113,113,.4)}
+.seri{margin:16px 0 4px;text-align:center;font-family:var(--baslik);font-weight:800;font-size:26px;letter-spacing:.5px;text-transform:uppercase}
+.seri small{display:block;font-family:var(--govde);font-weight:500;font-size:12px;color:var(--soluk);text-transform:none;letter-spacing:0}
+.dugmeler{display:flex;gap:8px;margin-top:14px}
+.dugmeler .ana-btn{font-size:19px;padding:12px}
+.ikincil{background:none;border:1.5px solid var(--cizgi);color:var(--yazi)}
+details.dokum-kap{margin-top:12px}
+details.dokum-kap summary{cursor:pointer;font-weight:700;color:var(--soluk);font-size:13px}
+.yatay{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-size:10.5px;text-transform:uppercase;color:var(--soluk);font-weight:700;text-align:right;padding:6px 5px}
+th:first-child,td:first-child{text-align:left}
+td{padding:6px 5px;text-align:right;border-top:1px solid var(--cizgi);font-variant-numeric:tabular-nums;white-space:nowrap}
+td:first-child{white-space:normal;min-width:140px}
+.yatay th:first-child,.yatay td:first-child{position:sticky;left:0;background:var(--kart)}
+tr.toplam td{font-weight:700}
+.arti{color:var(--yesil)}.eksi{color:var(--kirmizi)}
+.not{font-size:12px;color:var(--soluk);margin-top:10px}
+
+/* YZ kurulumu */
+.kurulum h3{margin:0 0 4px;font-family:var(--baslik);font-size:24px;text-transform:uppercase;letter-spacing:.5px}
+.kurulum label{display:block;font-size:11px;font-weight:700;color:var(--soluk);text-transform:uppercase;letter-spacing:.6px;margin:14px 0 6px}
+.kurulum input{font:inherit;color:var(--yazi);background:var(--kart2);border:1px solid var(--cizgi);border-radius:10px;padding:9px;width:100%;margin-bottom:6px}
+.kurulum select{font:inherit;color:var(--yazi);background:var(--kart2);border:1px solid var(--cizgi);border-radius:10px;padding:9px;width:100%}
+
+.toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-20px);background:var(--yazi);color:var(--zemin);padding:10px 16px;border-radius:12px;font-weight:700;opacity:0;transition:.2s;pointer-events:none;z-index:50;max-width:92vw;text-align:center}
+.toast.goster{opacity:1;transform:translate(-50%,0)}
+footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
+@media (max-width:520px){.logo small{display:none}.logo{font-size:23px}.secici button{padding:5px 9px;font-size:12.5px}header{gap:8px}}
+</style>
+</head>
+<body>
+<div class="sar">
+  <header>
+    <div class="logo">Pota Altı <b id="baslik">30-0</b><small>Takım çevir · beşini kur · sezonu oyna</small></div>
+    <div class="bosluk"></div>
+    <div class="ayarlar">
+      <div class="secici" id="ligSec"><button data-lig="bsl" class="aktif">BSL</button><button data-lig="tbl">TBL</button></div>
+      <div class="secici" id="modSec"><button data-mod="serbest" class="aktif">Serbest</button><button data-mod="yz">vs AI</button><button data-mod="iki">2 kişi</button></div>
+      <div class="secici" id="zorSec"><button data-zor="0" class="aktif">İstatistik</button><button data-zor="1">Gizli</button></div>
+    </div>
+  </header>
+  <details class="kural"><summary>Kurallar</summary><p id="kural"></p></details>
+
+  <div class="izgara">
+    <div>
+      <div class="tur"><div class="ad" id="turAd">Tur 1 <span>/ 5</span></div><div class="cubuklar" id="cubuklar"></div></div>
+      <div class="makaralar">
+        <div class="makara" id="makaraKulup">
+          <div class="etk">Kulüp</div>
+          <div class="pencere"><img id="mkLogo" alt="" referrerpolicy="no-referrer" class="gizli"><div class="yazi" id="mkKulup">?</div></div>
+          <div class="alt" id="mkGercek"></div>
+          <button class="atla-btn" id="atlaTakim">Başka takım (1)</button>
+        </div>
+        <div class="makara sezon" id="makaraSezon">
+          <div class="etk">Sezon</div>
+          <div class="pencere"><div class="yazi" id="mkSezon">?</div></div>
+          <div class="alt" id="mkLig"></div>
+          <button class="atla-btn" id="atlaSezon">Başka sezon (1)</button>
+        </div>
+      </div>
+
+      <div class="saha-kap">
+        <div class="saha-bas" id="sahaBaslik"></div>
+        <div class="secici dizilis" id="dizSec" style="display:flex"><button data-diz="2-3">2 Arka · 3 Ön</button><button data-diz="3-2">3 Arka · 2 Ön</button></div>
+        <div class="saha" id="saha">
+          <svg viewBox="0 0 300 250" aria-hidden="true" preserveAspectRatio="none">
+            <g fill="none" stroke="var(--parke-cizgi)" stroke-width="2">
+              <rect x="2" y="2" width="296" height="246" rx="14"/>
+              <path d="M22 2 V46 A128 128 0 0 0 278 46 V2"/>
+              <rect x="106" y="2" width="88" height="96"/>
+              <circle cx="150" cy="98" r="30"/>
+              <path d="M120 98 A30 30 0 0 0 180 98" stroke-dasharray="6 6"/>
+              <path d="M106 248 A44 44 0 0 1 194 248"/>
+              <line x1="128" y1="20" x2="172" y2="20" stroke-width="3"/>
+              <circle cx="150" cy="30" r="8" stroke="var(--turuncu)" stroke-width="2.5"/>
+            </g>
+          </svg>
+          <div id="pullar"></div>
+        </div>
+      </div>
+      <div class="durum" id="durum"></div>
+      <button class="ana-btn" id="cevir">Çevir</button>
+      <button class="ana-btn turuncu gizli" id="oyna">Sezonu oyna ▶</button>
+      <button class="yz-bes gizli" id="yzBes" title="Sahada bu beşi göster"><h3><b id="digerAd">AI</b> <span id="yzEtiket"></span></h3><div class="mini" id="yzMini"></div></button>
+    </div>
+
+    <div class="panel" id="panel">
+      <button class="panel-tutamak" id="tutamak" aria-label="Kadroyu aç ya da kapat"><i></i></button>
+      <div class="panel-govde" id="kadro"></div>
+    </div>
+  </div>
+
+  <div class="sonuc gizli" id="sonuc"></div>
+
+  <footer>Veri: Türkiye Basketbol Federasyonu (tbf.org.tr) sezon istatistikleri, normal sezon + play-off ortalamaları. Mevki Wikidata'dan (CC0), yoksa boy ve istatistikten tahmin. BSL 2004-05 ve 2006-07'de TBF yalnız sayı tuttuğu için bu iki sezon yok. Bir hayran oyunu; TBF ile bağlantısı yoktur.</footer>
+</div>
+<div class="toast" id="toast"></div>
+<script src="veri/bsl.js"></script>
+<script src="veri/tbl.js"></script>
+<script src="firebase-ayar.js"></script>
+<script src="baglanti.js"></script>
+<script src="oyun.js"></script>
+</body>
+</html>

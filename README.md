@@ -1,0 +1,130 @@
+# Pota Altı 30-0
+
+BSL ve TBL için takım+sezon çevirmeli beş kurma oyunu. Pota Altı uygulamasından ayrı bir depo.
+
+Yayın: https://potaalti.github.io/pota-30-0/ (GitHub Pages; `site/` klasörü, `.github/workflows/yayin.yml` ile
+main'e her gönderimde yayınlanır). Çevrim içi 2 kişilik odalar Firebase Realtime Database (`pota-30-0` projesi) kullanır.
+
+## Oynamak
+
+Yayındaki adresi aç ya da yerelde `site/` klasörünü bir HTTP sunucusuyla sun (ör. `python -m http.server -d site`);
+veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB) depoda yok, `veri/cek.py` ile yeniden çekilir.
+
+- Her turda rastgele bir takım-sezon çıkar (ör. FENERBAHÇE 2016-17). Kadrodan bir oyuncu seç, beşte bir yere koy.
+- Mevki sistemi lige göre: **BSL** beş mevki, **TBL** yalnız Arka (1-2) / Ön (3-5) — TBL'de mevki verisi zayıf
+  (Wikidata kapsamı %31). TBL'de iki tarafa da uyan (mevkileri 2 ve 3'ü kapsayan) oyuncu cezasız her yere konur, mevki
+  dışı ×0,88. TBL oyuncu-sezonları: 937 Arka, 1.242 Ön, 512 ikisi birden.
+- BSL'de beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot. Diziliş 2 Arka 3 Ön (1-2-3-4-5) ya da
+  3 Arka 2 Ön (1-2-gard-4-5); sezon oynanana kadar değiştirilebilir. Komşu mevki ×0,92, daha uzağı ×0,80.
+- En az 1 Türk (BSL) / 3 Türk (TBL), aynı oyuncu bir kez, her takım-sezondan bir oyuncu.
+- Bir "başka takım" (yeni takım-sezon) ve bir "başka sezon" (aynı kulübün başka sezonu; kulüp kimliği TBF teamId) hakkı.
+- Sonuç: kayıt, harf notu (A+ … F), en iyi seçim, en büyük zayıflık, döküm.
+- **vs AI**: sen ve AI sırayla seçersiniz (AI seçerken onun beşi 2,5 sn sahada görünür) (her tur ilk seçen değişir), alınan oyuncu rakibe kalmaz.
+  Havuz: her tur çark ya da seçilen tek takım-sezon (ör. Fenerbahçe 2016-17; ikiniz de o kadrodan 5'er oyuncu).
+  Zorluk: Kolay (en iyi 6 aday arasından rastgele), Orta (3), Zor (her zaman en iyisi; güç × mevki uyumu).
+  Beşler dolunca iki sezon oynanır, ardından 7 maçlık karşılıklı seri (olasılık iki takım gücünün farkından).
+- **2 kişi**: iki oyuncu, vs AI ile aynı kurallar.
+  - *Ayrı telefonlar* (varsayılan): biri "Oda kur" der, 5 harflik kodu ya da `?oda=KOD` bağlantısını atar, öbürü katılır.
+    Her hamle (çark, seçim, diziliş) Firebase Realtime Database'deki odaya yazılır; iki telefon aynı hamle listesini aynı
+    sırayla uygular (`site/baglanti.js`, `oyun.js` içindeki "çevrim içi oda" bölümü). Sayfa yenilenirse liste baştan uygulanır.
+    Sonuç iki telefonda da aynı çıkar (odanın tohumu ortak). `site/firebase-ayar.js` boşken yalnız aynı tarayıcının
+    sekmeleri arasında çalışır (yerel test). Veritabanı kuralları: `firebase-kurallar.json` (anonim giriş gerekir;
+    yalnız odadaki iki kişi hamle yazar, yazılan hamle değişmez).
+  - *Bu cihazda*: aynı telefonda sırayla; sıra kimdeyse saha onun beşini gösterir.
+- Günlük mod şimdilik kapalı (kodu duruyor; `oyun.js` MODLAR ve `index.html` düğmesi).
+- Beş tamamlanınca sezon simüle edilir: BSL 30 maç (hedef 30-0), TBL 32 maç (hedef 32-0).
+- **Günlük**: herkese aynı tohum (Türkiye tarihi + lig) → aynı takım-sezon sırası; sonuç tarayıcıda saklanır, paylaşılabilir metin kopyalanır.
+- **Serbest**: sınırsız. **Gizli** modda sayı/ribaund/asist/VP ve dakika gizlenir.
+
+## Güç modeli
+
+- Oyuncu gücü = o sezonki VP ortalaması; az maç oynayanlar yedek seviyesine (5) çekilir: `(maç×VP + 8×5) / (maç + 8)`.
+  Sezonlar arası VP ölçeği farkı, her sezonun ortalama ilk beş gücüne göre normalleştirilir.
+- Buna takımın maç başı sayı averajından dakika payı eklenir: `1,0 × averaj × dk/40` (averaj en az -8; 2026-11-17'ye
+  kadar 0,6 idi, geri testle 1,0'a çıkarıldı).
+  Yalnız VP ile ilk beş gücü gerçek galibiyet oranını zayıf açıklıyordu (korelasyon 0,20: kötü takımlarda VP şişiyor);
+  averaj payıyla 0,84 (BSL) / 0,84 (TBL).
+- Mevki dışı yerleşim ×0,88.
+- Beşin karakteri (oyun tasarımı tercihi): iki eksen, gerçek ilk beşlerin (en çok süre alan 5) ortancasına göre.
+  - Hücum = sayı + 1,5×asist + üçlük − top kaybı; Savunma = 2×(top çalma + blok) + 0,5×ribaund (beşin toplamları).
+  - Ortancadan iyiyse artı, kötüyse eksi: `3 × (değer − ortanca) / çeyrekler arası açıklık`, en çok ±6.
+    Bir eksende çok iyi olan beş, diğerindeki eksiyi kapatabilir.
+  - Rol eksikliği: asist ya da ribaund gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1; TBL 10,3 / 18,4) ayrıca ceza.
+  - Veriyle sınandığında bu eksenler galibiyeti güce ek olarak açıklamadı (katsayılar sıfıra yakın); oyun hissi için var.
+    Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,85 → 0,76, TBL 0,84 → 0,79.
+- Uyum kuralları (oyun hissi için; toplam ±5): oyun kurucu var +2, top dağıtacak kimse yok −3, pota koruyucu var +2,
+  pota boş −2, dış şut bol +2, şutör yok −3, yıldız ikilisi +2, top tek isteyen çok −2, boyalı alan kalabalık −3.
+  Gerçek ilk beşlerle sınandığında (güç sabitken) hiçbiri galibiyeti artırmadı; bazıları ters yönde çıktı (ör. iki yıldızlı
+  ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).
+  Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,76 → 0,72, TBL 0,79 → 0,76. Hücum/savunma ekseni sınırı ±4'e indi.
+- Top kullanımı (Kul = şut denemesi + 0,44×serbest atış denemesi + top kaybı, maç başı): beşin toplamı gerçek ilk beşlerin
+  üst çeyreğini (BSL 63,7, TBL 64,0) aşarsa aşan her birim −0,5 güç ("Top yetmiyor"). Veriyle desteklenen tek takım kuralı:
+  güç sabitken ilk beş kullanımı arttıkça galibiyet düşüyor (BSL −0,0052, TBL −0,0043 galibiyet oranı / birim; güç katsayısı 0,0095).
+- Şut isabeti (TS%) her sezon için hesaplanır ve oyuncu satırının ipucunda görünür; güce eklenmedi (geri testte tahmini
+  iyileştirmedi, VP kaçan şutları zaten düşüyor).
+- Tablolarda sayı, ribaund, asist, top çalma, blok, top kaybı ve VP gösterilir; top kaybı simülasyona yalnız VP içinden girer.
+- Takım gücü → maç başı galibiyet olasılığı: gerçek takımların ilk beşleri (en çok süre alan 5) ile gerçek normal sezon
+  galibiyet oranı arasına uydurulan lojistik eğri (`veri/isle.py`, sonuç `egri` alanında).
+- Mevki TBF'de yok. Önce Wikidata'daki mevkiler (point guard 1, shooting guard 2, small forward 3, power forward 4,
+  center 5; guard 1-2, forward 3-4). Yoksa doğrusal tahmin (Wikidata'lı 4.358 oyuncu-sezona uyduruldu):
+  boy varsa `-18,27 + 0,1048×boy − 0,234×log2(asist/(rib+0,5)) + 0,328×blok − 0,082×üçlük`, yoksa
+  `1,246 − 0,462×log2(oran) + 0,437×blok − 0,164×üçlük + 0,2125×(rib/dk×30)`. En yakın mevki; boyluda kesir 0,25'ten
+  büyükse, boysuzda her zaman komşu mevki de eklenir. İsabet (tahmin kümesi gerçek mevkilerden birini içeriyor):
+  boylu %85 (ortalama 1,46 mevki), boysuz %84 (1,98 mevki). Rozetin üstüne gelince mevkinin kaynağı görünür.
+  Tahmin oyuncu başına bir kez yapılır: iki ligdeki bütün sezonlarının (dakika × maç ağırlıklı) ortalamasından; böylece
+  aynı oyuncu sezona göre farklı mevkide görünmez.
+- Elle düzeltme: `veri/mevki_duzeltme.json` (anahtar TBF oyuncu numarası, `p` mevkiler, isteğe bağlı `boy`). Her kaynağın
+  önüne geçer; sonra `CEVRIMDISI=1 python veri/isle.py`. İlk kayıt: Hakan Yapar 4-5.
+
+## Geri test
+
+`veri/isle.py` her çalışmada modeli dürüst biçimde sınar ve `veri/test_sonucu.json`'a yazar: takımın gerçek galibiyet oranı,
+ilk beşinin (en çok süre alan 5) ÖNCEKİ sezondaki güçlerinden tahmin edilir (oyun da oyuncuları başka takımlarla birleştirir).
+
+| BETA (averaj payı) | BSL herkes | BSL takım değiştiren | TBL herkes | TBL takım değiştiren |
+|---|---|---|---|---|
+| 0,6 (eski) | 0,655 | 0,560 | 0,532 | 0,457 |
+| **1,0 (şimdi)** | **0,716** | **0,601** | **0,559** | **0,493** |
+| 1,5 | 0,741 | 0,608 | 0,573 | 0,517 |
+
+Karşılaştırma: ham VP ile BSL 0,34. Aynı sezon içinde ölçülen 0,85-0,88 abartılıdır (takım averajı sonucu zaten içerir).
+`tam` satırı (kurallar dahil tam takım gücü) yalnız beşin beşi de önceki sezonda bulunan takımlarla, örneklem küçük (22 / 13).
+
+## Veri
+
+Kaynak: TBF resmi API (`https://www.tbf.org.tr/api`).
+
+| Lig | Sezonlar | Not |
+|---|---|---|
+| BSL | 2001-02 … 2025-26: 23 sezon, 358 takım-sezon, 5.047 oyuncu-sezon | 2004-05 ve 2006-07'de TBF yalnız sayı tutmuş (dakika/ribaund/asist yok) → oyunda yok. 2007-08'de bir takımın istatistiği TBF'den alınamadı. TBF lig listesi 1966-67'ye kadar iniyor; 2000-01 ve öncesi denenmedi |
+| TBL | 2015-16 … 2025-26: 11 sezon, 188 takım-sezon, 2.691 oyuncu-sezon | TBF'de TBL sayfası 2015-16'dan başlıyor |
+
+Mevki ve boy için Wikidata (CC0): `python veri/wikidata.py` → `veri/wikidata/oyuncular.json` (25.512 basketbolcu:
+Türkiye kulübünde oynamış olanlar + 1960 sonrası doğumlu, boyu ya da mevkisi bilinenler). Wikidata'nın kendi sorgu
+hizmeti arızadayken aynı veriyi sunan QLever (Freiburg Üniversitesi) kullanıldı. TBF oyuncusu ile aynı doğum tarihli ve adı
+benzeyen Wikidata kaydı eşlenir: 2.614 tekil oyuncunun 1.450'si bulundu (1.342 mevkili, 1.382 boylu).
+
+| | Mevki kaynağı: Wikidata | boy + istatistik | yalnız istatistik |
+|---|---|---|---|
+| BSL (5.047 oyuncu-sezon) | 3.528 | 478 | 1.041 |
+| TBL (2.691 oyuncu-sezon) | 830 | 339 | 1.522 |
+
+Proballers.com kullanılmadı: robots.txt dosyası Claude dahil yapay zekâ ajanlarını tüm siteden yasaklıyor. Uyruk profilden gelir
+(TÜRKİYE = Türk oyuncu).
+
+Kullanılan uçlar:
+- `/League/get-standings-table?LeagueId=&SeasonId=&prefix=` → gerçek derece
+- `/Team/get-teams-by-leauge?leaugeId=` → takımlar (teamProcessId)
+- `/Team/get-team-detail-statistic?TeamProcessId=&SeasonId=&LeagueId=&prefix=` → oyuncu sezon ortalamaları (normal sezon + play-off)
+- `/Player/get-player-detail-profile-and-career-info/{oyuncuId}` → uyruk, boy
+- Lig/sezon numaraları: `veri/bsl_ligler.json`, `veri/tbl_ligler.json` (tbf.org.tr lig sayfasının Nuxt verisinden)
+
+Yeniden üretmek:
+
+```
+python veri/cek.py     # önbellekli çekim (veri/ham), ~4000 istek, 0,3 sn arayla; önbellekte olanı atlar
+python veri/isle.py    # site/veri/bsl.js ve tbl.js
+```
+
+`veri/ham/` 2026-11-17'de çekilmiş ham TBF yanıtlarını tutar (44 MB, 3.746 dosya). Ağa çıkmadan yeniden üretmek için
+`CEVRIMDISI=1 python veri/isle.py`.

@@ -1,0 +1,27 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "odalar": {
+      "$oda": {
+        ".read": "auth != null && $oda.matches(/^[A-Z2-9]{5}$/)",
+        "ayar": {
+          ".write": "auth != null && !data.exists() && $oda.matches(/^[A-Z2-9]{5}$/)",
+          ".validate": "newData.hasChildren(['lig', 'kaynak', 'tohum', 'kuran', 'zaman']) && newData.child('kuran').val() === auth.uid"
+        },
+        "oyuncular": {
+          "$i": {
+            ".write": "auth != null && $i.matches(/^[01]$/) && root.child('odalar/' + $oda + '/ayar').exists() && (!data.exists() || data.child('uid').val() === auth.uid) && ($i === '0' ? root.child('odalar/' + $oda + '/ayar/kuran').val() === auth.uid : root.child('odalar/' + $oda + '/oyuncular/0/uid').val() !== auth.uid)",
+            ".validate": "newData.child('uid').val() === auth.uid && newData.child('ad').isString() && newData.child('ad').val().length <= 16"
+          }
+        },
+        "hamleler": {
+          "$h": {
+            ".write": "auth != null && !data.exists() && (root.child('odalar/' + $oda + '/oyuncular/0/uid').val() === auth.uid || root.child('odalar/' + $oda + '/oyuncular/1/uid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['tip', 'kim']) && newData.child('tip').isString() && newData.child('tip').val().length <= 12"
+          }
+        }
+      }
+    }
+  }
+}
