@@ -451,7 +451,7 @@
   function yedekKopya(t) { const a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select(); try { document.execCommand("copy"); } catch (e) { /* yok */ } a.remove(); }
 
   let toastZ;
-  function toast(t) { const e = $("toast"); e.textContent = t; e.classList.add("goster"); clearTimeout(toastZ); toastZ = setTimeout(() => e.classList.remove("goster"), 2200); }
+  function toast(t, ms) { const e = $("toast"); e.textContent = t; e.classList.add("goster"); clearTimeout(toastZ); toastZ = setTimeout(() => e.classList.remove("goster"), ms || 2200); }
 
   // ---- çizim: üst bölüm, saha, öbür beş ----
   function sahaCiz() {
@@ -929,6 +929,20 @@
   $("atlaTakim").onclick = () => cevir("takim");
   $("atlaSezon").onclick = () => cevir("sezon");
   $("oyna").onclick = () => sezonuOyna(false);
+  // ---- uygulama (PWA): kendi servis çalışanı (kapsam yalnız bu klasör) ve yükle düğmesi ----
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(() => {});
+  const kurulu = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let kurIstegi = null;
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); kurIstegi = e; if (!kurulu) $("yukle").classList.remove("gizli"); });
+  window.addEventListener("appinstalled", () => { $("yukle").classList.add("gizli"); toast("Uygulama yüklendi: ana ekrandaki 30-0 simgesinden aç"); });
+  if (ios && !kurulu) $("yukle").classList.remove("gizli"); // iPhone'da düğmeyle kurulum yok, nasıl yapılacağını gösterir
+  $("yukle").onclick = () => {
+    if (kurIstegi) { kurIstegi.prompt(); kurIstegi.userChoice.finally(() => { kurIstegi = null; $("yukle").classList.add("gizli"); }); return; }
+    if (ios) { toast("Safari'de alttaki Paylaş (□↑) düğmesine bas → \"Ana Ekrana Ekle\"", 6000); return; }
+    toast("Tarayıcı menüsünden \"Uygulamayı yükle\" ya da \"Ana ekrana ekle\"yi seç", 5000);
+  };
+
   const odaParam = (new URLSearchParams(location.search).get("oda") || "").toUpperCase();
   if (/^[A-Z2-9]{5}$/.test(odaParam)) {
     ayar.mod = "iki"; yaz("mod", "iki"); yaz("ikiTur", "uzak");

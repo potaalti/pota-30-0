@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a1214">
 <title>Pota Altı 30-0</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="simge-64.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="30-0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -212,6 +219,7 @@ tr.toplam td{font-weight:700}
 
 .toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-20px);background:var(--yazi);color:var(--zemin);padding:10px 16px;border-radius:12px;font-weight:700;opacity:0;transition:.2s;pointer-events:none;z-index:50;max-width:92vw;text-align:center}
 .toast.goster{opacity:1;transform:translate(-50%,0)}
+.yukle{border:1px solid var(--vurgu);color:var(--vurgu);background:var(--vurgu-acik);border-radius:999px;padding:6px 12px;font-weight:700;font-size:13px}
 footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
 @media (max-width:520px){.logo small{display:none}.logo{font-size:23px}.secici button{padding:5px 9px;font-size:12.5px}header{gap:8px}}
 </style>
@@ -224,6 +232,7 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
     <div class="ayarlar">
       <div class="secici" id="ligSec"><button data-lig="bsl" class="aktif">BSL</button><button data-lig="tbl">TBL</button></div>
       <div class="secici" id="modSec"><button data-mod="serbest" class="aktif">Serbest</button><button data-mod="yz">vs AI</button><button data-mod="iki">2 kişi</button></div>
+      <button class="yukle gizli" id="yukle" title="Telefona uygulama olarak kur">⬇ Uygulamayı yükle</button>
       <div class="secici" id="zorSec"><button data-zor="0" class="aktif">İstatistik</button><button data-zor="1">Gizli</button></div>
     </div>
   </header>
@@ -283,10 +292,10 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
   <footer>Veri: Türkiye Basketbol Federasyonu (tbf.org.tr) sezon istatistikleri, normal sezon + play-off ortalamaları. Mevki Wikidata'dan (CC0), yoksa boy ve istatistikten tahmin. BSL 2004-05 ve 2006-07'de TBF yalnız sayı tuttuğu için bu iki sezon yok. Bir hayran oyunu; TBF ile bağlantısı yoktur.</footer>
 </div>
 <div class="toast" id="toast"></div>
-<script src="veri/bsl.js?v=20261117c"></script>
-<script src="veri/tbl.js?v=20261117c"></script>
-<script src="firebase-ayar.js?v=20261117c"></script>
-<script src="baglanti.js?v=20261117c"></script>
-<script src="oyun.js?v=20261117c"></script>
+<script src="veri/bsl.js?v=20261117d"></script>
+<script src="veri/tbl.js?v=20261117d"></script>
+<script src="firebase-ayar.js?v=20261117d"></script>
+<script src="baglanti.js?v=20261117d"></script>
+<script src="oyun.js?v=20261117d"></script>
 </body>
 </html>

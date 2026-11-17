@@ -5,6 +5,13 @@ BSL ve TBL için takım+sezon çevirmeli beş kurma oyunu. Pota Altı uygulamas�
 Yayın: https://potaalti.github.io/pota-30-0/ (GitHub Pages; `site/` klasörü, `.github/workflows/yayin.yml` ile
 main'e her gönderimde yayınlanır). Çevrim içi 2 kişilik odalar Firebase Realtime Database (`pota-30-0` projesi) kullanır.
 
+## Uygulama (PWA)
+
+Telefonda "Uygulamayı yükle" (Android/Chrome düğmesi) ya da Safari → Paylaş → "Ana Ekrana Ekle" (iPhone) ile kurulur.
+`site/manifest.webmanifest` (kimlik ve kapsam yalnız `/pota-30-0/`), `site/sw.js` (ağ öncelikli önbellek; tek başına ve
+vs AI internetsiz oynanır), simgeler `site/simge-*.png` (`veri/simge.ps1` ile üretilir). Aynı sitede kökte kurulu Pota Altı
+uygulamasından ayrı bir uygulamadır; kapsamı daha dar olduğu için bu klasörün sayfalarını kendi servis çalışanı denetler.
+
 ## Oynamak
 
 Yayındaki adresi aç ya da yerelde `site/` klasörünü bir HTTP sunucusuyla sun (ör. `python -m http.server -d site`);
