@@ -48,7 +48,15 @@
   // ---- küçük yardımcılar ----
   function kac(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
   function logo(url, sinif) { return '<img alt="" referrerpolicy="no-referrer" ' + (sinif ? 'class="' + sinif + '" ' : "") + 'src="' + kac(url || "") + '" onerror="this.style.visibility=\'hidden\'">'; }
-  function soyad(ad) { const p = ad.split(/\s+/); return p.length > 1 ? p[p.length - 1] : ad; }
+  // ad / soyad ayrımı: JR, II gibi ekler soyad sayılmaz ("TARONTATE DE SHAWN CROCKETT JR" → "TARONTATE DE SHAWN" / "CROCKETT")
+  const EKLER = /^(JR\.?|SR\.?|II|III|IV)$/;
+  function adParca(ad) {
+    const p = ad.split(/\s+/).filter(Boolean);
+    while (p.length > 1 && EKLER.test(p[p.length - 1])) p.pop();
+    return p.length > 1 ? [p.slice(0, -1).join(" "), p[p.length - 1]] : ["", p[0] || ad];
+  }
+  function soyad(ad) { return adParca(ad)[1]; }
+  function adEtiketi(ad) { const a = adParca(ad); return (a[0] ? '<small>' + kac(a[0]) + "</small>" : "") + "<b>" + kac(a[1]) + "</b>"; }
   function kisa(ad) { return ad.split(/\s+/).slice(0, 2).join(" "); }
   function trRozet(o) { return o.tr ? '<span class="rozet-tr">TR</span>' : ""; }
   function sayi1(x) { return x === undefined || x === null ? "–" : (+x).toFixed(1); }
@@ -477,7 +485,7 @@
       const c = uyumCarpan(p.o, yer), son = S.son && S.son.taraf === g && S.son.i === i && !S.bitti;
       return '<div class="pul dolu' + (c < 1 ? " disi" : "") + (son ? " son" : "") + '"' + stil + ' title="' + kac(p.o.ad + " · " + p.t.ad + " " + p.t.sezon + " · " + mevkiYaz(p.o) + (c < 1 ? " → " + yerAdi(yer) + " ×" + c : "")) + '">' +
         '<span class="daire">' + logo(p.t.logo) + '<span class="no">' + yerKisa(yer) + "</span>" + (p.o.tr ? '<span class="tr">TR</span>' : "") + "</span>" +
-        '<span class="etiket">' + kac(soyad(p.o.ad)) + "</span></div>";
+        '<span class="etiket iki">' + adEtiketi(p.o.ad) + "</span></div>";
     }).join("");
     Array.prototype.forEach.call($("pullar").querySelectorAll("button.pul"), (b) => {
       b.onclick = () => {
@@ -522,7 +530,7 @@
       $("digerAd").textContent = ot.ad === "Sen" ? "Senin beşin" : ot.ad;
       $("yzEtiket").textContent = (ot.yz ? YZ_AD[S.zorluk] + " · " : "") + "sahada göster";
       $("yzMini").innerHTML = ot.bes.map((p, i) => p
-        ? '<div class="' + (S.son && S.son.taraf === o && S.son.i === i && !S.bitti ? "son" : "") + '" title="' + kac(p.o.ad + " · " + p.t.ad + " " + p.t.sezon) + '">' + logo(p.t.logo) + kac(soyad(p.o.ad)) + "</div>"
+        ? '<div class="' + (S.son && S.son.taraf === o && S.son.i === i && !S.bitti ? "son" : "") + '" title="' + kac(p.o.ad + " · " + p.t.ad + " " + p.t.sezon) + '">' + logo(p.t.logo) + '<span class="mini-ad">' + adEtiketi(p.o.ad) + "</span>" + "</div>"
         : "<div><b>" + yerKisa(yerler[i]) + "</b>boş</div>").join("");
     }
   }
