@@ -392,8 +392,11 @@
       if (v < V.esik.rol[k]) etkiler.push({ ad: (ROL_AD[k] || [k])[0], aciklama: (ROL_AD[k] || [k, "beşin " + k])[1] + " " + v.toFixed(1) + " < " + V.esik.rol[k], d: -(V.esik.rol[k] - v) * V.denge[k] });
     });
     const kul = top("kul");
-    if (V.esik.kullanim && kul > V.esik.kullanim) {
-      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + V.esik.kullanim + " (gerçek ilk beşlerin üst çeyreği)", d: -(kul - V.esik.kullanim) * V.kullanimKatsayi });
+    const bant = V.kullanimBant || 0, ust = V.esik.kullanim * (1 + bant), alt = V.esik.kullanim * (1 - bant);
+    if (V.esik.kullanim && kul > ust) {
+      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + ust.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği +%" + Math.round(bant * 100) + ")", d: -(kul - ust) * V.kullanimKatsayi });
+    } else if (V.esik.kullanim && bant && kul < alt) {
+      etkiler.push({ ad: "Şut yaratan yok", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " < " + alt.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği −%" + Math.round(bant * 100) + ")", d: -(alt - kul) * V.kullanimKatsayi });
     }
     const R = satirlar.reduce((a, s) => a + s.guc, 0) + etkiler.reduce((a, e) => a + e.d, 0);
     const p = 1 / (1 + Math.exp(-(R - V.egri.orta) / V.egri.olcek));
@@ -545,7 +548,7 @@
         : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı gerçek ilk beşlerin üst çeyreğini aşarsa aşan her birim −" + S.veri.kullanimKatsayi +
+      ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı gerçek ilk beşlerin üst çeyreğinin ±%" + Math.round((S.veri.kullanimBant || 0) * 100) + " bandı dışında kalan her birim −" + S.veri.kullanimKatsayi +
       "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için ~%6-7 kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +

@@ -58,10 +58,12 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 
 - **Klasik** (2026-11-17 sistemi, kullanıcı isteğiyle geri geldi): oyuncu gücü + hücum/savunma eksenleri + uyum kuralları +
   rol eksikliği (beşin toplam asisti ve toplam ribaundu gerçek ilk beşlerin alt %10'unun altındaysa eksik birim başına ceza)
-  + top kullanımı (gerçek ilk beşlerin üst çeyreğini aşan her birim −0,5, tavansız) → galibiyet eğrisi. Ayrıntısı aşağıda
-  "Güç modeli (Klasik)". Oyun ~%6-7 kolay: eğrinin ortası BSL'de 5,0, TBL'de 5,5 güç aşağı kaydırılır (`KLASIK_KOLAY`,
-  `egri.ortaGercek` uydurulan değer); güçle kurulan beşin ortalaması BSL 20,1 → 21,5 / 30, TBL 20,6 → ~21,9 / 32
-  (önce %10 denendi: 7,7 / 8,4; kullanıcıya fazla geldi).
+  + top kullanımı → galibiyet eğrisi. Ayrıntısı aşağıda "Güç modeli (Klasik)".
+  Top kullanımı bandı (2026-11-18, kullanıcı): eşik (gerçek ilk beşlerin üst çeyreği, BSL 63,7, TBL 64,0) ±%7 cezasız
+  (BSL 59,2–68,2, TBL 59,5–68,5); üstünü aşan her birim "Top yetmiyor", altında kalan her birim "Şut yaratan yok" −0,5 güç.
+  Eğri bantla yeniden uyduruldu (BSL orta 53,5 ölçek 20,4; TBL 56,5 / 26,4; hata 0,024 → 0,020, 0,030 → 0,026).
+  Oyun ~%6-7 kolay: bant tek başına güçle kurulan beşi BSL 20,1 → 21,0, TBL 20,6 → 21,1 yapıyor; eğrinin ortası ayrıca BSL'de
+  1,5, TBL'de 3,5 güç kayar (`KLASIK_KOLAY`, `egri.ortaGercek` uydurulan değer): BSL ~21,45 / 30, TBL ~21,9 / 32.
 - **Maç motoru**: aşağıda.
 
 ## Güç modeli (Klasik)
@@ -88,7 +90,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).
   Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,76 → 0,72, TBL 0,79 → 0,76. Hücum/savunma ekseni sınırı ±4'e indi.
 - Top kullanımı (Kul = şut denemesi + 0,44×serbest atış denemesi + top kaybı, maç başı): beşin toplamı gerçek ilk beşlerin
-  üst çeyreğini (BSL 63,7, TBL 64,0) aşarsa aşan her birim −0,5 güç ("Top yetmiyor"). Veriyle desteklenen tek takım kuralı:
+  üst çeyreğinin (BSL 63,7, TBL 64,0) ±%7 bandı dışındaysa her birim −0,5 güç ("Top yetmiyor" / "Şut yaratan yok"). Veriyle desteklenen tek takım kuralı:
   güç sabitken ilk beş kullanımı arttıkça galibiyet düşüyor (BSL −0,0052, TBL −0,0043 galibiyet oranı / birim; güç katsayısı 0,0095).
 - Şut isabeti (TS%) her sezon için hesaplanır ve oyuncu satırının ipucunda görünür; güce eklenmedi (geri testte tahmini
   iyileştirmedi, VP kaçan şutları zaten düşüyor).

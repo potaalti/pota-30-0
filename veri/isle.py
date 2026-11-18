@@ -27,12 +27,17 @@ GAMMA = float(os.environ.get("GAMMA", "0"))  # verimlilik katkısı: (TS% − se
 # (eşik + ~11 birim ≈ −5,5), ötesi kanıtsız; beş skorer yan yana tek başına takımı çökertmesin.
 KULLANIM_KATSAYI = 0.5
 KULLANIM_SINIR = 99.0  # klasik sistem dünkü hâliyle: eşik üst çeyrek, tavan yok (2026-11-18, kullanıcı)
+# Eşiğin ±%7'si cezasız bant (2026-11-18, kullanıcı): üstünü aşan her birim "Top yetmiyor", altında kalan her birim
+# "Şut yaratan yok" −0,5 güç (BSL 59,2–68,2, TBL 59,5–68,5).
+KULLANIM_BANT = 0.07
 # Oyun eğrisi: gerçek takımlardan uydurulan eğri bu kat dikleştirilir (2026-11-18, kullanıcıyla: gerçekçi eğri iyi
 # kurulan beşi ~%70'te tutuyordu). Zayıf beşler neredeyse aynı kalır, güçlüler daha çok kazanır. 1 = gerçekçi.
 OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOLAY ile
 # Klasik sistem ~%6-7 kolay (2026-11-18, kullanıcı; önce %10 denendi, fazla geldi): eğrinin ortası bu kadar güç aşağı
 # kayar; akıllı kurulan beşin (her tur en yüksek güç × mevki uyumu) ortalama galibiyeti ~%6-7 artar.
-KLASIK_KOLAY = {"bsl": 5.0, "tbl": 5.5}  # ölçüm: güçle kuran beş BSL 20,1 → 21,5 / 30 (+%6,8), TBL 20,6 → ~21,9 / 32 (+%6,5)
+# Kullanım bandı (±%7) tek başına güçle kurulan beşi BSL'de 20,1 → 21,0, TBL'de 20,6 → 21,1 yapıyor; kalan kayma toplamı
+# ~%6-7'de tutar: BSL → ~21,45 / 30 (+%6,7), TBL → ~21,9 / 32 (+%6,5).
+KLASIK_KOLAY = {"bsl": 1.5, "tbl": 3.5}
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
 MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)
@@ -267,7 +272,9 @@ def denge(oyuncular, esik):
         z = (eksen_degeri(oyuncular, ad) - ek["med"]) / ek["iqr"]
         d += max(-EKSEN_SINIR, min(EKSEN_SINIR, EKSEN_KATSAYI * z))
     d -= sum(max(0.0, esik["rol"][k] - toplam(oyuncular, k)) * c for k, c in DENGE.items())
-    d -= min(KULLANIM_SINIR, max(0.0, toplam(oyuncular, "kul") - esik["kullanim"]) * KULLANIM_KATSAYI)
+    kul = toplam(oyuncular, "kul")
+    d -= min(KULLANIM_SINIR, max(0.0, kul - esik["kullanim"] * (1 + KULLANIM_BANT)) * KULLANIM_KATSAYI)
+    d -= min(KULLANIM_SINIR, max(0.0, esik["kullanim"] * (1 - KULLANIM_BANT) - kul) * KULLANIM_KATSAYI)
     return d + uyum_kurallari(oyuncular)[1]
 
 
@@ -602,7 +609,7 @@ def main():
                                                                    ortaGercek=parametreler[lig]["orta"], kolay=KLASIK_KOLAY[lig],
                                                                    orta=round(parametreler[lig]["orta"] - KLASIK_KOLAY[lig], 2)), "esik": esik[lig], "denge": DENGE,
                 "eksenler": EKSENLER, "eksenKatsayi": EKSEN_KATSAYI, "eksenSinir": EKSEN_SINIR,
-                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR,
+                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "kullanimBant": KULLANIM_BANT,
                 "motor": motor_lig[lig], "takimlar": takimlar}
         (SITE / f"{lig}.js").write_text("window.VERI=window.VERI||{};window.VERI." + lig + "=" + json.dumps(veri, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
         oy = sum(len(t["oyuncular"]) for t in takimlar)
