@@ -67,8 +67,9 @@ Sezon, gerçek takımlara karşı sahiplik sahiplik oynanan maçlarla simüle ed
   ortalamasından 0,1 fazlaysa isabet +1,2 puan. Kaçan şutta hücum ribaundu iki takımın ribaundu karşılaştırılarak (log5)
   belirlenir; alınırsa hücum sürer.
 - **Şut yaratma**: takımın doğal top kullanımı (şut + 0,44×serbest atış + top kaybı) lig ortalamasının altındaysa eksik
-  her %10 için isabet −6 puan (zorlama şutlar); üstündeyse şutlar paylaşılır, fazlası boşa gider, her %10 için −0,6 puan.
-  Beş skorer yan yana hacim üstünlüğü kazanmaz, yalnız isabetleri sayılır.
+  her %10 için isabet −6 puan (zorlama şutlar); üstündeyse şutlar paylaşılır ve şut yaratan oyuncular zor şutları da
+  soktuğu için her %10 için +1,5 puan (en çok %50 fazlaya kadar). Gerçek takımlarla tahmini değiştirmiyor; skorerlerle
+  kurulan beş çok cezalanmasın diye (2026-11-18, kullanıcı).
 - **Takım katkısı**: oyuncunun takımının sayı averajından dakika payı (`averaj × dk/40 × maç/(maç+8)`, beş için toplam/5),
   ×1,5 sayı olarak eklenir: kutuya yansımayan savunma ve uyum. Gerçek takımlarda önceki sezonun en güçlü tek göstergesi.
 - **Maç**: lig ortalaması ~74 hücum (±4), beraberlikte uzatma; iç sahada +3 sayı. Lig ortalaması takımlar kendi aralarında
@@ -76,10 +77,10 @@ Sezon, gerçek takımlara karşı sahiplik sahiplik oynanan maçlarla simüle ed
 - **Sınama**: önceki sezon verisiyle kurulan gerçek ilk beşin bu sezonki galibiyet oranıyla korelasyonu BSL 0,75 (eski güç
   modeli 0,75), TBL 0,46 (eski 0,57). Motorun beklenen farkları gerçeğinkinden dar çıkıyor; galibiyet oranlarına sıralama
   eşleştirmesiyle lig başına açılır (`motor.diklik`: BSL 1,25, TBL 1,15).
-- **Oyun ayarı** (`motor.oyunDiklik`: BSL 1,15, TBL 1,1): kurulan beşlerin lig ortalamasından farkları ayrıca açılır.
-  Taslak simülasyonuyla (her tur rastgele takım-sezon) ölçüldü: motoru bilen biri gibi kuran beşin ortancası BSL ~22 / 30,
-  TBL ~22 / 32 (eski sistemin en iyi kuruluşu 20,7 / 20,9; kullanıcının istediği +1-1,5 galibiyet); yalnız VP'ye bakarak
-  kuran ~19-20; beş skorerli beşler ~14-15.
+- **Oyun ayarı** (`motor.oyunDiklik`: BSL 1,25, TBL 1,1): kurulan beşlerin lig ortalamasından farkları ayrıca açılır.
+  Taslak simülasyonuyla (her tur rastgele takım-sezon, ortanca galibiyet) ölçüldü, kullanıcının hedefleri: en yüksek VP'liyi
+  alan BSL 20,2 / 30, TBL 20,9 / 32 (eski sistemde ~21); skorerlerle kuran BSL 17,3, TBL 17,7 (eski 18); dengeli kuran
+  (motoru bilen) BSL 22,8, TBL 22,5.
 - **Rakipler**: ligin bütün gerçek takımları (en çok süre alan beşi + lig ortalaması yedek). Sezonda N/2 farklı takım,
   her biriyle bir iç saha bir deplasman. İkili modda iki beş 2-2-1-1-1 düzeninde 7 maçlık seri oynar.
 - **Sonuç ekranı**: ortalama rakibe beklenen fark ve bu fikstürde beklenen galibiyet; oyuncu katkısı (yerine aynı dakikada

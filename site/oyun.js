@@ -401,7 +401,7 @@
       (s.uyum < 1 ? " → " + yerAdi(s.yer) + " ×" + s.uyum : "") + " · " + sayi1(s.p.o.sy) + " sy · " + sayi1(s.p.o.rb) + " rb · " + sayi1(s.p.o.as) + " as</div></div>" +
       '<div class="guc" title="Katkı: yerine aynı dakikada lig ortalaması bir oyuncu konsa beşin beklenen farkı bu kadar değişirdi (sayı/maç)">' + isaretli(s.guc) + "</div></div>").join("") + "</div>";
     const ozet = (r) => '<div class="ozet"><div><b>En iyi seçim</b>' + kac(enIyiSecim(r.h)) + "</div><div><b>En büyük zayıflık</b>" + kac(enZayif(r.h)) + "</div></div>" +
-      '<div class="etkiler">' + r.h.etkiler.filter((e) => Math.abs(e.d) >= 0.1).sort((x, y) => y.d - x.d).map((e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + isaretli(e.d) + "</span>").join("") + "</div>";
+      '<div class="etkiler">' + r.h.etkiler.filter((e) => Math.abs(e.d) >= 0.5).sort((x, y) => Math.abs(y.d) - Math.abs(x.d)).slice(0, 4).sort((x, y) => y.d - x.d).map((e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + isaretli(e.d) + "</span>").join("") + "</div>";
     const sezonKutu = (r) => {
       const k = kutuTopla(r.maclar.map((m) => m.kutu), r.maclar.length), kis = r.h.A.kisiler;
       const atilan = r.maclar.reduce((x, m) => x + m.biz, 0) / r.maclar.length, yenen = r.maclar.reduce((x, m) => x + m.onlar, 0) / r.maclar.length;

@@ -34,7 +34,7 @@ OYUN_DIKLIK = 1.3
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü). Oyun ayarı: kurulan
 # beşlerin farkı ayrıca bu kat açılır; bilgili kurulan beşte eski sisteme göre +1-1,5 galibiyet (kullanıcıyla).
 MOTOR_GERCEK = {"bsl": 1.25, "tbl": 1.15}
-MOTOR_OYUN = {"bsl": 1.15, "tbl": 1.1}
+MOTOR_OYUN = {"bsl": 1.25, "tbl": 1.1}
 
 
 # Maç motoru (site/motor.js) için oyuncunun maç başı ham kutu istatistikleri. Dönem farkı sezonun lig ortalamasına

@@ -8,12 +8,13 @@
 (function () {
   const K = ["a2", "m2", "a3", "m3", "fa", "fm", "or", "dr", "as", "st", "bl", "tk", "pf"];
   // Katsayılar gerçek takımlarla sınandı (2026-11-18): önceki sezon verisiyle kurulan ilk beş bu sezonun galibiyet
-  // oranını BSL'de r≈0,75 (eski güç modeli 0,75), TBL'de r≈0,45 (eski 0,57) tahmin ediyor. kFazla tahmini
-  // etkilemiyor (gerçek takımlarda kullanım fazlası küçük); beş skorerli beşler fazla güçlenmesin diye oyun ayarı.
+  // oranını BSL'de r≈0,75 (eski güç modeli 0,75), TBL'de r≈0,46 (eski 0,57) tahmin ediyor. kFazla tahmini
+  // etkilemiyor (−0,15 ile 0 arası aynı); oyun ayarı: skorerlerle kurulan beş eski sistemdeki gibi ~17-18 galibiyet alsın
+  // (2026-11-18, kullanıcı: "5 skorerde bu kadar kötü olmaması lazım").
   const AYAR = {
     kAs: 0.12,     // asist oranı lig ortalamasından 0,1 fazlaysa şut isabeti +1,2 puan
     kEksik: 0.6,   // takımın doğal şut yaratması gerekenin %10 altındaysa isabet −6 puan (zorlama şutlar)
-    kFazla: 0.06,  // herkes topu isterse (doğal kullanım fazlası %10) isabet −0,6 puan
+    kFazla: -0.15, // şut yaratan oyuncu çoksa (doğal kullanım fazlası %10) zor şutlar da girer: isabet +1,5 puan
     lambda: 1.5,   // takım averajı payının sayıya geçen kısmı
     guvenMac: 8,   // az maç oynayanın istatistiği bu kadar maçta yarı yarıya lig ortalamasına çekilir
     ev: 3,         // ev sahibi avantajı, sayı
@@ -86,7 +87,7 @@
     const atis = (Lt.a2 + Lt.a3) * 2.2; // maç başı şutla gelen sayı ölçeği: sayı farkını isabet farkına çevirir
     const tov = sinir(A.r.tov + (B.r.st - lr.st) / lr.kul, 0.04, 0.32);
     const ft = sinir(A.r.ft * Math.sqrt(sinir(B.r.foul / lr.foul, 0.6, 1.6)), 0.02, 0.35);
-    const kalite = AYAR.kAs * (A.r.ast - lr.ast) - AYAR.kEksik * A.r.eksik - AYAR.kFazla * A.r.fazla +
+    const kalite = AYAR.kAs * (A.r.ast - lr.ast) - AYAR.kEksik * A.r.eksik - AYAR.kFazla * Math.min(0.5, A.r.fazla) +
       (AYAR.lambda * (A.r.nt - B.r.nt) + ev * AYAR.ev) / 2 / atis; // farkın yarısı hücumdan, yarısı savunmadan
     const p2 = sinir(A.r.p2 - (B.r.bl - lr.bl) / Lt.a2 + kalite, 0.25, 0.78);
     const p3 = sinir(A.r.p3 + kalite * 0.8, 0.12, 0.55);
@@ -173,7 +174,7 @@
     { ad: "Top çalma", alanlar: ["st"], ipucu: "rakibe top kaybettirme", goster: (r) => bir(r.st) + " / maç" },
     { ad: "Blok", alanlar: ["bl"], ipucu: "rakibin iki sayılık isabetini düşürür", goster: (r) => bir(r.bl) + " / maç" },
     { ad: "Faul", alanlar: ["foul"], ipucu: "rakibi çizgiye gönderme (azı iyi)", goster: (r) => bir(r.foul) + " / maç" },
-    { ad: "Şut yaratma", alanlar: ["eksik", "fazla"], ipucu: "topu isteme payı: kimse şut yaratmıyorsa zorlama şut, herkes topu isterse fazlası boşa",
+    { ad: "Şut yaratma", alanlar: ["eksik", "fazla"], ipucu: "topu isteme payı: kimse şut yaratmıyorsa zorlama şut; şut yaratan çoksa zor şutlar da girer",
       goster: (r, lr) => "top kullanımı lig ortalamasının " + yz(r.kul / lr.kul) },
     { ad: "Takım katkısı", alanlar: ["nt"], ipucu: "oyuncuların takımlarının sayı averajından dakika payı (kutuya yansımayan savunma, uyum)",
       goster: (r) => (r.nt >= 0 ? "+" : "") + bir(r.nt) + " sayı / maç" }
