@@ -26,10 +26,13 @@ GAMMA = float(os.environ.get("GAMMA", "0"))  # verimlilik katkısı: (TS% − se
 # (2026-11-18: üst çeyrekten yükseltildi). Ceza en çok KULLANIM_SINIR: veride ~79'un üstünde neredeyse takım yok
 # (eşik + ~11 birim ≈ −5,5), ötesi kanıtsız; beş skorer yan yana tek başına takımı çökertmesin.
 KULLANIM_KATSAYI = 0.5
-KULLANIM_SINIR = 6.0
+KULLANIM_SINIR = 99.0  # klasik sistem dünkü hâliyle: eşik üst çeyrek, tavan yok (2026-11-18, kullanıcı)
 # Oyun eğrisi: gerçek takımlardan uydurulan eğri bu kat dikleştirilir (2026-11-18, kullanıcıyla: gerçekçi eğri iyi
 # kurulan beşi ~%70'te tutuyordu). Zayıf beşler neredeyse aynı kalır, güçlüler daha çok kazanır. 1 = gerçekçi.
-OYUN_DIKLIK = 1.3
+OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOLAY ile
+# Klasik sistem %10 kolay (2026-11-18, kullanıcı): eğrinin ortası bu kadar güç aşağı kayar; akıllı kurulan beşin
+# (her tur en yüksek güç × mevki uyumu) ortanca galibiyeti ~%10 artar.
+KLASIK_KOLAY = {"bsl": 7.7, "tbl": 8.4}  # ölçüm: güçle kuran beş BSL 20,1 → ~22,1 / 30, TBL 20,6 → ~22,7 / 32
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
 MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)
@@ -247,7 +250,7 @@ def esikler(takimlar):
     ilk5 = [t["oyuncular"][:5] for t in takimlar]
     e = {"rol": {}, "eksen": {}}
     v = sorted(toplam(b, "kul") for b in ilk5)
-    e["kullanim"] = round(v[9 * len(v) // 10], 1)
+    e["kullanim"] = round(v[3 * len(v) // 4], 1)
     for k in DENGE:
         v = sorted(toplam(b, k) for b in ilk5)
         e["rol"][k] = round(v[len(v) // 10], 1)
@@ -595,7 +598,9 @@ def main():
                     o.pop(k, None)
     for lig, takimlar in cikti.items():
         veri = {"lig": lig, "mac": mac_sayisi[lig], "egri": dict(parametreler[lig], olcekGercek=parametreler[lig]["olcek"], diklik=OYUN_DIKLIK,
-                                                                   olcek=round(parametreler[lig]["olcek"] / OYUN_DIKLIK, 2)), "esik": esik[lig], "denge": DENGE,
+                                                                   olcek=round(parametreler[lig]["olcek"] / OYUN_DIKLIK, 2),
+                                                                   ortaGercek=parametreler[lig]["orta"], kolay=KLASIK_KOLAY[lig],
+                                                                   orta=round(parametreler[lig]["orta"] - KLASIK_KOLAY[lig], 2)), "esik": esik[lig], "denge": DENGE,
                 "eksenler": EKSENLER, "eksenKatsayi": EKSEN_KATSAYI, "eksenSinir": EKSEN_SINIR,
                 "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR,
                 "motor": motor_lig[lig], "takimlar": takimlar}
