@@ -2,6 +2,9 @@
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
+  // Sürüm: oyun.js'nin ?v= değeri. Çevrim içi odada iki telefon aynı sürümde değilse sonuçlar (seri, sezonlar) farklı
+  // hesaplanır: odaya yazılır, farklıysa uyarılır (2026-11-19).
+  const SURUM = ((document.currentScript && document.currentScript.src.match(/[?&]v=([^&]+)/)) || [])[1] || "yerel";
 
   // ---- sabitler ----
   const MEVKI_AD = { 1: "Oyun kurucu", 2: "Şutör", 3: "Kısa forvet", 4: "Uzun forvet", 5: "Pivot" };
@@ -882,8 +885,8 @@
     let kod = null;
     for (let i = 0; i < 6 && !kod; i++) { const k = kodUret(); if (!(await Baglanti.odaOku(k))) kod = k; }
     if (!kod) throw new Error("Boş oda kodu bulunamadı");
-    await Baglanti.odaKur(kod, { lig: ayar.lig, sim: ayar.sim, kaynak: S.kaynak, sabit: sabitId || "", tohum: "oda:" + kod + ":" + Math.random(), kuran: b.uid, zaman: Date.now() });
-    await Baglanti.oyuncuYaz(kod, 0, { ad: ad, uid: b.uid });
+    await Baglanti.odaKur(kod, { lig: ayar.lig, sim: ayar.sim, surum: SURUM, kaynak: S.kaynak, sabit: sabitId || "", tohum: "oda:" + kod + ":" + Math.random(), kuran: b.uid, zaman: Date.now() });
+    await Baglanti.oyuncuYaz(kod, 0, { ad: ad, uid: b.uid, surum: SURUM });
     await odayaBaglan(kod);
   }
   async function odayaKatil(kod, ad) {
@@ -893,7 +896,7 @@
     const o = oda.oyuncular || {};
     if (!(o[0] && o[0].uid === b.uid) && !(o[1] && o[1].uid === b.uid)) {
       if (o[1]) throw new Error("Oda dolu");
-      await Baglanti.oyuncuYaz(kod, 1, { ad: ad, uid: b.uid });
+      await Baglanti.oyuncuYaz(kod, 1, { ad: ad, uid: b.uid, surum: SURUM });
     }
     await odayaBaglan(kod);
   }
@@ -930,7 +933,7 @@
   }
   function bakiyorGonder(k) { // rakip telefonunda "X bakıyor" görünsün diye seçili oyuncu odaya yazılır
     if (!S.cevrim) return;
-    Baglanti.oyuncuYaz(S.cevrim.kod, S.cevrim.ben, { ad: S.taraflar[S.cevrim.ben].ad, uid: S.cevrim.uid, bakiyor: k || null }).catch(() => {});
+    Baglanti.oyuncuYaz(S.cevrim.kod, S.cevrim.ben, { ad: S.taraflar[S.cevrim.ben].ad, uid: S.cevrim.uid, surum: SURUM, bakiyor: k || null }).catch(() => {});
   }
   function hamleGonder(h) {
     Baglanti.hamleEkle(S.cevrim.kod, h).catch((e) => toast("Gönderilemedi: " + (e.message || e)));
@@ -949,12 +952,28 @@
     hamleGonder({ tip: "cevir", kim: S.cevrim.ben, id: aday[Math.floor(Math.random() * aday.length)].id, yeni: yeni, atla: atla });
   }
 
+  // iki telefon farklı sürümdeyse seri ve sezonlar farklı hesaplanır: kalıcı uyarı ve yenile düğmesi
+  function surumDenetle(rakip, odaAyar) {
+    let mesaj = "";
+    if (rakip && rakip.surum !== SURUM) {
+      mesaj = !rakip.surum || rakip.surum < SURUM
+        ? kac(rakip.ad || "Arkadaşın") + " eski sürümde: sayfasını yenilesin, yoksa sonuçlar iki telefonda farklı çıkar."
+        : "Uygulaman eski sürümde: yenile, yoksa sonuçlar iki telefonda farklı çıkar.";
+    } else if (odaAyar && odaAyar.surum !== SURUM && !rakip) {
+      mesaj = "Bu oda başka bir sürümle kuruldu: ikiniz de sayfayı yenileyin.";
+    }
+    let e = $("surumUyari");
+    if (!mesaj) { if (e) e.remove(); return; }
+    if (!e) { e = document.createElement("div"); e.id = "surumUyari"; e.className = "surum-uyari"; document.body.appendChild(e); }
+    e.innerHTML = "<span>" + mesaj + '</span><button onclick="location.reload()">Yenile</button>';
+  }
   function yansit(oda) {
     if (!oda || !S.cevrim) return;
     const o = oda.oyuncular || {};
     if (o[0]) S.taraflar[0].ad = o[0].ad;
     if (o[1]) S.taraflar[1].ad = o[1].ad;
     S.rakipBakiyor = (o[1 - S.cevrim.ben] || {}).bakiyor || null;
+    surumDenetle(o[1 - S.cevrim.ben], oda.ayar);
     if (!S.basladi && o[0] && o[1]) {
       S.basladi = true; kuralYaz();
       if (!S.cevrim.toplu) toast(S.taraflar[1 - S.cevrim.ben].ad + " odaya katıldı");

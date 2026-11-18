@@ -88,6 +88,8 @@ details.kural b{color:var(--yazi)}
 .pul.dolu .daire{border:2px solid var(--vurgu);background:#fff;padding:0}
 .rol-satir{align-items:center}.rol-satir b{font-size:12px;margin-right:4px}
 .oy .roller{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}.oy .roller span{font-size:10px;padding:1px 6px;border-radius:999px;border:1px solid var(--cizgi);color:var(--soluk)}
+.surum-uyari{position:fixed;left:8px;right:8px;top:8px;z-index:60;display:flex;gap:10px;align-items:center;background:var(--turuncu-acik);border:1px solid var(--turuncu);color:var(--yazi);border-radius:12px;padding:10px 12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.surum-uyari span{flex:1}.surum-uyari button{flex:none;background:var(--turuncu);color:#111;border-radius:8px;padding:6px 10px;font-weight:800}
 .mac-liste{margin:8px 0 0;padding-left:28px;font-size:13px}.mac-liste li{display:flex;gap:6px;align-items:baseline;padding:2px 0;border-bottom:1px solid var(--cizgi,rgba(127,127,127,.15))}.mac-liste li b{width:14px}.mac-liste li.G b{color:var(--yesil)}.mac-liste li.M b{color:var(--kirmizi)}.mac-liste .skr{margin-left:auto;font-variant-numeric:tabular-nums}
 .pul.dolu .daire img{width:34px;height:34px;object-fit:contain;display:block} /* 50 px dairenin içine sığan kare ~35 px: köşeler taşmasın */
 .pul .etiket.iki{display:flex;flex-direction:column;align-items:center;line-height:1.05;padding:2px 6px;gap:0;color:var(--yazi)}
@@ -181,7 +183,9 @@ details.kural b{color:var(--yazi)}
   .panel-tutamak{display:block;width:100%;padding:2px 0 8px}
   .panel-tutamak i{display:block;width:42px;height:4px;border-radius:2px;background:var(--cizgi);margin:0 auto}
   .liste{max-height:none;flex:1;min-height:0;gap:4px}
-  .panel-govde{display:flex;flex-direction:column;min-height:0;flex:1}
+  /* panel içeriği taşarsa (2 kişi odası, vs AI ayarı) kayar; oyuncu listesi yine kendi içinde kayar */
+  .panel-govde{display:flex;flex-direction:column;min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .panel-govde > *{flex-shrink:0}.panel-govde > .liste{flex-shrink:1}
   .panel{max-height:74vh}
   .panel-bas{margin-bottom:6px}.panel-bas img,.panel-bas .bas-harf{width:34px;height:34px}
   .panel-bas .ad{font-size:17px}.arac{margin-bottom:6px}.arac input{padding:6px 10px}
@@ -325,11 +329,11 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
   <footer>Veri: Türkiye Basketbol Federasyonu (tbf.org.tr) sezon istatistikleri, normal sezon + play-off ortalamaları. Mevki Wikidata'dan (CC0), yoksa boy ve istatistikten tahmin. BSL 2004-05 ve 2006-07'de TBF yalnız sayı tuttuğu için bu iki sezon yok. Bir hayran oyunu; TBF ile bağlantısı yoktur.</footer>
 </div>
 <div class="toast" id="toast"></div>
-<script src="veri/bsl.js?v=20261118x"></script>
-<script src="veri/tbl.js?v=20261118x"></script>
-<script src="firebase-ayar.js?v=20261118x"></script>
-<script src="baglanti.js?v=20261118x"></script>
-<script src="motor.js?v=20261118x"></script>
-<script src="oyun.js?v=20261118x"></script>
+<script src="veri/bsl.js?v=20261119b"></script>
+<script src="veri/tbl.js?v=20261119b"></script>
+<script src="firebase-ayar.js?v=20261119b"></script>
+<script src="baglanti.js?v=20261119b"></script>
+<script src="motor.js?v=20261119b"></script>
+<script src="oyun.js?v=20261119b"></script>
 </body>
 </html>
