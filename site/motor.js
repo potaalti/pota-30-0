@@ -59,16 +59,37 @@
       r.eksik = Math.max(0, 1 - kul); r.fazla = Math.max(0, kul - 1);
       return r;
     };
-    let r = ac(D);
+    let r = ac(D), denge = null;
+    // Denge ödülü (yalnız kurulan beşler): dört alan (şut, ribaund, oyun kurma, savunma) ayrı ayrı lig ortalamasına
+    // göre sayıya çevrilir; hiçbiri lig ortalamasının altında değilse dengeTaban + dengeK × en zayıf alan (en çok dengeTavan). Zayıf alanı olmayan beş ödüllenir (2026-11-18, kullanıcı:
+    // "en dengeli beşi kurmanın 30-0 ihtimali daha yüksek olmalı").
+    if (secenek && secenek.diklik && M.dengeK) {
+      const alan = dengeAlanlari(r, M), enZayif = Math.min.apply(null, alan.map((x) => x.d));
+      denge = { alan: alan, puan: enZayif >= 0 ? Math.min(M.dengeTavan, M.dengeTaban + M.dengeK * enZayif) : 0 };
+      r.denge = denge.puan;
+    }
     // Üst uç (yalnız kurulan beşler): beklenen farkı M.ustEsik'i aşan beşin farkları ayrıca açılır; ortalama beşler aynı
     // kalır, en iyi beşlerin 30-0 şansı artar (2026-11-18, kullanıcı: "en iyi beşlerin ihtimali artsın").
     if (secenek && secenek.diklik && M.ustBeta) {
       const f = beklenenFark({ r: r }, { r: ligTakimi(M).r }, M, 0);
-      if (f > M.ustEsik) r = ac(D * (1 + M.ustBeta * (f - M.ustEsik) / 10));
+      if (f > M.ustEsik) { r = ac(D * (1 + M.ustBeta * (f - M.ustEsik) / 10)); if (denge) r.denge = denge.puan; }
     }
     const pay = (k) => { const t = liste.reduce((a, p) => a + Math.max(0, p.v[k]), 0) || 1; return liste.map((p) => Math.max(0, p.v[k]) / t); };
     const paylar = {}; ["a2", "a3", "fa", "or", "dr", "as", "st", "bl", "tk"].forEach((k) => { paylar[k] = pay(k); });
-    return { kisiler: liste, T: T, r: r, ham: ham, paylar: paylar };
+    return { kisiler: liste, T: T, r: r, ham: ham, paylar: paylar, denge: denge };
+  }
+  const DENGE_ALAN = [
+    { ad: "Şut", alanlar: ["p2", "p3", "s3", "ft", "pf", "eksik", "fazla"] },
+    { ad: "Ribaund", alanlar: ["or", "dr"] },
+    { ad: "Oyun kurma", alanlar: ["ast", "tov"] },
+    { ad: "Savunma", alanlar: ["st", "bl", "foul"] }
+  ];
+  function dengeAlanlari(r, M) { // her alanın lig ortalamasına göre sayı katkısı
+    const lig = ligTakimi(M), L = { r: lig.r }, taban = beklenenFark({ r: r }, L, M, 0);
+    return DENGE_ALAN.map((a) => {
+      const x = Object.assign({}, r); a.alanlar.forEach((k) => { x[k] = lig.r[k]; });
+      return { ad: a.ad, d: taban - beklenenFark({ r: x }, L, M, 0) };
+    });
   }
 
   function oranlar(T) {
@@ -98,7 +119,7 @@
     const tov = sinir(A.r.tov + (B.r.st - lr.st) / lr.kul, 0.04, 0.32);
     const ft = sinir(A.r.ft * Math.sqrt(sinir(B.r.foul / lr.foul, 0.6, 1.6)), 0.02, 0.35);
     const kalite = AYAR.kAs * (A.r.ast - lr.ast) - AYAR.kEksik * A.r.eksik - AYAR.kFazla * Math.min(0.5, A.r.fazla) +
-      (AYAR.lambda * (A.r.nt - B.r.nt) + ev * AYAR.ev) / 2 / atis; // farkın yarısı hücumdan, yarısı savunmadan
+      (AYAR.lambda * (A.r.nt - B.r.nt) + ((A.r.denge || 0) - (B.r.denge || 0)) + ev * AYAR.ev) / 2 / atis; // farkın yarısı hücumdan, yarısı savunmadan
     const p2 = sinir(A.r.p2 - (B.r.bl - lr.bl) / Lt.a2 + kalite, 0.25, 0.78);
     const p3 = sinir(A.r.p3 + kalite * 0.8, 0.12, 0.55);
     const a = A.r.or / (A.r.or + lr.dr), d = B.r.dr / (B.r.dr + lr.or), lp = lr.or / (lr.or + lr.dr);
@@ -187,13 +208,15 @@
     { ad: "Şut yaratma", alanlar: ["eksik", "fazla"], ipucu: "topu isteme payı: kimse şut yaratmıyorsa zorlama şut; şut yaratan çoksa zor şutlar da girer",
       goster: (r, lr) => "top kullanımı lig ortalamasının " + yz(r.kul / lr.kul) },
     { ad: "Takım katkısı", alanlar: ["nt"], ipucu: "oyuncuların takımlarının sayı averajından dakika payı (kutuya yansımayan savunma, uyum)",
-      goster: (r) => (r.nt >= 0 ? "+" : "") + bir(r.nt) + " sayı / maç" }
+      goster: (r) => (r.nt >= 0 ? "+" : "") + bir(r.nt) + " sayı / maç" },
+    { ad: "Denge", alanlar: ["denge"], ipucu: "zayıf alanı olmayan beşe ödül: şut, ribaund, oyun kurma ve savunmanın en zayıfı bile iyiyse",
+      goster: (r, lr, A) => A && A.denge ? A.denge.alan.map((x) => x.ad + " " + (x.d >= 0 ? "+" : "") + bir(x.d)).join(", ") : "—" }
   ];
   function katkilar(A, M) {
     const lig = ligTakimi(M), L = { r: lig.r, paylar: {} }, taban = beklenenFark(A, L, M, 0);
     return ETKENLER.map((et) => {
       const r = Object.assign({}, A.r); et.alanlar.forEach((k) => { r[k] = lig.r[k]; });
-      return { ad: et.ad, ipucu: et.ipucu, deger: et.goster(A.ham, lig.lr), lig: et.goster(lig.lr, lig.lr), d: taban - beklenenFark({ r: r }, L, M, 0) };
+      return { ad: et.ad, ipucu: et.ipucu, deger: et.goster(A.ham, lig.lr, A), lig: et.alanlar[0] === "denge" ? "0" : et.goster(lig.lr, lig.lr), d: taban - beklenenFark({ r: r }, L, M, 0) };
     });
   }
 

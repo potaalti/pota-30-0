@@ -316,7 +316,7 @@
       if (kisiler[i].uyum < 1) { const tam = kisiler.slice(); tam[i] = Object.assign({}, kisiler[i], { uyum: 1 }); kayip = motorFark(tam) - R; }
       return { p: p, yer: yerler[i], uyum: kisiler[i].uyum, guc: R - motorFark(yerine), kayip: kayip };
     });
-    const etkiler = Motor.katkilar(A, M).map((e) => ({ ad: e.ad, aciklama: e.deger + " (lig " + e.lig + ") · " + e.ipucu, d: e.d }));
+    const etkiler = Motor.katkilar(A, M).map((e) => ({ ad: e.ad, aciklama: e.deger + (e.lig !== "0" ? " (lig " + e.lig + ")" : "") + " · " + e.ipucu, d: e.d }));
     return { A: A, satirlar: satirlar, etkiler: etkiler, R: R, p: Motor.olasilik(R) };
   }
 
@@ -364,7 +364,7 @@
   function isaretli(x) { return (x > 0.05 ? "+" : x < -0.05 ? "−" : "") + Math.abs(x).toFixed(1).replace(".", ","); }
   function enIyiSecim(h) { const e = h.satirlar.slice().sort((a, b) => b.guc - a.guc)[0]; return e.p.o.ad + " · " + e.p.t.ad + " " + e.p.t.sezon + " (katkı " + isaretli(e.guc) + " sayı/maç)"; }
   function enZayif(h) {
-    const adaylar = h.etkiler.filter((e) => e.d < -0.3).map((e) => ({ metin: e.ad + " (" + e.aciklama.split(" · ")[0] + ")", d: e.d }));
+    const adaylar = h.etkiler.filter((e) => e.d < -0.3).map((e) => ({ metin: e.ad + " (" + e.aciklama.split(" · ")[0].split(" (lig")[0] + ")", d: e.d }));
     h.satirlar.forEach((s) => { if (s.uyum < 1) adaylar.push({ metin: s.p.o.ad + " mevkisi dışında (" + mevkiYaz(s.p.o) + " → " + yerAdi(s.yer) + ")", d: -s.kayip }); });
     h.satirlar.forEach((s) => { if (s.guc < -0.3) adaylar.push({ metin: s.p.o.ad + " lig ortalamasının altında", d: s.guc }); });
     if (adaylar.length) { adaylar.sort((a, b) => a.d - b.d); return adaylar[0].metin + " · " + isaretli(adaylar[0].d) + " sayı/maç"; }
@@ -400,8 +400,13 @@
       '<div><div class="isim">' + kac(s.p.o.ad) + trRozet(s.p.o) + '</div><div class="ust">' + kac(s.p.t.ad) + " " + s.p.t.sezon + " · " + mevkiYaz(s.p.o) +
       (s.uyum < 1 ? " → " + yerAdi(s.yer) + " ×" + s.uyum : "") + " · " + sayi1(s.p.o.sy) + " sy · " + sayi1(s.p.o.rb) + " rb · " + sayi1(s.p.o.as) + " as</div></div>" +
       '<div class="guc" title="Katkı: yerine aynı dakikada lig ortalaması bir oyuncu konsa beşin beklenen farkı bu kadar değişirdi (sayı/maç)">' + isaretli(s.guc) + "</div></div>").join("") + "</div>";
-    const ozet = (r) => '<div class="ozet"><div><b>En iyi seçim</b>' + kac(enIyiSecim(r.h)) + "</div><div><b>En büyük zayıflık</b>" + kac(enZayif(r.h)) + "</div></div>" +
-      '<div class="etkiler">' + r.h.etkiler.filter((e) => Math.abs(e.d) >= 0.5).sort((x, y) => Math.abs(y.d) - Math.abs(x.d)).slice(0, 4).sort((x, y) => y.d - x.d).map((e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + isaretli(e.d) + "</span>").join("") + "</div>";
+    const ozet = (r) => '<div class="ozet"><div><b>En iyi seçim</b>' + kac(enIyiSecim(r.h)) + "</div><div><b>En büyük zayıflık</b>" + kac(enZayif(r.h)) + "</div></div>" + dengeSatir(r);
+    const dengeSatir = (r) => { // dört alan; hiçbiri eksi değilse denge ödülü
+      const d = r.h.A.denge; if (!d) return "";
+      const zayif = d.alan.filter((x) => x.d < 0).map((x) => x.ad.toLocaleLowerCase("tr"));
+      return '<div class="etkiler denge-satir"><b>' + (d.puan > 0 ? "Dengeli beş +" + d.puan.toFixed(1).replace(".", ",") : "Denge ödülü yok (" + zayif.join(", ") + " zayıf)") + "</b>" +
+        d.alan.map((x) => '<span class="' + (x.d >= 0 ? "arti" : "eksi") + '">' + kac(x.ad) + " " + isaretli(x.d) + "</span>").join("") + "</div>";
+    };
     const sezonKutu = (r) => {
       const k = kutuTopla(r.maclar.map((m) => m.kutu), r.maclar.length), kis = r.h.A.kisiler;
       const atilan = r.maclar.reduce((x, m) => x + m.biz, 0) / r.maclar.length, yenen = r.maclar.reduce((x, m) => x + m.onlar, 0) / r.maclar.length;
