@@ -63,10 +63,12 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   - Hücum = sayı + 1,5×asist + üçlük − top kaybı; Savunma = 2×(top çalma + blok) + 0,5×ribaund (beşin toplamları).
   - Ortancadan iyiyse artı, kötüyse eksi: `3 × (değer − ortanca) / çeyrekler arası açıklık`, en çok ±6.
     Bir eksende çok iyi olan beş, diğerindeki eksiyi kapatabilir.
-  - Rol eksikliği: asist ya da ribaund gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1; TBL 10,3 / 18,4) ayrıca ceza.
+  - Rol eksikliği: beşin toplam asisti ya da toplam ribaundu gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1;
+    TBL 10,3 / 18,4) eksik her asist −1, her ribaund −0,6 güç ("Top paylaşımı zayıf", "Ribaund alan yok"). Asiste toplamdan
+    bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
   - Veriyle sınandığında bu eksenler galibiyeti güce ek olarak açıklamadı (katsayılar sıfıra yakın); oyun hissi için var.
     Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,85 → 0,76, TBL 0,84 → 0,79.
-- Uyum kuralları (oyun hissi için; toplam ±5): oyun kurucu var +2, top dağıtacak kimse yok −3, pota koruyucu var +2,
+- Uyum kuralları (oyun hissi için; toplam ±5): oyun kurucu var +2, pota koruyucu var +2,
   pota boş −2, dış şut bol +2, şutör yok −3, yıldız ikilisi +2, top tek isteyen çok −2, boyalı alan kalabalık −3.
   Gerçek ilk beşlerle sınandığında (güç sabitken) hiçbiri galibiyeti artırmadı; bazıları ters yönde çıktı (ör. iki yıldızlı
   ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).

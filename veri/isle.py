@@ -126,14 +126,15 @@ EKSENLER = {
     "savunma": {"ad": "Savunma", "formul": {"st": 2.0, "bl": 2.0, "rb": 0.5}},
 }
 EKSEN_KATSAYI, EKSEN_SINIR = 3.0, 4.0
-DENGE = {"rb": 0.6}
+# Rol eksikliği: beşin TOPLAMI gerçek ilk beşlerin alt %10'unun altındaysa eksik birim başına ceza. Asist toplamdan bakılır:
+# topu birden çok oyuncu paylaşabilir (2026-11-18, kullanıcı önerisi; eski "kimse ≥3 asist yapmıyor −3" kuralının yerine).
+DENGE = {"rb": 0.6, "as": 1.0}
 
 # Uyum kuralları (oyun tasarımı; 2026-11-17'de gerçek ilk beşlerle sınandı: güç sabitken hiçbiri galibiyeti artırmadı,
 # bazıları ters yönde çıktı; NBA'deki benzer oyunlar gibi oyun hissi için). Her kural: oyuncu koşulları (hepsi sağlanmalı),
 # bunu sağlayan oyuncu sayısı en_az / en_cok sınırına uyarsa puan. Toplam etki ±UYUM_SINIR.
 UYUM = [
     {"ad": "Oyun kurucu var", "aciklama": "biri maç başı ≥5,5 asist", "kosul": [["as", ">=", 5.5]], "en_az": 1, "puan": 2},
-    {"ad": "Top dağıtacak kimse yok", "aciklama": "kimse ≥3 asist yapmıyor", "kosul": [["as", ">=", 3]], "en_cok": 0, "puan": -3},
     {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,3 blok", "kosul": [["bl", ">=", 1.3]], "en_az": 1, "puan": 2},
     {"ad": "Pota boş", "aciklama": "kimse ≥0,6 blok yapmıyor", "kosul": [["bl", ">=", 0.6]], "en_cok": 0, "puan": -2},
     {"ad": "Dış şut bol", "aciklama": "en az 3 kişi ≥1,2 üçlük", "kosul": [["u3", ">=", 1.2]], "en_az": 3, "puan": 2},
