@@ -81,6 +81,9 @@ Sezon, gerçek takımlara karşı sahiplik sahiplik oynanan maçlarla simüle ed
   Taslak simülasyonuyla (her tur rastgele takım-sezon, ortalama galibiyet) ölçüldü, kullanıcının hedefi "en yüksek VP ile en
   skorer beş aynı, ~20; yalnız dengeli kurmak ödüllensin": en yüksek VP'liyi alan BSL 20,2 / 30, TBL 21,2 / 32; en skoreri
   alan BSL 20,0, TBL 20,2; dengeli kuran (motoru bilen) BSL 22,1, TBL 23,2.
+- **Üst uç** (`motor.ustEsik` 12, `motor.ustBeta` 0,3): ortalama rakibe beklenen farkı 12 sayıyı aşan kurulan beşin farkları
+  her 10 sayı fazlası için ayrıca %30 açılır. Ortalamalar aynı kalır; BSL'de VP'ye göre kurulanların en iyi %10'u 23,9 → 24,9,
+  en iyi %1'i 26,6 → 28,8 galibiyet, en iyi %10'un 30-0 şansı %1 → %8 (dengeli kurulanlarda %10). TBL'de 32-0 %0,3 → %3.
 - **Rakipler**: ligin bütün gerçek takımları (en çok süre alan beşi + lig ortalaması yedek). Sezonda N/2 farklı takım,
   her biriyle bir iç saha bir deplasman. İkili modda iki beş 2-2-1-1-1 düzeninde 7 maçlık seri oynar.
 - **Sonuç ekranı**: ortalama rakibe beklenen fark ve bu fikstürde beklenen galibiyet; oyuncu katkısı (yerine aynı dakikada

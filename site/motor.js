@@ -51,11 +51,21 @@
     if (yedekDk > 0.5) { const v = { dk: yedekDk }; K.forEach((k) => { v[k] = yedekDk * L[k]; }); liste.push({ ad: "Yedekler", yedek: true, v: v, nt: 0 }); }
     const T = {}; K.forEach((k) => { T[k] = liste.reduce((a, p) => a + p.v[k], 0); });
     T.nt = liste.reduce((a, p) => a + p.nt, 0) / 5; // beşin takım averajındaki payı (sayı/maç)
-    const lr = ligOranlari(M), r = oranlar(T), ham = oranlar(T);
-    if (D !== 1) Object.keys(r).forEach((k) => { if (k in lr) r[k] = lr[k] + D * (r[k] - lr[k]); });
-    if (D !== 1) r.nt *= D;
-    const kul = r.kul / lr.kul;
-    r.eksik = Math.max(0, 1 - kul); r.fazla = Math.max(0, kul - 1);
+    const lr = ligOranlari(M), ham = oranlar(T);
+    const ac = (Dx) => {
+      const r = oranlar(T);
+      if (Dx !== 1) { Object.keys(r).forEach((k) => { if (k in lr) r[k] = lr[k] + Dx * (r[k] - lr[k]); }); r.nt *= Dx; }
+      const kul = r.kul / lr.kul;
+      r.eksik = Math.max(0, 1 - kul); r.fazla = Math.max(0, kul - 1);
+      return r;
+    };
+    let r = ac(D);
+    // Üst uç (yalnız kurulan beşler): beklenen farkı M.ustEsik'i aşan beşin farkları ayrıca açılır; ortalama beşler aynı
+    // kalır, en iyi beşlerin 30-0 şansı artar (2026-11-18, kullanıcı: "en iyi beşlerin ihtimali artsın").
+    if (secenek && secenek.diklik && M.ustBeta) {
+      const f = beklenenFark({ r: r }, { r: ligTakimi(M).r }, M, 0);
+      if (f > M.ustEsik) r = ac(D * (1 + M.ustBeta * (f - M.ustEsik) / 10));
+    }
     const pay = (k) => { const t = liste.reduce((a, p) => a + Math.max(0, p.v[k]), 0) || 1; return liste.map((p) => Math.max(0, p.v[k]) / t); };
     const paylar = {}; ["a2", "a3", "fa", "or", "dr", "as", "st", "bl", "tk"].forEach((k) => { paylar[k] = pay(k); });
     return { kisiler: liste, T: T, r: r, ham: ham, paylar: paylar };

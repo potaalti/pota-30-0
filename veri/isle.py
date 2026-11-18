@@ -35,6 +35,9 @@ OYUN_DIKLIK = 1.3
 # beşlerin farkı ayrıca bu kat açılır; bilgili kurulan beşte eski sisteme göre +1-1,5 galibiyet (kullanıcıyla).
 MOTOR_GERCEK = {"bsl": 1.25, "tbl": 1.15}
 MOTOR_OYUN = {"bsl": 0.9, "tbl": 0.9}  # <1: kurulan beşlerin farkı biraz daraltılır (şut yaratma artısı dengelenir)
+# Üst uç: ortalama rakibe beklenen farkı 12 sayıyı aşan kurulan beşin farkları her 10 sayı için ayrıca %30 açılır
+# (ortalama beş aynı; en iyi %10'un 30-0 şansı BSL %1 → %8). 2026-11-18, kullanıcı: "en iyi beşlerin ihtimali artsın".
+MOTOR_UST = {"esik": 12.0, "beta": 0.3}
 
 
 # Maç motoru (site/motor.js) için oyuncunun maç başı ham kutu istatistikleri. Dönem farkı sezonun lig ortalamasına
@@ -485,7 +488,8 @@ def main():
             for k in ("or", "dr"):
                 La[k] = sum(L_[k] * sum(o["dk"] * o["mac"] for tk in sk for o in tk["oyuncular"])
                             for _, sk, _, L_ in kayitlar if L_["or"] > 1e-6) / dk_or
-        motor_lig[lig] = {"sira": MOTOR_SIRA, "L": {k: round(v, 5) for k, v in La.items()}, "diklik": MOTOR_GERCEK[lig], "oyunDiklik": MOTOR_OYUN[lig]}
+        motor_lig[lig] = {"sira": MOTOR_SIRA, "L": {k: round(v, 5) for k, v in La.items()}, "diklik": MOTOR_GERCEK[lig], "oyunDiklik": MOTOR_OYUN[lig],
+                          "ustEsik": MOTOR_UST["esik"], "ustBeta": MOTOR_UST["beta"]}
         esik[lig] = esikler([tk for _, sk, _, _ in kayitlar for tk in sk])
         print(lig, "denge eşikleri", esik[lig], flush=True)
         takimlar_hepsi = []
