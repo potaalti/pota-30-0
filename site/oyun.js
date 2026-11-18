@@ -326,7 +326,7 @@
     });
     const kul = top("kul");
     if (V.esik.kullanim && kul > V.esik.kullanim) {
-      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + V.esik.kullanim + " (gerçek ilk beşlerin üst çeyreği)", d: -(kul - V.esik.kullanim) * V.kullanimKatsayi });
+      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + V.esik.kullanim + " (gerçek ilk beşlerin üst %10'u)", d: -Math.min(V.kullanimSinir || 99, (kul - V.esik.kullanim) * V.kullanimKatsayi) });
     }
     const R = satirlar.reduce((a, s) => a + s.guc, 0) + etkiler.reduce((a, e) => a + e.d, 0);
     const p = 1 / (1 + Math.exp(-(R - V.egri.orta) / V.egri.olcek));
@@ -432,8 +432,8 @@
         : S.cevrim ? '<button class="ana-btn" id="rovans">Rövanş (aynı oda)</button><button class="ana-btn ikincil" id="tekrar">Odadan çık</button>'
         : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı gerçek ilk beşlerin üst çeyreğini aşarsa aşan her birim −" + S.veri.kullanimKatsayi +
-      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu.</p>";
+      ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı gerçek ilk beşlerin üst %10'unu aşarsa aşan her birim −" + S.veri.kullanimKatsayi + " (en çok −" + S.veri.kullanimSinir + ")" +
+      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu" + (S.veri.egri.diklik > 1 ? ", oyun için " + String(S.veri.egri.diklik).replace(".", ",") + " kat dikleştirildi" : "") + ".</p>";
     el.innerHTML = html;
     sonuclar.forEach((r, j) => {
       let i = 0, gs = 0;

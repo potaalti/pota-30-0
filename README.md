@@ -74,13 +74,18 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).
   Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,76 → 0,72, TBL 0,79 → 0,76. Hücum/savunma ekseni sınırı ±4'e indi.
 - Top kullanımı (Kul = şut denemesi + 0,44×serbest atış denemesi + top kaybı, maç başı): beşin toplamı gerçek ilk beşlerin
-  üst çeyreğini (BSL 63,7, TBL 64,0) aşarsa aşan her birim −0,5 güç ("Top yetmiyor"). Veriyle desteklenen tek takım kuralı:
-  güç sabitken ilk beş kullanımı arttıkça galibiyet düşüyor (BSL −0,0052, TBL −0,0043 galibiyet oranı / birim; güç katsayısı 0,0095).
+  üst %10'unu (BSL 68,4, TBL 67,3) aşarsa aşan her birim −0,5 güç, en çok −6 ("Top yetmiyor"). Veriyle desteklenen tek takım
+  kuralı: güç sabitken ilk beş kullanımı arttıkça galibiyet düşüyor (BSL −0,0052, TBL −0,0043 galibiyet oranı / birim; güç
+  katsayısı 0,0095 → birim başına ~0,55 güç). Tavan: gerçek ilk beşlerde ~79'un üstü neredeyse yok (eşik + 11 ≈ −5,5), ötesi
+  kanıtsız; beş skorer yan yana tek başına takımı çökertmesin. Eşik 2026-11-18'de üst çeyrekten (63,7 / 64,0) yükseltildi.
 - Şut isabeti (TS%) her sezon için hesaplanır ve oyuncu satırının ipucunda görünür; güce eklenmedi (geri testte tahmini
   iyileştirmedi, VP kaçan şutları zaten düşüyor).
 - Tablolarda sayı, ribaund, asist, top çalma, blok, top kaybı ve VP gösterilir; top kaybı simülasyona yalnız VP içinden girer.
 - Takım gücü → maç başı galibiyet olasılığı: gerçek takımların ilk beşleri (en çok süre alan 5) ile gerçek normal sezon
-  galibiyet oranı arasına uydurulan lojistik eğri (`veri/isle.py`, sonuç `egri` alanında).
+  galibiyet oranı arasına uydurulan lojistik eğri (`veri/isle.py`, sonuç `egri` alanında). Oyunda bu eğri 1,3 kat
+  dikleştirilir (OYUN_DIKLIK; `olcekGercek` uydurulan, `olcek` oyunda kullanılan): gerçekçi eğri iyi kurulan beşi ~%70'te
+  tutuyordu. BSL'de tipik iyi beş 21-9 → 23-7, en iyi %10 24-6 → 26-4; ortalama beş neredeyse aynı (17-13). İkili seriler de
+  aynı eğriyi kullanır.
 - Mevki TBF'de yok. Önce Wikidata'daki mevkiler (point guard 1, shooting guard 2, small forward 3, power forward 4,
   center 5; guard 1-2, forward 3-4). Yoksa doğrusal tahmin (Wikidata'lı 4.358 oyuncu-sezona uyduruldu):
   boy varsa `-18,27 + 0,1048×boy − 0,234×log2(asist/(rib+0,5)) + 0,328×blok − 0,082×üçlük`, yoksa

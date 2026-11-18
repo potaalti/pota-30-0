@@ -22,8 +22,14 @@ BETA = float(os.environ.get("BETA", "1.0"))  # takım averajından (maç başı 
 # BSL 0,56 → 0,60, TBL 0,46 → 0,49 yaptı. GAMMA (verimlilik) tahmini iyileştirmedi, 0'da bırakıldı.
 GAMMA = float(os.environ.get("GAMMA", "0"))  # verimlilik katkısı: (TS% − sezon ortalaması) × 2 × şut hacmi
 # Top kullanımı çakışması: güç sabitken ilk beşin toplam kullanımı (şut + 0,44 serbest atış + top kaybı) arttıkça galibiyet
-# düşüyor (birim başına ~0,5 güç; BSL ve TBL'de aynı yönde). Gerçek ilk beşlerin üst çeyreğini aşan her birim cezalı.
+# düşüyor (birim başına ~0,5 güç; BSL ve TBL'de aynı yönde). Gerçek ilk beşlerin üst %10'unu aşan her birim cezalı
+# (2026-11-18: üst çeyrekten yükseltildi). Ceza en çok KULLANIM_SINIR: veride ~79'un üstünde neredeyse takım yok
+# (eşik + ~11 birim ≈ −5,5), ötesi kanıtsız; beş skorer yan yana tek başına takımı çökertmesin.
 KULLANIM_KATSAYI = 0.5
+KULLANIM_SINIR = 6.0
+# Oyun eğrisi: gerçek takımlardan uydurulan eğri bu kat dikleştirilir (2026-11-18, kullanıcıyla: gerçekçi eğri iyi
+# kurulan beşi ~%70'te tutuyordu). Zayıf beşler neredeyse aynı kalır, güçlüler daha çok kazanır. 1 = gerçekçi.
+OYUN_DIKLIK = 1.3
 
 
 def sayi(x):
@@ -168,7 +174,7 @@ def esikler(takimlar):
     ilk5 = [t["oyuncular"][:5] for t in takimlar]
     e = {"rol": {}, "eksen": {}}
     v = sorted(toplam(b, "kul") for b in ilk5)
-    e["kullanim"] = round(v[3 * len(v) // 4], 1)
+    e["kullanim"] = round(v[9 * len(v) // 10], 1)
     for k in DENGE:
         v = sorted(toplam(b, k) for b in ilk5)
         e["rol"][k] = round(v[len(v) // 10], 1)
@@ -185,7 +191,7 @@ def denge(oyuncular, esik):
         z = (eksen_degeri(oyuncular, ad) - ek["med"]) / ek["iqr"]
         d += max(-EKSEN_SINIR, min(EKSEN_SINIR, EKSEN_KATSAYI * z))
     d -= sum(max(0.0, esik["rol"][k] - toplam(oyuncular, k)) * c for k, c in DENGE.items())
-    d -= max(0.0, toplam(oyuncular, "kul") - esik["kullanim"]) * KULLANIM_KATSAYI
+    d -= min(KULLANIM_SINIR, max(0.0, toplam(oyuncular, "kul") - esik["kullanim"]) * KULLANIM_KATSAYI)
     return d + uyum_kurallari(oyuncular)[1]
 
 
@@ -493,9 +499,10 @@ def main():
                 for k in ("fga", "fta", "verim", "mk"):
                     o.pop(k, None)
     for lig, takimlar in cikti.items():
-        veri = {"lig": lig, "mac": mac_sayisi[lig], "egri": parametreler[lig], "esik": esik[lig], "denge": DENGE,
+        veri = {"lig": lig, "mac": mac_sayisi[lig], "egri": dict(parametreler[lig], olcekGercek=parametreler[lig]["olcek"], diklik=OYUN_DIKLIK,
+                                                                   olcek=round(parametreler[lig]["olcek"] / OYUN_DIKLIK, 2)), "esik": esik[lig], "denge": DENGE,
                 "eksenler": EKSENLER, "eksenKatsayi": EKSEN_KATSAYI, "eksenSinir": EKSEN_SINIR,
-                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "takimlar": takimlar}
+                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "takimlar": takimlar}
         (SITE / f"{lig}.js").write_text("window.VERI=window.VERI||{};window.VERI." + lig + "=" + json.dumps(veri, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
         oy = sum(len(t["oyuncular"]) for t in takimlar)
         tr = sum(o["tr"] for t in takimlar for o in t["oyuncular"])
