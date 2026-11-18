@@ -30,9 +30,9 @@ KULLANIM_SINIR = 99.0  # klasik sistem dünkü hâliyle: eşik üst çeyrek, tav
 # Oyun eğrisi: gerçek takımlardan uydurulan eğri bu kat dikleştirilir (2026-11-18, kullanıcıyla: gerçekçi eğri iyi
 # kurulan beşi ~%70'te tutuyordu). Zayıf beşler neredeyse aynı kalır, güçlüler daha çok kazanır. 1 = gerçekçi.
 OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOLAY ile
-# Klasik sistem %10 kolay (2026-11-18, kullanıcı): eğrinin ortası bu kadar güç aşağı kayar; akıllı kurulan beşin
-# (her tur en yüksek güç × mevki uyumu) ortanca galibiyeti ~%10 artar.
-KLASIK_KOLAY = {"bsl": 7.7, "tbl": 8.4}  # ölçüm: güçle kuran beş BSL 20,1 → ~22,1 / 30, TBL 20,6 → ~22,7 / 32
+# Klasik sistem ~%6-7 kolay (2026-11-18, kullanıcı; önce %10 denendi, fazla geldi): eğrinin ortası bu kadar güç aşağı
+# kayar; akıllı kurulan beşin (her tur en yüksek güç × mevki uyumu) ortalama galibiyeti ~%6-7 artar.
+KLASIK_KOLAY = {"bsl": 5.0, "tbl": 5.5}  # ölçüm: güçle kuran beş BSL 20,1 → 21,5 / 30 (+%6,8), TBL 20,6 → ~21,9 / 32 (+%6,5)
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
 MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)

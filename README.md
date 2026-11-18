@@ -59,8 +59,9 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 - **Klasik** (2026-11-17 sistemi, kullanıcı isteğiyle geri geldi): oyuncu gücü + hücum/savunma eksenleri + uyum kuralları +
   rol eksikliği (beşin toplam asisti ve toplam ribaundu gerçek ilk beşlerin alt %10'unun altındaysa eksik birim başına ceza)
   + top kullanımı (gerçek ilk beşlerin üst çeyreğini aşan her birim −0,5, tavansız) → galibiyet eğrisi. Ayrıntısı aşağıda
-  "Güç modeli (Klasik)". Oyun %10 kolay: eğrinin ortası BSL'de 7,7, TBL'de 8,4 güç aşağı kaydırılır (`KLASIK_KOLAY`,
-  `egri.ortaGercek` uydurulan değer); güçle kurulan beşin ortalaması BSL 20,1 → ~22,1 / 30, TBL 20,6 → ~22,7 / 32.
+  "Güç modeli (Klasik)". Oyun ~%6-7 kolay: eğrinin ortası BSL'de 5,0, TBL'de 5,5 güç aşağı kaydırılır (`KLASIK_KOLAY`,
+  `egri.ortaGercek` uydurulan değer); güçle kurulan beşin ortalaması BSL 20,1 → 21,5 / 30, TBL 20,6 → ~21,9 / 32
+  (önce %10 denendi: 7,7 / 8,4; kullanıcıya fazla geldi).
 - **Maç motoru**: aşağıda.
 
 ## Güç modeli (Klasik)

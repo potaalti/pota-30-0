@@ -546,7 +546,7 @@
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
       ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı gerçek ilk beşlerin üst çeyreğini aşarsa aşan her birim −" + S.veri.kullanimKatsayi +
-      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için %10 kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
+      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için ~%6-7 kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
       "iki ya da üç sayılık şut (isabeti rakibin bloğu düşürür, asistli oyun artırır), kaçan şutta hücum ribaundu ile savunma ribaundunun çekişmesi. " +
