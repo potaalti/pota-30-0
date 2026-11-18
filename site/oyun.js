@@ -131,7 +131,7 @@
       : "Her turda " + S.veri.lig.toUpperCase() + " " + sz[0] + " … " + sz[sz.length - 1] + " arasından rastgele bir kulüp ve sezon çıkar; kadrodan <b>bir</b> oyuncu seç, sahada bir yere koy. ") +
       (S.sistem === "ao" ? "Mevki: Arka (oyun kurucu, şutör) ya da Ön (forvet, pivot); ikisine uyan iki tarafa da konabilir, mevki dışı ×" + AO_DISI + ". "
         : "Beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot; komşu mevki ×" + UYUM_CARPAN[1] + ", daha uzağı ×" + UYUM_CARPAN[2] + ". ") +
-      "En az <b>" + minTr() + " Türk</b>, aynı oyuncu bir kez" + (S.cift ? "" : ", bir <b>başka takım</b> ve bir <b>başka sezon</b> hakkı") + ". Hedef: <b>" + S.veri.mac + "-0</b>.";
+      "En az <b>" + minTr() + " Türk</b>, aynı oyuncu bir kez" + (S.cift ? (S.kaynak === "sabit" ? "" : ", herkesin oyun başına 1 <b>atlama</b> hakkı (başka takım ya da sezon; yalnız turun ilk seçimini yaparken)") : ", bir <b>başka takım</b> ve bir <b>başka sezon</b> hakkı") + ". Hedef: <b>" + S.veri.mac + "-0</b>.";
   }
 
   function minTr() { return S.minTrOzel !== null ? S.minTrOzel : (MIN_TR_LIG[S.veri.lig] || 2); }
@@ -177,9 +177,9 @@
   }
   function atlamaSerbest(tur) {
     if (S.bitti || S.cevriliyor || !S.takim) return false;
-    if (S.cift) { // iki taraflı: sırası gelen insan, oyun başına 1 hak (kulüp ya da sezon), tek kadro modunda yok
+    if (S.cift) { // iki taraflı: turun ilk seçimini yapacak insan (turda henüz kimse seçmediyse), oyun başına 1 hak
       const a = aktif();
-      if (a === null || S.tut || S.kaynak === "sabit" || S.taraflar[a].atlaHak < 1) return false;
+      if (a === null || S.tut || S.kaynak === "sabit" || S.taraflar[a].atlaHak < 1 || S.turdaSecen.length > 0) return false;
     } else if (S.taraflar[0].atla[tur] < 1) return false;
     return tur === "takim" || baskaSezonVar();
   }
@@ -280,7 +280,10 @@
       const a = [];
       S.takim.oyuncular.forEach((o) => {
         if (kuralli ? secilebilir(yz, o) : (S.alinan[alinanAnahtar(S.takim, o)] !== undefined || yz.bes.some((p) => p && p.o.k === o.k))) return;
-        yz.bes.forEach((p, i) => { if (!p) a.push({ o: o, i: i, v: o.g * uyumCarpan(o, yerler[i]) }); });
+        yz.bes.forEach((p, i) => { // değer: bu yere konunca beşin motordaki beklenen farkı (boş yerler lig ortalaması)
+          if (p) return; const b = yz.bes.slice(); b[i] = { o: o };
+          a.push({ o: o, i: i, v: motorFark(motorKisiler(b, yerler)) });
+        });
       });
       return a;
     };
@@ -295,65 +298,49 @@
     secimYap(sira, sec.o, sec.i);
   }
 
-  // ---- güç ve simülasyon ----
+  // ---- maç motoru (motor.js) ----
+  // Beşin değeri: lig ortalaması bir rakibe karşı tarafsız sahada beklenen sayı farkı. Oyuncunun katkısı: yerine aynı
+  // dakikada lig ortalaması bir oyuncu konunca bu farkın ne kadar düştüğü. Etkenler: bir istatistiği lig ortalamasına
+  // çekince farkın ne kadar değiştiği (sayı / maç).
+  function motorKisiler(bes, yerler) { return bes.map((p, i) => (p ? { o: p.o, uyum: uyumCarpan(p.o, yerler[i]), ad: p.o.ad } : { ortalama: true, dk: 28, ad: "" })); }
+  function motorFark(kisiler) {
+    const M = S.veri.motor;
+    return Motor.beklenenFark(Motor.takimKur(kisiler, M, { diklik: M.oyunDiklik }), { r: Motor.ligTakimi(M).r }, M, 0);
+  }
   function hesap(taraf) {
-    const V = S.veri, yerler = DZ()[taraf.dizilis].yerler;
+    const M = S.veri.motor, yerler = DZ()[taraf.dizilis].yerler, kisiler = motorKisiler(taraf.bes, yerler);
+    const A = Motor.takimKur(kisiler, M, { diklik: M.oyunDiklik }), R = motorFark(kisiler);
     const satirlar = taraf.bes.map((p, i) => {
-      const uyum = uyumCarpan(p.o, yerler[i]);
-      return { p: p, yer: yerler[i], uyum: uyum, guc: p.o.g * uyum, kayip: p.o.g * (1 - uyum) };
+      const yerine = kisiler.slice(); yerine[i] = { ortalama: true, dk: p.o.m[0], ad: "" };
+      let kayip = 0;
+      if (kisiler[i].uyum < 1) { const tam = kisiler.slice(); tam[i] = Object.assign({}, kisiler[i], { uyum: 1 }); kayip = motorFark(tam) - R; }
+      return { p: p, yer: yerler[i], uyum: kisiler[i].uyum, guc: R - motorFark(yerine), kayip: kayip };
     });
-    const os = taraf.bes.map((p) => p.o);
-    const top = (k) => os.reduce((a, o) => a + (o[k] || 0), 0);
-    const etkiler = [];
-    Object.keys(V.eksenler).forEach((ad) => {
-      const f = V.eksenler[ad].formul; let deger = 0;
-      Object.keys(f).forEach((k) => { deger += f[k] * top(k); });
-      const ek = V.esik.eksen[ad], z = (deger - ek.med) / ek.iqr;
-      const d = Math.max(-V.eksenSinir, Math.min(V.eksenSinir, V.eksenKatsayi * z));
-      const soz = z >= 1 ? "çok iyi" : z >= 0.3 ? "iyi" : z > -0.3 ? "ortalama" : z > -1 ? "zayıf" : "çok zayıf";
-      etkiler.push({ ad: V.eksenler[ad].ad + " " + soz, aciklama: deger.toFixed(1) + " (gerçek ilk beş ortancası " + ek.med.toFixed(1) + ")", d: d });
-    });
-    let uyumTop = 0;
-    (V.uyum || []).forEach((k) => {
-      const n = os.filter((o) => k.kosul.every((c) => (c[1] === ">=" ? (o[c[0]] || 0) >= c[2] : (o[c[0]] || 0) < c[2]))).length;
-      if ((k.en_az !== undefined && n >= k.en_az) || (k.en_cok !== undefined && n <= k.en_cok)) { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.puan }); uyumTop += k.puan; }
-    });
-    if (Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop });
-    const ROL_AD = { rb: ["Ribaund alan yok", "beşin ribaundu"], as: ["Top paylaşımı zayıf", "beşin toplam asisti"] };
-    Object.keys(V.denge).forEach((k) => {
-      const v = top(k);
-      if (v < V.esik.rol[k]) etkiler.push({ ad: (ROL_AD[k] || [k])[0], aciklama: (ROL_AD[k] || [k, "beşin " + k])[1] + " " + v.toFixed(1) + " < " + V.esik.rol[k], d: -(V.esik.rol[k] - v) * V.denge[k] });
-    });
-    const kul = top("kul");
-    if (V.esik.kullanim && kul > V.esik.kullanim) {
-      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + V.esik.kullanim + " (gerçek ilk beşlerin üst %10'u)", d: -Math.min(V.kullanimSinir || 99, (kul - V.esik.kullanim) * V.kullanimKatsayi) });
-    }
-    const R = satirlar.reduce((a, s) => a + s.guc, 0) + etkiler.reduce((a, e) => a + e.d, 0);
-    const p = 1 / (1 + Math.exp(-(R - V.egri.orta) / V.egri.olcek));
-    return { satirlar: satirlar, etkiler: etkiler, R: R, p: p };
+    const etkiler = Motor.katkilar(A, M).map((e) => ({ ad: e.ad, aciklama: e.deger + " (lig " + e.lig + ") · " + e.ipucu, d: e.d }));
+    return { A: A, satirlar: satirlar, etkiler: etkiler, R: R, p: Motor.olasilik(R) };
   }
 
   function tarafTohumu(taraf) { return S.tohum + "|" + taraf.dizilis + "|" + taraf.bes.map((p) => p.o.k + "@" + p.t.id).join(","); }
-  function macUret(rng, logit, g) {
-    const fark = Math.max(1, Math.round(Math.abs(logit) * 4 + rng() * 9)), biz = Math.round(74 + rng() * 18 + (g ? fark / 2 : -fark / 2));
-    return { g: g, biz: biz, onlar: g ? biz - fark : biz + fark };
+  function kutuTopla(kutular, n) { // maç maç kutu → sezon ortalaması
+    const t = kutular[0].map(() => ({ sy: 0, rb: 0, as: 0, st: 0, bl: 0, tk: 0 }));
+    kutular.forEach((k) => k.forEach((x, i) => { Object.keys(x).forEach((a) => { t[i][a] += x[a] / n; }); }));
+    return t;
   }
-  function simule(taraf, h) {
-    const rng = mulberry(hash(tarafTohumu(taraf))), sonuc = [];
-    for (let i = 0; i < S.veri.mac; i++) {
-      const logit = Math.log(h.p / (1 - h.p)) + (rng() + rng() + rng() - 1.5) * 1.2; // rakip gücü maçtan maça değişir
-      sonuc.push(macUret(rng, logit, rng() < 1 / (1 + Math.exp(-logit))));
-    }
-    return sonuc;
+  function simule(taraf, h) { // gerçek takımlara karşı sezon: her rakiple bir iç saha bir deplasman
+    const V = S.veri, rng = mulberry(hash(tarafTohumu(taraf)));
+    return Motor.takvim(V, rng).map((m) => {
+      const s = Motor.mac(h.A, m.rakip.A, V.motor, rng, m.ev);
+      return { g: s.a > s.b, biz: s.a, onlar: s.b, uz: s.uzatma, ev: m.ev, rakip: m.rakip.t, kutu: s.kA, p: Motor.olasilik(Motor.beklenenFark(h.A, m.rakip.A, V.motor, m.ev)) };
+    });
   }
-  function seri(hA, hB) { // 7 maçlık seri, 4 alan kazanır
-    const rng = mulberry(hash(tarafTohumu(S.taraflar[0]) + "#" + tarafTohumu(S.taraflar[1])));
-    const p = 1 / (1 + Math.exp(-(hA.R - hB.R) / S.veri.egri.olcek)), taban = Math.log(p / (1 - p));
+  function seri(hA, hB) { // 7 maçlık seri, 4 alan kazanır; saha düzeni 2-2-1-1-1
+    const M = S.veri.motor, rng = mulberry(hash(tarafTohumu(S.taraflar[0]) + "#" + tarafTohumu(S.taraflar[1])));
+    const p = Motor.olasilik(Motor.beklenenFark(hA.A, hB.A, M, 0)), evler = [1, 1, -1, -1, 1, -1, 1];
     let a = 0, b = 0; const maclar = [];
     while (a < 4 && b < 4) {
-      const logit = taban + (rng() + rng() + rng() - 1.5) * 1.2, g = rng() < 1 / (1 + Math.exp(-logit));
+      const ev = evler[maclar.length], s = Motor.mac(hA.A, hB.A, M, rng, ev), g = s.a > s.b;
       if (g) a++; else b++;
-      maclar.push(macUret(rng, logit, g));
+      maclar.push({ g: g, biz: s.a, onlar: s.b, uz: s.uzatma, ev: ev });
     }
     return { a: a, b: b, p: p, maclar: maclar };
   }
@@ -374,20 +361,27 @@
     if (w >= 0.3) return "Zor bir sezon";
     return "Küme hattı";
   }
-  function enIyiSecim(h) { const e = h.satirlar.slice().sort((a, b) => b.guc - a.guc)[0]; return e.p.o.ad + " · " + e.p.t.ad + " " + e.p.t.sezon + " (güç " + e.guc.toFixed(1) + ")"; }
+  function isaretli(x) { return (x > 0.05 ? "+" : x < -0.05 ? "−" : "") + Math.abs(x).toFixed(1).replace(".", ","); }
+  function enIyiSecim(h) { const e = h.satirlar.slice().sort((a, b) => b.guc - a.guc)[0]; return e.p.o.ad + " · " + e.p.t.ad + " " + e.p.t.sezon + " (katkı " + isaretli(e.guc) + " sayı/maç)"; }
   function enZayif(h) {
-    const adaylar = h.etkiler.filter((e) => e.d < 0).map((e) => ({ metin: e.ad + " (" + e.aciklama + ")", d: e.d }));
+    const adaylar = h.etkiler.filter((e) => e.d < -0.3).map((e) => ({ metin: e.ad + " (" + e.aciklama.split(" · ")[0] + ")", d: e.d }));
     h.satirlar.forEach((s) => { if (s.uyum < 1) adaylar.push({ metin: s.p.o.ad + " mevkisi dışında (" + mevkiYaz(s.p.o) + " → " + yerAdi(s.yer) + ")", d: -s.kayip }); });
-    if (adaylar.length) { adaylar.sort((a, b) => a.d - b.d); return adaylar[0].metin + " · " + adaylar[0].d.toFixed(1); }
+    h.satirlar.forEach((s) => { if (s.guc < -0.3) adaylar.push({ metin: s.p.o.ad + " lig ortalamasının altında", d: s.guc }); });
+    if (adaylar.length) { adaylar.sort((a, b) => a.d - b.d); return adaylar[0].metin + " · " + isaretli(adaylar[0].d) + " sayı/maç"; }
     const z = h.satirlar.slice().sort((a, b) => a.guc - b.guc)[0];
-    return "Belirgin bir eksik yok; en zayıf halka " + z.p.o.ad + " (güç " + z.guc.toFixed(1) + ")";
+    return "Belirgin bir eksik yok; en az katkı " + z.p.o.ad + " (" + isaretli(z.guc) + ")";
   }
   function hucreler(o, alanlar) { return alanlar.map((k) => "<td>" + sayi1(o[k]) + "</td>").join(""); }
   function basliklar(alanlar) { return alanlar.map((k) => '<th title="' + BASLIK_UZUN[k] + '">' + BASLIK[k] + "</th>").join(""); }
   function modAdi() { return ayar.mod === "gunluk" ? "Günlük #" + gunNo() : S.yzMod ? "vs AI (" + YZ_AD[S.zorluk] + ")" : S.iki ? "2 kişi" : "Serbest"; }
+  function macYazi(m, i) {
+    return (i + 1) + ". maç · " + (m.rakip ? m.rakip.ad + " " + m.rakip.sezon + " · " : "") + (m.ev > 0 ? "iç saha" : m.ev < 0 ? "deplasman" : "tarafsız") +
+      " · " + m.biz + "-" + m.onlar + (m.uz ? " (" + (m.uz > 1 ? m.uz + " " : "") + "uzatma)" : "");
+  }
 
   // ---- sonuç ----
   function sezonuOyna(hemen) {
+    if (!S.taraflar.every((t) => t.bes.every((p) => p && p.o))) return; // beşler dolmadan oynanmaz
     tutmayiBitir();
     S.bitti = true; S.takim = null; S.gorunen = S.cevrim ? S.cevrim.ben : 0; ciz();
     const sonuclar = S.taraflar.map((t) => { const h = hesap(t), m = simule(t, h); return { taraf: t, h: h, maclar: m, g: m.filter((x) => x.g).length }; });
@@ -399,41 +393,60 @@
       '<div class="skorbord">' + (S.cift ? "<h2>" + kac(r.taraf.ad) + "</h2>" : "") +
       '<div class="skor"><span id="sg' + j + '">0</span><span class="tire">-</span><span id="sm' + j + '">0</span></div>' +
       '<div class="not-sat"><span class="harf">' + harfNotu(r.g, n) + '</span><span class="unvan" id="unvan' + j + '">&nbsp;</span></div>' +
-      '<div class="skor-alt">' + S.veri.lig.toUpperCase() + " · " + modAdi() + " · " + DZ()[r.taraf.dizilis].ad + " · maç başı ~%" + Math.round(r.h.p * 100) + "</div>" +
-      '<div class="isiklar">' + r.maclar.map((m, i) => '<i class="isik" id="m' + j + "_" + i + '" title="' + (i + 1) + ". maç: " + m.biz + "-" + m.onlar + '"></i>').join("") + "</div></div>";
+      '<div class="skor-alt">' + S.veri.lig.toUpperCase() + " · " + modAdi() + " · " + DZ()[r.taraf.dizilis].ad + " · ortalama rakibe " + isaretli(r.h.R) + " sayı · bu fikstürde beklenen " + r.maclar.reduce((x, m) => x + m.p, 0).toFixed(1).replace(".", ",") + " galibiyet</div>" +
+      '<div class="isiklar">' + r.maclar.map((m, i) => '<i class="isik" id="m' + j + "_" + i + '" title="' + kac(macYazi(m, i)) + '"></i>').join("") + "</div></div>";
     const satirlar = (r) => '<div class="satirlar">' + r.h.satirlar.map((s) =>
       '<div class="sat' + (s.uyum < 1 ? " disi" : "") + '"><div class="no">' + yerKisa(s.yer) + "</div>" + logo(s.p.t.logo, s.p.t.ad) +
       '<div><div class="isim">' + kac(s.p.o.ad) + trRozet(s.p.o) + '</div><div class="ust">' + kac(s.p.t.ad) + " " + s.p.t.sezon + " · " + mevkiYaz(s.p.o) +
       (s.uyum < 1 ? " → " + yerAdi(s.yer) + " ×" + s.uyum : "") + " · " + sayi1(s.p.o.sy) + " sy · " + sayi1(s.p.o.rb) + " rb · " + sayi1(s.p.o.as) + " as</div></div>" +
-      '<div class="guc" title="Güç">' + s.guc.toFixed(1) + "</div></div>").join("") + "</div>";
+      '<div class="guc" title="Katkı: yerine aynı dakikada lig ortalaması bir oyuncu konsa beşin beklenen farkı bu kadar değişirdi (sayı/maç)">' + isaretli(s.guc) + "</div></div>").join("") + "</div>";
     const ozet = (r) => '<div class="ozet"><div><b>En iyi seçim</b>' + kac(enIyiSecim(r.h)) + "</div><div><b>En büyük zayıflık</b>" + kac(enZayif(r.h)) + "</div></div>" +
-      '<div class="etkiler">' + r.h.etkiler.map((e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + (e.d > 0 ? "+" : "") + e.d.toFixed(1) + "</span>").join("") + "</div>";
+      '<div class="etkiler">' + r.h.etkiler.filter((e) => Math.abs(e.d) >= 0.1).sort((x, y) => y.d - x.d).map((e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + isaretli(e.d) + "</span>").join("") + "</div>";
+    const sezonKutu = (r) => {
+      const k = kutuTopla(r.maclar.map((m) => m.kutu), r.maclar.length), kis = r.h.A.kisiler;
+      const atilan = r.maclar.reduce((x, m) => x + m.biz, 0) / r.maclar.length, yenen = r.maclar.reduce((x, m) => x + m.onlar, 0) / r.maclar.length;
+      const gercek = (i) => { const o = r.taraf.bes[i] && r.taraf.bes[i].o; return o ? '<div class="ipucu" style="margin:0">gerçekte ' + sayi1(o.sy) + " sy · " + sayi1(o.rb) + " rb · " + sayi1(o.as) + " as · " + sayi1(o.dk) + " dk</div>" : ""; };
+      const satir = kis.map((p, i) => "<tr><td>" + kac(p.ad) + (p.yedek ? '<div class="ipucu" style="margin:0">lig ortalaması, ' + Math.round(p.v.dk) + " dk</div>" : gercek(i)) + "</td>" +
+        ["sy", "rb", "as", "st", "bl", "tk"].map((a2) => "<td>" + k[i][a2].toFixed(1) + "</td>").join("") + "</tr>").join("");
+      const top = {}; ["sy", "rb", "as", "st", "bl", "tk"].forEach((a2) => { top[a2] = k.reduce((x, y) => x + y[a2], 0); });
+      return '<details class="dokum-kap"><summary>' + (S.cift ? kac(r.taraf.ad) + ": " : "") + "sezon istatistikleri (maç başı " + atilan.toFixed(1) + " – " + yenen.toFixed(1) + ")</summary>" +
+        '<div class="yatay"><table><thead><tr><th>Oyuncu</th><th>Sayı</th><th>Rib</th><th>Ast</th><th>TÇ</th><th>Blk</th><th>TK</th></tr></thead><tbody>' + satir +
+        '<tr class="toplam"><td>Takım</td>' + ["sy", "rb", "as", "st", "bl", "tk"].map((a2) => "<td>" + top[a2].toFixed(1) + "</td>").join("") + "</tr></tbody></table></div>" +
+        '<p class="ipucu">Simüle edilen ' + r.maclar.length + " maçın ortalaması. Takım ribaundu yalnız oyunculara yazılanlar.</p></details>";
+    };
+    const macListesi = (r) => '<details class="dokum-kap"><summary>' + (S.cift ? kac(r.taraf.ad) + ": " : "") + "maç maç</summary><ol class=\"mac-liste\">" +
+      r.maclar.map((m, i) => '<li class="' + (m.g ? "G" : "M") + '"><b>' + (m.g ? "G" : "M") + "</b> " + kac(m.rakip.ad) + " <span class=\"ipucu\">" + m.rakip.sezon + " · " + (m.ev > 0 ? "iç saha" : "deplasman") +
+        "</span><span class=\"skr\">" + m.biz + "-" + m.onlar + (m.uz ? " (U)" : "") + "</span></li>").join("") + "</ol></details>";
     const dokum = (r) => {
       const satir = r.h.satirlar.map((s) =>
         "<tr><td>" + mkRozet(s.p.o) + " " + kac(s.p.o.ad) + '<div class="ipucu" style="margin:0">' + yerAdi(s.yer) + " · " + kac(s.p.t.ad) + " " + s.p.t.sezon +
-        (s.uyum < 1 ? ' · <span class="eksi">' + uyumSoz(s.uyum) + " ×" + s.uyum + "</span>" : "") + "</div></td>" +
-        hucreler(s.p.o, ALANLAR) + "<td><b>" + s.guc.toFixed(1) + "</b></td></tr>").join("");
+        (s.uyum < 1 ? ' · <span class="eksi">' + uyumSoz(s.uyum) + " ×" + s.uyum + " (" + isaretli(-s.kayip) + ")</span>" : "") + "</div></td>" +
+        hucreler(s.p.o, ALANLAR) + "<td><b>" + isaretli(s.guc) + "</b></td></tr>").join("");
       const top = {}; ALANLAR.forEach((k) => { top[k] = r.taraf.bes.reduce((x, p) => x + (p.o[k] || 0), 0); });
-      const etk = r.h.etkiler.map((e) => "<tr><td colspan=" + ALANLAR.length + ">" + kac(e.ad) + ' <span class="ipucu">' + kac(e.aciklama) + '</span></td><td class="' + (e.d >= 0 ? "arti" : "eksi") + '">' + (e.d > 0 ? "+" : "") + e.d.toFixed(1) + "</td></tr>").join("");
-      return '<details class="dokum-kap"><summary>' + (S.cift ? kac(r.taraf.ad) + ": " : "") + 'ayrıntılı döküm</summary><div class="yatay"><table><thead><tr><th>Oyuncu</th>' + basliklar(ALANLAR) + "<th>Güç</th></tr></thead><tbody>" + satir +
-        '<tr class="toplam"><td>Beşin toplamı</td>' + hucreler(top, ALANLAR) + "<td></td></tr>" + etk +
-        "<tr><td colspan=" + ALANLAR.length + "><b>Takım gücü</b> (maç başı galibiyet olasılığı ~%" + Math.round(r.h.p * 100) + ")</td><td><b>" + r.h.R.toFixed(1) + "</b></td></tr></tbody></table></div></details>";
+      const etk = r.h.etkiler.map((e) => "<tr><td colspan=" + ALANLAR.length + ">" + kac(e.ad) + ' <span class="ipucu">' + kac(e.aciklama) + '</span></td><td class="' + (e.d >= 0 ? "arti" : "eksi") + '">' + isaretli(e.d) + "</td></tr>").join("");
+      return '<details class="dokum-kap"><summary>' + (S.cift ? kac(r.taraf.ad) + ": " : "") + 'ayrıntılı döküm</summary><div class="yatay"><table><thead><tr><th>Oyuncu</th>' + basliklar(ALANLAR) + '<th title="Katkı (sayı/maç)">Katkı</th></tr></thead><tbody>' + satir +
+        '<tr class="toplam"><td>Beşin toplamı</td>' + hucreler(top, ALANLAR) + "<td></td></tr>" +
+        '<tr class="toplam"><td colspan=' + (ALANLAR.length + 1) + ">Etkenler: istatistik lig ortalamasına çekilse fark ne kadar değişir (sayı/maç)</td></tr>" + etk +
+        "<tr><td colspan=" + ALANLAR.length + "><b>Beklenen fark</b> (lig ortalaması rakibe, tarafsız saha; maç başı galibiyet olasılığı ~%" + Math.round(r.h.p * 100) + ")</td><td><b>" + isaretli(r.h.R) + "</b></td></tr></tbody></table></div></details>";
     };
     let html;
     if (S.cift) {
       html = '<div class="iki">' + sonuclar.map((r, j) => "<div>" + skorbord(r, j) + ozet(r) + "</div>").join("") + "</div>";
       html += '<div class="seri">Seri: ' + kac(a[0]) + " " + sr.a + " – " + sr.b + " " + kac(a[1]) + " · " + kac(sr.a > sr.b ? a[0] : a[1]) + (sr.a > sr.b && a[0] === "Sen" ? " kazandın" : " kazandı") +
-        "<small>Maç başı " + kac(a[0]) + " kazanma olasılığı ~%" + Math.round(sr.p * 100) + " · " + sr.maclar.map((m) => m.biz + "-" + m.onlar).join(", ") +
+        "<small>Maç başı " + kac(a[0]) + " kazanma olasılığı ~%" + Math.round(sr.p * 100) + " · " + sr.maclar.map((m) => m.biz + "-" + m.onlar + (m.uz ? " (U)" : "")).join(", ") +
         (S.cevrim ? "<br>Oda skoru: " + kac(a[0]) + " " + S.odaSkor[0] + " – " + S.odaSkor[1] + " " + kac(a[1]) + " · " + (S.oyunNo + 1) + ". oyun" : "") + "</small></div>";
-      html += '<div class="iki">' + sonuclar.map((r) => "<div>" + satirlar(r) + dokum(r) + "</div>").join("") + "</div>";
-    } else html = skorbord(sonuclar[0], 0) + satirlar(sonuclar[0]) + ozet(sonuclar[0]) + dokum(sonuclar[0]);
+      html += '<div class="iki">' + sonuclar.map((r) => "<div>" + satirlar(r) + sezonKutu(r) + macListesi(r) + dokum(r) + "</div>").join("") + "</div>";
+    } else html = skorbord(sonuclar[0], 0) + satirlar(sonuclar[0]) + ozet(sonuclar[0]) + sezonKutu(sonuclar[0]) + macListesi(sonuclar[0]) + dokum(sonuclar[0]);
     html += '<div class="dugmeler"><button class="ana-btn ikincil" id="paylas">Sonucu kopyala</button>' +
       (ayar.mod === "gunluk" ? '<button class="ana-btn" id="serbeste">Serbest oyna</button>'
         : S.cevrim ? '<button class="ana-btn" id="rovans">Rövanş (aynı oda)</button><button class="ana-btn ikincil" id="tekrar">Odadan çık</button>'
         : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
-      '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı gerçek ilk beşlerin üst %10'unu aşarsa aşan her birim −" + S.veri.kullanimKatsayi + " (en çok −" + S.veri.kullanimSinir + ")" +
-      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu" + (S.veri.egri.diklik > 1 ? ", oyun için " + String(S.veri.egri.diklik).replace(".", ",") + " kat dikleştirildi" : "") + ".</p>";
+      '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
+      "iki ya da üç sayılık şut (isabeti rakibin bloğu düşürür, asistli oyun artırır), kaçan şutta hücum ribaundu ile savunma ribaundunun çekişmesi. " +
+      "Her oyuncu o sezonki kutu istatistikleri ve dakikasıyla oynar (dönem farkı giderilir, az maç oynayanlar lig ortalamasına çekilir); kalan dakikayı lig ortalaması yedekler oynar. " +
+      "Takımının sayı averajından dakika payı kutuya yansımayan katkıyı taşır. Mevki dışı ×" + (S.sistem === "ao" ? AO_DISI : UYUM_CARPAN.slice(1).join(" / ×")) +
+      ": ribaund, asist, savunma azalır, top kaybı artar. Rakipler ligin gerçek takımları (en çok süre alan beşleri); iç sahada +" + Motor.AYAR.ev + " sayı. " +
+      "Motor gerçek takımlarla sınandı; oyunda kurulan beşlerin farkı " + String(S.veri.motor.oyunDiklik).replace(".", ",") + " kat açılır.</p>";
     el.innerHTML = html;
     sonuclar.forEach((r, j) => {
       let i = 0, gs = 0;
@@ -532,8 +545,8 @@
     const hakSahibi = S.cift ? S.taraflar[aktif() !== null ? aktif() : (S.cevrim ? S.cevrim.ben : g)] : null;
     $("atlaTakim").textContent = "Başka takım (" + (S.cift ? hakSahibi.atlaHak : S.taraflar[0].atla.takim) + ")";
     $("atlaSezon").textContent = "Başka sezon (" + (S.cift ? hakSahibi.atlaHak : S.taraflar[0].atla.sezon) + ")";
-    $("atlaSezon").title = S.takim && !baskaSezonVar() ? "Bu kulübün başka sezonu yok" : S.cift ? "Oyun başına 1 atlama: kulüp ya da sezon" : "Bir kez: aynı kulübün başka bir sezonu";
-    $("atlaTakim").title = S.cift ? "Oyun başına 1 atlama: kulüp ya da sezon" : "Bir kez: başka bir takım-sezon";
+    $("atlaSezon").title = S.takim && !baskaSezonVar() ? "Bu kulübün başka sezonu yok" : S.cift ? "Oyun başına 1 atlama (kulüp ya da sezon), yalnız turun ilk seçimini yapan" : "Bir kez: aynı kulübün başka bir sezonu";
+    $("atlaTakim").title = S.cift ? "Oyun başına 1 atlama (kulüp ya da sezon), yalnız turun ilk seçimini yapan" : "Bir kez: başka bir takım-sezon";
     $("atlaTakim").classList.toggle("gizli", S.cift && S.kaynak === "sabit"); $("atlaSezon").classList.toggle("gizli", S.cift && S.kaynak === "sabit");
     if (S.cift) { // sahada görünmeyen öbür beş: dokununca sahaya gelir
       const o = 1 - g, ot = S.taraflar[o], yerler = DZ()[ot.dizilis].yerler;
@@ -864,7 +877,7 @@
       const t = S.veri.takimlar.filter((x) => x.id === h.id)[0];
       if (h.atla) { // atlama hakkı: yalnız sırası gelen, hakkı varsa
         const tr = S.taraflar[h.kim];
-        if (!S.takim || siradaki() !== h.kim || tr.atlaHak < 1) return;
+        if (!S.takim || siradaki() !== h.kim || tr.atlaHak < 1 || S.turdaSecen.length > 0) return; // yalnız turun ilk seçeni
         tr.atlaHak--;
         if (h.kim !== S.cevrim.ben && !S.cevrim.toplu) toast(tr.ad + " atlama hakkını kullandı");
       }

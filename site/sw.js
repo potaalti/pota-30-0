@@ -2,8 +2,8 @@
 // yerine bu klasörün sayfalarını bu çalışan denetler. Ağ öncelikli: güncel dosya varsa o gelir, bağlantı yoksa son
 // görülen dosyalar açılır (tek başına mod ve vs AI internetsiz oynanır; 2 kişilik oda internet ister).
 // Yalnız sitenin kendi dosyaları önbelleğe alınır; Firebase, yazı tipleri ve logolar doğrudan ağa gider.
-const ONBELLEK = "pota-30-0-v2";
-const KABUK = ["./", "index.html", "oyun.js", "baglanti.js", "firebase-ayar.js", "veri/bsl.js", "veri/tbl.js",
+const ONBELLEK = "pota-30-0-v3";
+const KABUK = ["./", "index.html", "oyun.js", "baglanti.js", "motor.js", "firebase-ayar.js", "veri/bsl.js", "veri/tbl.js",
   "manifest.webmanifest", "simge-192.png", "simge-512.png", "apple-touch-icon.png", "simge-64.png"];
 
 self.addEventListener("install", (e) => {

@@ -44,48 +44,53 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
     "Rövanş" aynı odada yeni oyun başlatır (ilk seçen sırayla değişir, oda skoru tutulur), "Odadan çık" odayı bırakır.
   - *Bu cihazda*: aynı telefonda sırayla; sıra kimdeyse saha onun beşini gösterir.
 - İki taraflı modlarda (vs AI, 2 kişi) her oyuncunun oyun başına 1 atlama hakkı var: "Başka takım" ya da "Başka sezon"
-  (tek takım-sezon havuzunda yok).
+  (tek takım-sezon havuzunda yok). Hak yalnız turun ilk seçimini yapacak oyuncunundur: turda biri seçtikten sonra
+  ikinci seçen kadroyu değiştiremez (2026-11-18, kullanıcı isteği).
 - Günlük mod şimdilik kapalı (kodu duruyor; `oyun.js` MODLAR ve `index.html` düğmesi).
 - Beş tamamlanınca sezon simüle edilir: BSL 30 maç (hedef 30-0), TBL 32 maç (hedef 32-0).
 - **Günlük**: herkese aynı tohum (Türkiye tarihi + lig) → aynı takım-sezon sırası; sonuç tarayıcıda saklanır, paylaşılabilir metin kopyalanır.
 - **Serbest**: sınırsız. Kadroda yalnız en az 6 maç oynamış oyuncular var (`veri/isle.py` EN_AZ_MAC). **Gizli** modda sayı/ribaund/asist/VP ve dakika gizlenir.
 
-## Güç modeli
+## Maç motoru (`site/motor.js`, 2026-11-18)
 
-- Oyuncu gücü = o sezonki VP ortalaması; az maç oynayanlar yedek seviyesine (5) çekilir: `(maç×VP + 8×5) / (maç + 8)`.
-  Sezonlar arası VP ölçeği farkı, her sezonun ortalama ilk beş gücüne göre normalleştirilir.
-- Buna takımın maç başı sayı averajından dakika payı eklenir: `1,0 × averaj × dk/40` (averaj en az -8; 2026-11-17'ye
-  kadar 0,6 idi, geri testle 1,0'a çıkarıldı).
-  Yalnız VP ile ilk beş gücü gerçek galibiyet oranını zayıf açıklıyordu (korelasyon 0,20: kötü takımlarda VP şişiyor);
-  averaj payıyla 0,84 (BSL) / 0,84 (TBL).
-- Mevki dışı yerleşim ×0,88.
-- Beşin karakteri (oyun tasarımı tercihi): iki eksen, gerçek ilk beşlerin (en çok süre alan 5) ortancasına göre.
-  - Hücum = sayı + 1,5×asist + üçlük − top kaybı; Savunma = 2×(top çalma + blok) + 0,5×ribaund (beşin toplamları).
-  - Ortancadan iyiyse artı, kötüyse eksi: `3 × (değer − ortanca) / çeyrekler arası açıklık`, en çok ±6.
-    Bir eksende çok iyi olan beş, diğerindeki eksiyi kapatabilir.
-  - Rol eksikliği: beşin toplam asisti ya da toplam ribaundu gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1;
-    TBL 10,3 / 18,4) eksik her asist −1, her ribaund −0,6 güç ("Top paylaşımı zayıf", "Ribaund alan yok"). Asiste toplamdan
-    bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
-  - Veriyle sınandığında bu eksenler galibiyeti güce ek olarak açıklamadı (katsayılar sıfıra yakın); oyun hissi için var.
-    Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,85 → 0,76, TBL 0,84 → 0,79.
-- Uyum kuralları (oyun hissi için; toplam ±5): oyun kurucu var +2, pota koruyucu var +2,
-  pota boş −2, dış şut bol +2, şutör yok −3, yıldız ikilisi +2, top tek isteyen çok −2, boyalı alan kalabalık −3.
-  Gerçek ilk beşlerle sınandığında (güç sabitken) hiçbiri galibiyeti artırmadı; bazıları ters yönde çıktı (ör. iki yıldızlı
-  ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).
-  Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,76 → 0,72, TBL 0,79 → 0,76. Hücum/savunma ekseni sınırı ±4'e indi.
-- Top kullanımı (Kul = şut denemesi + 0,44×serbest atış denemesi + top kaybı, maç başı): beşin toplamı gerçek ilk beşlerin
-  üst %10'unu (BSL 68,4, TBL 67,3) aşarsa aşan her birim −0,5 güç, en çok −6 ("Top yetmiyor"). Veriyle desteklenen tek takım
-  kuralı: güç sabitken ilk beş kullanımı arttıkça galibiyet düşüyor (BSL −0,0052, TBL −0,0043 galibiyet oranı / birim; güç
-  katsayısı 0,0095 → birim başına ~0,55 güç). Tavan: gerçek ilk beşlerde ~79'un üstü neredeyse yok (eşik + 11 ≈ −5,5), ötesi
-  kanıtsız; beş skorer yan yana tek başına takımı çökertmesin. Eşik 2026-11-18'de üst çeyrekten (63,7 / 64,0) yükseltildi.
-- Şut isabeti (TS%) her sezon için hesaplanır ve oyuncu satırının ipucunda görünür; güce eklenmedi (geri testte tahmini
-  iyileştirmedi, VP kaçan şutları zaten düşüyor).
-- Tablolarda sayı, ribaund, asist, top çalma, blok, top kaybı ve VP gösterilir; top kaybı simülasyona yalnız VP içinden girer.
-- Takım gücü → maç başı galibiyet olasılığı: gerçek takımların ilk beşleri (en çok süre alan 5) ile gerçek normal sezon
-  galibiyet oranı arasına uydurulan lojistik eğri (`veri/isle.py`, sonuç `egri` alanında). Oyunda bu eğri 1,3 kat
-  dikleştirilir (OYUN_DIKLIK; `olcekGercek` uydurulan, `olcek` oyunda kullanılan): gerçekçi eğri iyi kurulan beşi ~%70'te
-  tutuyordu. BSL'de tipik iyi beş 21-9 → 23-7, en iyi %10 24-6 → 26-4; ortalama beş neredeyse aynı (17-13). İkili seriler de
-  aynı eğriyi kullanır.
+Sezon, gerçek takımlara karşı sahiplik sahiplik oynanan maçlarla simüle edilir (önceki "güç → lojistik eğri" yerine).
+
+- **Oyuncular**: o sezonki maç başı kutu istatistikleri (TBF): iki/üç sayılık deneme ve isabet, serbest atış, hücum ve
+  savunma ribaundu, asist, top çalma, blok, top kaybı, faul; gerçek dakikasıyla oynar. Dönem farkı giderilir (her istatistik
+  sezonun lig ortalamasına bölünüp bütün sezonların ortalamasıyla çarpılır), isabet yüzdeleri az denemede lig ortalamasına
+  çekilir, az maç oynayanın bütün istatistiği `maç/(maç+8)` ağırlıkla lig ortalamasına çekilir. BSL 2008-09'da TBF hücum
+  ribaundunu tutmamış: toplam ribaund lig oranıyla bölünür. Veri: `veri/isle.py` → oyuncu başına `m` (sıra `motor.sira`) ve `nt`.
+- **Takım** = beş + kalan dakikada (200 − beşin dakikası) lig ortalaması yedekler. Mevki dışı (×0,92 / ×0,8; TBL Arka/Ön
+  ×0,88): ribaund, asist, top çalma, blok yarı oranda azalır, top kaybı artar, isabet `(1−uyum)×15` puan düşer.
+- **Hücum**: top kaybı (rakibin top çalması lig ortalamasından fazlaysa artar) → serbest atış (rakibin faulü artırır) →
+  iki ya da üç sayılık şut. İki sayılık isabeti rakibin bloğu düşürür; takımın asist oranı (isabetlerin asistli payı) lig
+  ortalamasından 0,1 fazlaysa isabet +1,2 puan. Kaçan şutta hücum ribaundu iki takımın ribaundu karşılaştırılarak (log5)
+  belirlenir; alınırsa hücum sürer.
+- **Şut yaratma**: takımın doğal top kullanımı (şut + 0,44×serbest atış + top kaybı) lig ortalamasının altındaysa eksik
+  her %10 için isabet −6 puan (zorlama şutlar); üstündeyse şutlar paylaşılır, fazlası boşa gider, her %10 için −0,6 puan.
+  Beş skorer yan yana hacim üstünlüğü kazanmaz, yalnız isabetleri sayılır.
+- **Takım katkısı**: oyuncunun takımının sayı averajından dakika payı (`averaj × dk/40 × maç/(maç+8)`, beş için toplam/5),
+  ×1,5 sayı olarak eklenir: kutuya yansımayan savunma ve uyum. Gerçek takımlarda önceki sezonun en güçlü tek göstergesi.
+- **Maç**: lig ortalaması ~74 hücum (±4), beraberlikte uzatma; iç sahada +3 sayı. Lig ortalaması takımlar kendi aralarında
+  BSL 78,2 sayı, 16,8 asist, 33,4 ribaund, 12,3 top kaybı üretir (gerçek lig ortalaması 79,2 / 16,8 / 31,5 / 12,2).
+- **Sınama**: önceki sezon verisiyle kurulan gerçek ilk beşin bu sezonki galibiyet oranıyla korelasyonu BSL 0,75 (eski güç
+  modeli 0,75), TBL 0,46 (eski 0,57). Motorun beklenen farkları gerçeğinkinden dar çıkıyor; galibiyet oranlarına sıralama
+  eşleştirmesiyle lig başına açılır (`motor.diklik`: BSL 1,25, TBL 1,15).
+- **Oyun ayarı** (`motor.oyunDiklik`: BSL 1,15, TBL 1,1): kurulan beşlerin lig ortalamasından farkları ayrıca açılır.
+  Taslak simülasyonuyla (her tur rastgele takım-sezon) ölçüldü: motoru bilen biri gibi kuran beşin ortancası BSL ~22 / 30,
+  TBL ~22 / 32 (eski sistemin en iyi kuruluşu 20,7 / 20,9; kullanıcının istediği +1-1,5 galibiyet); yalnız VP'ye bakarak
+  kuran ~19-20; beş skorerli beşler ~14-15.
+- **Rakipler**: ligin bütün gerçek takımları (en çok süre alan beşi + lig ortalaması yedek). Sezonda N/2 farklı takım,
+  her biriyle bir iç saha bir deplasman. İkili modda iki beş 2-2-1-1-1 düzeninde 7 maçlık seri oynar.
+- **Sonuç ekranı**: ortalama rakibe beklenen fark ve bu fikstürde beklenen galibiyet; oyuncu katkısı (yerine aynı dakikada
+  lig ortalaması bir oyuncu konsa fark ne kadar düşerdi); etkenler (bir istatistik lig ortalamasına çekilse fark ne kadar
+  değişirdi: şut isabeti, serbest atış, top kaybı, hücum/savunma ribaundu, asist, top çalma, blok, faul, şut yaratma, takım
+  katkısı); sezonun simüle kutu istatistikleri; maç maç rakipler ve skorlar.
+- AI seçimini motorla yapar: her aday için o yere konunca beşin beklenen farkı (boş yerler lig ortalaması).
+- Eski güç değeri (`g`: büzülmüş VP + averaj payı) veride duruyor; geri test (`veri/test_sonucu.json`) onu ölçer.
+
+## Mevki
+
 - Mevki TBF'de yok. Önce Wikidata'daki mevkiler (point guard 1, shooting guard 2, small forward 3, power forward 4,
   center 5; guard 1-2, forward 3-4). Yoksa doğrusal tahmin (Wikidata'lı 4.358 oyuncu-sezona uyduruldu):
   boy varsa `-18,27 + 0,1048×boy − 0,234×log2(asist/(rib+0,5)) + 0,328×blok − 0,082×üçlük`, yoksa

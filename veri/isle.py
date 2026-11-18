@@ -30,6 +30,40 @@ KULLANIM_SINIR = 6.0
 # Oyun eğrisi: gerçek takımlardan uydurulan eğri bu kat dikleştirilir (2026-11-18, kullanıcıyla: gerçekçi eğri iyi
 # kurulan beşi ~%70'te tutuyordu). Zayıf beşler neredeyse aynı kalır, güçlüler daha çok kazanır. 1 = gerçekçi.
 OYUN_DIKLIK = 1.3
+# Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
+# eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü). Oyun ayarı: kurulan
+# beşlerin farkı ayrıca bu kat açılır; bilgili kurulan beşte eski sisteme göre +1-1,5 galibiyet (kullanıcıyla).
+MOTOR_GERCEK = {"bsl": 1.25, "tbl": 1.15}
+MOTOR_OYUN = {"bsl": 1.15, "tbl": 1.1}
+
+
+# Maç motoru (site/motor.js) için oyuncunun maç başı ham kutu istatistikleri. Dönem farkı sezonun lig ortalamasına
+# bölünüp bütün sezonların ortalamasıyla çarpılarak giderilir; isabet yüzdeleri az denemede lig ortalamasına çekilir.
+MOTOR_ALAN = [("a2", "puan21Ortalama"), ("m2", "puan20Ortalama"), ("a3", "puan31Ortalama"), ("m3", "puan30Ortalama"),
+              ("fa", "sA1Ortalama"), ("fm", "sA0Ortalama"), ("or", "hrOrtalama"), ("dr", "drOrtalama"), ("as", "asistOrtalama"),
+              ("st", "topCalmaOrtalama"), ("bl", "blokOrtalama"), ("tk", "topKaybiOrtalama"), ("pf", "faulOrtalama")]
+MOTOR_SIRA = ["dk"] + [k for k, _ in MOTOR_ALAN]
+ISABET_GUVEN = {"m2": ("a2", 60), "m3": ("a3", 60), "fm": ("fa", 40)}  # bu kadar denemede yarı yarıya lig ortalamasına çekilir
+
+
+def motor_vektor(o, Ls, La):
+    m = o.pop("_m")
+    if m["or"] + m["dr"] <= 0 and o["rb"] > 0:  # hücum/savunma ayrımı yoksa lig oranıyla böl
+        pay = Ls["or"] / max(1e-9, Ls["or"] + Ls["dr"])
+        m["or"], m["dr"] = o["rb"] * pay, o["rb"] * (1 - pay)
+    cikis = {}
+    for k, _ in MOTOR_ALAN:
+        if k not in ISABET_GUVEN:
+            cikis[k] = m[k] * (La[k] / Ls[k] if Ls[k] > 0 else 1.0)
+    if Ls["or"] <= 1e-6:  # BSL 2008-09: TBF hücum ribaundunu tutmamış, savunma alanında toplam var → toplamı lig oranıyla böl
+        toplam_rb = (m["or"] + m["dr"]) * (La["or"] + La["dr"]) / max(1e-9, Ls["or"] + Ls["dr"])
+        pay = La["or"] / (La["or"] + La["dr"])
+        cikis["or"], cikis["dr"] = toplam_rb * pay, toplam_rb * (1 - pay)
+    for mm, (a, K) in ISABET_GUVEN.items():
+        ps, pa = Ls[mm] / max(1e-9, Ls[a]), La[mm] / max(1e-9, La[a])
+        yuzde = (m[mm] * o["mac"] + K * ps) / (m[a] * o["mac"] + K)
+        cikis[mm] = cikis[a] * max(0.0, min(1.0, yuzde - ps + pa))
+    return [round(o["dk"], 1)] + [round(cikis[k], 2) for k, _ in MOTOR_ALAN]
 
 
 def sayi(x):
@@ -353,10 +387,13 @@ def main():
     cikti = {}
     kalibrasyon = []
     esik = {}
+    motor_lig = {}
     for lig, sezonlar in cek.SEZONLAR.items():
         ligler = {x["sezon"]: x for x in json.loads((KOK / f"{lig}_ligler.json").read_text(encoding="utf-8"))}
         kayitlar = []
+        lig_top = {k: 0.0 for k in MOTOR_SIRA}
         for s in sezonlar:
+            sezon_top = {k: 0.0 for k in MOTOR_SIRA}
             L = ligler[s]
             fid, sid = L["faaliyet_ID"], L["sezon_ID"]
             tablo = cek.veri(f"/League/get-standings-table?LeagueId={fid}&SeasonId={sid}&prefix={lig}") or []
@@ -379,6 +416,10 @@ def main():
                     pr = profiller[p["code"]]
                     mac = int(p.get("macSayisi") or 0)
                     dk = dakika(p.get("sureOrtalama"))
+                    ham_m = {k: sayi(p.get(f)) for k, f in MOTOR_ALAN}
+                    for k in ham_m:
+                        sezon_top[k] += ham_m[k] * mac
+                    sezon_top["dk"] += dk * mac
                     if mac < EN_AZ_MAC or dk < 4:  # az oynayanlar kadroda gösterilmez (kullanıcı isteği, 2026-11-17)
                         continue
                     rb, ast = sayi(p.get("trOrtalama")), sayi(p.get("asistOrtalama"))
@@ -402,7 +443,7 @@ def main():
                         "tk": round(sayi(p.get("topKaybiOrtalama")), 1),
                         "fga": round(sayi(p.get("agDeneme")), 2), "fta": round(sayi(p.get("sA1Ortalama")), 2),
                         "u3": round(sayi(p.get("puan30Ortalama")), 1), "vp": round(sayi(p.get("vpOrtalama")), 1),
-                        "p": mk, "pk": mk_kaynak,
+                        "p": mk, "pk": mk_kaynak, "_m": ham_m,
                     })
                 if len(oyuncular) < 5:
                     continue
@@ -429,20 +470,32 @@ def main():
                     o["_ham"] = (o["mac"] * o["vp"] + GUVEN_MAC * YEDEK) / (o["mac"] + GUVEN_MAC)
             ilk5 = [sum(o["_ham"] for o in tk["oyuncular"][:5]) for tk in sezon_kayit]
             if sezon_kayit:
-                kayitlar.append((s, sezon_kayit, sum(ilk5) / len(ilk5)))
+                Ls = {k: sezon_top[k] / max(1e-9, sezon_top["dk"]) for k in MOTOR_SIRA if k != "dk"}
+                for k in MOTOR_SIRA:
+                    lig_top[k] += sezon_top[k]
+                kayitlar.append((s, sezon_kayit, sum(ilk5) / len(ilk5), Ls))
             print(lig, s, len(sezon_kayit), "takım", flush=True)
 
         if not kayitlar:
             continue
         genel = sum(k[2] for k in kayitlar) / len(kayitlar)
-        esik[lig] = esikler([tk for _, sk, _ in kayitlar for tk in sk])
+        La = {k: lig_top[k] / max(1e-9, lig_top["dk"]) for k in MOTOR_SIRA if k != "dk"}
+        dk_or = sum(sum(o["dk"] * o["mac"] for tk in sk for o in tk["oyuncular"]) for _, sk, _, L_ in kayitlar if L_["or"] > 1e-6)
+        if dk_or:  # hücum ribaundu ortalaması yalnız onu tutan sezonlardan
+            for k in ("or", "dr"):
+                La[k] = sum(L_[k] * sum(o["dk"] * o["mac"] for tk in sk for o in tk["oyuncular"])
+                            for _, sk, _, L_ in kayitlar if L_["or"] > 1e-6) / dk_or
+        motor_lig[lig] = {"sira": MOTOR_SIRA, "L": {k: round(v, 5) for k, v in La.items()}, "diklik": MOTOR_GERCEK[lig], "oyunDiklik": MOTOR_OYUN[lig]}
+        esik[lig] = esikler([tk for _, sk, _, _ in kayitlar for tk in sk])
         print(lig, "denge eşikleri", esik[lig], flush=True)
         takimlar_hepsi = []
-        for s, sezon_kayit, ort in kayitlar:
+        for s, sezon_kayit, ort, Ls in kayitlar:
             olcek = genel / ort
             for tk in sezon_kayit:
                 for o in tk["oyuncular"]:
                     guven = o["mac"] / (o["mac"] + GUVEN_MAC)
+                    o["m"] = motor_vektor(o, Ls, La)
+                    o["nt"] = round(max(-8.0, tk["net"]) * o["dk"] / 40 * guven, 2)  # takım averajından dakika payı (sayı/maç)
                     o["g"] = round(o.pop("_ham") * olcek + (BETA * max(-8.0, tk["net"]) * o["dk"] / 40 + GAMMA * o["verim"]) * guven, 2)
                 bes = tk["oyuncular"][:5]
                 R = sum(o["g"] for o in bes) + denge(bes, esik[lig])
@@ -502,7 +555,8 @@ def main():
         veri = {"lig": lig, "mac": mac_sayisi[lig], "egri": dict(parametreler[lig], olcekGercek=parametreler[lig]["olcek"], diklik=OYUN_DIKLIK,
                                                                    olcek=round(parametreler[lig]["olcek"] / OYUN_DIKLIK, 2)), "esik": esik[lig], "denge": DENGE,
                 "eksenler": EKSENLER, "eksenKatsayi": EKSEN_KATSAYI, "eksenSinir": EKSEN_SINIR,
-                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "takimlar": takimlar}
+                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR,
+                "motor": motor_lig[lig], "takimlar": takimlar}
         (SITE / f"{lig}.js").write_text("window.VERI=window.VERI||{};window.VERI." + lig + "=" + json.dumps(veri, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
         oy = sum(len(t["oyuncular"]) for t in takimlar)
         tr = sum(o["tr"] for t in takimlar for o in t["oyuncular"])
