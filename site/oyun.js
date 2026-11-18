@@ -446,7 +446,7 @@
       "Her oyuncu o sezonki kutu istatistikleri ve dakikasıyla oynar (dönem farkı giderilir, az maç oynayanlar lig ortalamasına çekilir); kalan dakikayı lig ortalaması yedekler oynar. " +
       "Takımının sayı averajından dakika payı kutuya yansımayan katkıyı taşır. Mevki dışı ×" + (S.sistem === "ao" ? AO_DISI : UYUM_CARPAN.slice(1).join(" / ×")) +
       ": ribaund, asist, savunma azalır, top kaybı artar. Rakipler ligin gerçek takımları (en çok süre alan beşleri); iç sahada +" + Motor.AYAR.ev + " sayı. " +
-      "Motor gerçek takımlarla sınandı; oyunda kurulan beşlerin farkı " + String(S.veri.motor.oyunDiklik).replace(".", ",") + " kat açılır.</p>";
+      "Motor gerçek takımlarla sınandı; oyunda kurulan beşlerin lig ortalamasından farkı ×" + String(S.veri.motor.oyunDiklik).replace(".", ",") + ".</p>";
     el.innerHTML = html;
     sonuclar.forEach((r, j) => {
       let i = 0, gs = 0;

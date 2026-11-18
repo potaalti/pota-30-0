@@ -8,13 +8,13 @@
 (function () {
   const K = ["a2", "m2", "a3", "m3", "fa", "fm", "or", "dr", "as", "st", "bl", "tk", "pf"];
   // Katsayılar gerçek takımlarla sınandı (2026-11-18): önceki sezon verisiyle kurulan ilk beş bu sezonun galibiyet
-  // oranını BSL'de r≈0,75 (eski güç modeli 0,75), TBL'de r≈0,46 (eski 0,57) tahmin ediyor. kFazla tahmini
-  // etkilemiyor (−0,15 ile 0 arası aynı); oyun ayarı: skorerlerle kurulan beş eski sistemdeki gibi ~17-18 galibiyet alsın
-  // (2026-11-18, kullanıcı: "5 skorerde bu kadar kötü olmaması lazım").
+  // oranını BSL'de r≈0,73 (eski güç modeli 0,75), TBL'de r≈0,47 (eski 0,57) tahmin ediyor. kFazla oyun ayarı
+  // (2026-11-18, kullanıcı): en yüksek VP'lilerle ve en skorerlerle kurulan beş aynı yerde (~20 / 30) dursun, yalnız
+  // dengeli kurmak ödüllensin. −0,15'ten −0,55'e çekince BSL tahmini 0,76 → 0,73, TBL aynı.
   const AYAR = {
     kAs: 0.12,     // asist oranı lig ortalamasından 0,1 fazlaysa şut isabeti +1,2 puan
     kEksik: 0.6,   // takımın doğal şut yaratması gerekenin %10 altındaysa isabet −6 puan (zorlama şutlar)
-    kFazla: -0.15, // şut yaratan oyuncu çoksa (doğal kullanım fazlası %10) zor şutlar da girer: isabet +1,5 puan
+    kFazla: -0.55, // şut yaratan oyuncu çoksa (doğal kullanım fazlası %10) zor şutlar da girer: isabet +5,5 puan (en çok %50 fazla)
     lambda: 1.5,   // takım averajı payının sayıya geçen kısmı
     guvenMac: 8,   // az maç oynayanın istatistiği bu kadar maçta yarı yarıya lig ortalamasına çekilir
     ev: 3,         // ev sahibi avantajı, sayı
