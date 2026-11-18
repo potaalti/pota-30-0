@@ -47,7 +47,15 @@
 
   // ---- küçük yardımcılar ----
   function kac(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-  function logo(url, sinif) { return '<img alt="" referrerpolicy="no-referrer" ' + (sinif ? 'class="' + sinif + '" ' : "") + 'src="' + kac(url || "") + '" onerror="this.style.visibility=\'hidden\'">'; }
+  // kulüp logosu; TBF'de doğru logosu olmayan takım-sezonlarda (veri/isle.py logo_duzelt) baş harf rozeti
+  function basHarf(ad) {
+    const k = (ad || "").split(/\s+/).filter((x) => x && !/^(SPOR|SK|BK|BASKETBOL|BASKET|BLD\.?|BŞB\.?)$/.test(x));
+    return k.slice(0, 2).map((x) => x[0]).join("") || "?";
+  }
+  function logo(url, ad) {
+    if (!url) return '<span class="bas-harf" title="' + kac(ad || "") + '">' + kac(basHarf(ad)) + "</span>";
+    return '<img alt="" referrerpolicy="no-referrer" src="' + kac(url) + '" onerror="this.style.visibility=\'hidden\'">';
+  }
   // ad / soyad ayrımı: JR, II gibi ekler soyad sayılmaz ("TARONTATE DE SHAWN CROCKETT JR" → "TARONTATE DE SHAWN" / "CROCKETT")
   const EKLER = /^(JR\.?|SR\.?|II|III|IV)$/;
   function adParca(ad) {
@@ -393,7 +401,7 @@
       '<div class="skor-alt">' + S.veri.lig.toUpperCase() + " · " + modAdi() + " · " + DZ()[r.taraf.dizilis].ad + " · maç başı ~%" + Math.round(r.h.p * 100) + "</div>" +
       '<div class="isiklar">' + r.maclar.map((m, i) => '<i class="isik" id="m' + j + "_" + i + '" title="' + (i + 1) + ". maç: " + m.biz + "-" + m.onlar + '"></i>').join("") + "</div></div>";
     const satirlar = (r) => '<div class="satirlar">' + r.h.satirlar.map((s) =>
-      '<div class="sat' + (s.uyum < 1 ? " disi" : "") + '"><div class="no">' + yerKisa(s.yer) + "</div>" + logo(s.p.t.logo) +
+      '<div class="sat' + (s.uyum < 1 ? " disi" : "") + '"><div class="no">' + yerKisa(s.yer) + "</div>" + logo(s.p.t.logo, s.p.t.ad) +
       '<div><div class="isim">' + kac(s.p.o.ad) + trRozet(s.p.o) + '</div><div class="ust">' + kac(s.p.t.ad) + " " + s.p.t.sezon + " · " + mevkiYaz(s.p.o) +
       (s.uyum < 1 ? " → " + yerAdi(s.yer) + " ×" + s.uyum : "") + " · " + sayi1(s.p.o.sy) + " sy · " + sayi1(s.p.o.rb) + " rb · " + sayi1(s.p.o.as) + " as</div></div>" +
       '<div class="guc" title="Güç">' + s.guc.toFixed(1) + "</div></div>").join("") + "</div>";
@@ -484,7 +492,7 @@
       }
       const c = uyumCarpan(p.o, yer), son = S.son && S.son.taraf === g && S.son.i === i && !S.bitti;
       return '<div class="pul dolu' + (c < 1 ? " disi" : "") + (son ? " son" : "") + '"' + stil + ' title="' + kac(p.o.ad + " · " + p.t.ad + " " + p.t.sezon + " · " + mevkiYaz(p.o) + (c < 1 ? " → " + yerAdi(yer) + " ×" + c : "")) + '">' +
-        '<span class="daire">' + logo(p.t.logo) + '<span class="no">' + yerKisa(yer) + "</span>" + (p.o.tr ? '<span class="tr">TR</span>' : "") + "</span>" +
+        '<span class="daire">' + logo(p.t.logo, p.t.ad) + '<span class="no">' + yerKisa(yer) + "</span>" + (p.o.tr ? '<span class="tr">TR</span>' : "") + "</span>" +
         '<span class="etiket iki">' + adEtiketi(p.o.ad) + "</span></div>";
     }).join("");
     Array.prototype.forEach.call($("pullar").querySelectorAll("button.pul"), (b) => {
@@ -504,10 +512,11 @@
     $("durum").innerHTML = '<span class="cip ' + (tr >= minTr() ? "tamam" : "eksik") + '">Türk ' + tr + "/" + minTr() + "</span>" +
       '<span class="cip">' + DZ()[taraf.dizilis].ad + "</span>" +
       (S.cift && !S.bitti && S.takim && !S.cevriliyor && sira !== null ? '<span class="cip sira">Sıra: ' + kac(S.taraflar[sira].ad) + "</span>" : "") +
-      (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" : "") +
+      (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" + '<button class="cip birak" data-birak="1">✕ Vazgeç</button>' : "") +
       (S.cevrim && S.rakipBakiyor && sira === 1 - S.cevrim.ben && S.takim && S.takim.oyuncular.some((x) => x.k === S.rakipBakiyor)
         ? '<span class="cip eksik">' + kac(S.taraflar[1 - S.cevrim.ben].ad) + " bakıyor: " + kac(soyad(S.takim.oyuncular.filter((x) => x.k === S.rakipBakiyor)[0].ad)) + "</span>" : "") +
       (S.cevrim && (S.odaSkor[0] + S.odaSkor[1]) > 0 ? '<span class="cip">Oda: ' + S.odaSkor[0] + "-" + S.odaSkor[1] + "</span>" : "");
+    Array.prototype.forEach.call(document.querySelectorAll("[data-birak]"), (b) => { b.onclick = secimiBirak; });
     Array.prototype.forEach.call($("dizSec").children, (b) => { b.classList.toggle("aktif", b.dataset.diz === taraf.dizilis); b.disabled = S.bitti || taraf.yz; });
     const dolu = hepsiDolu(), sabit = S.cift && S.kaynak === "sabit";
     $("cevir").disabled = !S.basladi || S.cevriliyor || !!S.takim || dolu || S.bitti;
@@ -530,13 +539,19 @@
       $("digerAd").textContent = ot.ad === "Sen" ? "Senin beşin" : ot.ad;
       $("yzEtiket").textContent = (ot.yz ? YZ_AD[S.zorluk] + " · " : "") + "sahada göster";
       $("yzMini").innerHTML = ot.bes.map((p, i) => p
-        ? '<div class="' + (S.son && S.son.taraf === o && S.son.i === i && !S.bitti ? "son" : "") + '" title="' + kac(p.o.ad + " · " + p.t.ad + " " + p.t.sezon) + '">' + logo(p.t.logo) + '<span class="mini-ad">' + adEtiketi(p.o.ad) + "</span>" + "</div>"
+        ? '<div class="' + (S.son && S.son.taraf === o && S.son.i === i && !S.bitti ? "son" : "") + '" title="' + kac(p.o.ad + " · " + p.t.ad + " " + p.t.sezon) + '">' + logo(p.t.logo, p.t.ad) + '<span class="mini-ad">' + adEtiketi(p.o.ad) + "</span>" + "</div>"
         : "<div><b>" + yerKisa(yerler[i]) + "</b>boş</div>").join("");
     }
   }
 
   // ---- çizim: kadro paneli ----
   function panelAc() { S.panelElle = "acik"; panelDurum(); }
+  // yanlışlıkla dokunulan oyuncuyu yerleştirmeden bırak, listeye dön
+  function secimiBirak() {
+    if (!S.secili) return;
+    S.secili = null; bakiyorGonder(null); S.panelElle = "acik";
+    ustCiz(); sahaCiz(); if (S.takim) listeCiz(); panelDurum();
+  }
   function panelDurum() {
     const p = $("panel");
     let d = "";
@@ -544,6 +559,7 @@
     else if (S.takim && !S.cevriliyor && !S.bitti) d = S.panelElle || (S.secili || S.tut ? "kucuk" : "acik");
     p.classList.toggle("acik", d === "acik");
     p.classList.toggle("kucuk", d === "kucuk");
+    p.classList.toggle("yarim", oku("panelBoy", "tam") === "yarim");
   }
 
   function kadroCiz() {
@@ -562,13 +578,16 @@
       return;
     }
     const t = S.takim;
-    k.innerHTML = '<div class="panel-bas">' + logo(t.logo) + '<div><div class="ad">' + kac(t.ad) + '</div><div class="alt">' + t.lig.toUpperCase() + " " + t.sezon +
+    k.innerHTML = '<div class="panel-ust"><div class="secili-serit" id="seciliSerit"></div><button class="panel-boy" id="panelBoy"></button></div>' +
+      '<div class="panel-bes" id="panelBes"></div>' +
+      '<div class="panel-bas">' + logo(t.logo, t.ad) + '<div><div class="ad">' + kac(t.ad) + '</div><div class="alt">' + t.lig.toUpperCase() + " " + t.sezon +
       (t.gercek ? " · gerçek <b>" + t.gercek + "</b>" + (t.sira ? " (" + t.sira + ".)" : "") : "") + "</div></div></div>" +
       '<div class="arac"><input id="ara" type="search" placeholder="Oyuncu ara" value="' + kac(S.ara) + '" autocomplete="off">' +
       (ayar.zor ? "" : '<select id="sirala" aria-label="Sırala">' + Object.keys(SIRALAR).map((s) => '<option value="' + s + '"' + (S.sirala === s ? " selected" : "") + ">" + SIRALAR[s] + "</option>").join("") + "</select>") + "</div>" +
       '<div class="suzgec" id="suzgec">' + (S.sistem === "ao" ? [0, "A", "O"] : [0, 1, 2, 3, 4, 5]).map((m) => '<button data-m="' + m + '" class="' + (S.suzgec === m ? "aktif" : "") + '" title="' +
         (!m ? "Bütün mevkiler" : m === "A" ? "Arka" : m === "O" ? "Ön" : MEVKI_AD[m]) + '">' + (!m ? "Tümü" : m === "A" ? "Arka" : m === "O" ? "Ön" : m) + "</button>").join("") + "</div>" +
       '<div class="liste" id="liste"></div><div class="ipucu" id="kadroIpucu"></div>';
+    $("panelBoy").onclick = () => { yaz("panelBoy", oku("panelBoy", "tam") === "yarim" ? "tam" : "yarim"); S.panelElle = "acik"; panelDurum(); listeCiz(); };
     $("ara").oninput = (e) => { S.ara = e.target.value; listeCiz(); };
     if ($("sirala")) $("sirala").onchange = (e) => { S.sirala = e.target.value; listeCiz(); };
     Array.prototype.forEach.call($("suzgec").children, (b) => { b.onclick = () => { S.suzgec = isNaN(+b.dataset.m) ? b.dataset.m : +b.dataset.m; Array.prototype.forEach.call($("suzgec").children, (x) => x.classList.toggle("aktif", x === b)); listeCiz(); }; });
@@ -595,6 +614,14 @@
         (bakilan ? '<span class="alindi">' + kac(S.taraflar[1 - S.cevrim.ben].ad) + " bakıyor</span>" : "") +
         '</div><div class="ust">' + mevkiUzun(o) + " · " + o.mac + " maç" + (zor ? "" : " · " + o.dk.toFixed(0) + " dk") + "</div>" + sayilar(o) + "</div>" + sag(o) + "</button>";
     }).join("") : '<div class="bos" style="padding:20px">Bu süzgeçle oyuncu yok</div>';
+    // panelin üst şeridi (telefonda panel küçükken de görünür) ve panel içindeki beş (telefonda sahayı görmeden seçtiklerin)
+    $("seciliSerit").innerHTML = S.secili ? "Seçili: <b>" + kac(S.secili.ad) + '</b> <button class="cip birak" data-birak="1">✕ Vazgeç</button>'
+      : '<span class="soluk">' + (a !== null ? "Oyuncu seç" : sira !== null ? "Sıra: " + kac(S.taraflar[sira].ad) : "") + "</span>";
+    $("panelBoy").textContent = oku("panelBoy", "tam") === "yarim" ? "▴ Büyüt" : "▾ Küçült";
+    const bt = S.taraflar[a !== null ? a : S.gorunen], byer = DZ()[bt.dizilis].yerler;
+    $("panelBes").innerHTML = '<span class="pb-bas">' + kac(bt.ad === "Sen" ? "Beşin" : bt.ad) + "</span>" + bt.bes.map((p, i) =>
+      '<span class="pb' + (p ? " dolu" : "") + '"><i>' + yerKisa(byer[i]) + "</i>" + (p ? kac(soyad(p.o.ad)) : "–") + "</span>").join("");
+    Array.prototype.forEach.call(document.querySelectorAll("#seciliSerit [data-birak]"), (b) => { b.onclick = secimiBirak; });
     $("kadroIpucu").innerHTML = sira !== null && S.taraflar[sira].yz ? "<b>AI düşünüyor…</b>"
       : S.secili ? "<b>" + kac(S.secili.ad) + "</b> (" + mevkiUzun(S.secili) + ") seçildi: sahada parlayan bir yere dokun."
       : (S.iki && a !== null ? "<b>Sıra: " + kac(S.taraflar[a].ad) + ".</b> " : "") + "Bir oyuncuya dokun, sonra sahada bir yer seç." + (a !== null && trZorunlu(S.taraflar[a]) ? " Kalan yerler Türk oyuncu olmalı." : "");

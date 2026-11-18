@@ -4,7 +4,7 @@ Kullanım: python veri/isle.py [ham_klasor]
 Her takım-sezon: ad, logo, gerçek normal sezon derecesi, oyuncular (sezon ortalamaları, uyruk, boy, mevki, güç).
 Güç (g): VP ortalaması, az maç oynayanlarda yedek seviyesine çekilir ve sezonun VP ölçeğine göre normalleştirilir.
 Takım gücünden galibiyet oranına giden eğri, gerçek takımların ilk beşlerinden (en çok süre alan 5) uydurulur."""
-import json, math, os, re, sys, unicodedata
+import json, math, os, re, sys, unicodedata, urllib.parse
 from difflib import SequenceMatcher
 from pathlib import Path
 
@@ -225,6 +225,66 @@ def mevki_tutarla(cikti):
     print("Mevki: tahminler oyuncu başına teke indi (" + str(degisen) + " oyuncu-sezon değişti); elle düzeltme:", len(duzeltme), "oyuncu", flush=True)
 
 
+LOGO_GENEL = {"logo", "logosu", "yeni", "renkli", "beyaz", "zemin", "kopya", "copy", "basketbol", "basket", "spor", "kulubu",
+              "kulup", "belediye", "belediyesi", "belediyespor", "buyuksehir", "orjinal", "cmyk", "png", "jpg", "gif", "jpeg", "fsbin"}
+
+
+def _kelimeler(x):
+    x = urllib.parse.unquote(x or "").replace("ı", "i").replace("İ", "I")
+    x = unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower()
+    return {k for k in re.findall(r"[a-z]{4,}", x) if k not in LOGO_GENEL}
+
+
+def _ad_bicimleri(ad):
+    """Takım adı kelimeleri iki biçimde: Türkçe harfler sadeleşmiş (bahcesehir) ve düşmüş (baheehir); dosya adlarında ikisi de var."""
+    a = (ad or "").lower().replace("ı", "i").replace("i̇", "i")
+    sade = unicodedata.normalize("NFKD", a).encode("ascii", "ignore").decode()
+    dusuk = re.sub(r"[^a-z ]", "", "".join(ch if ch.isascii() else "" for ch in a))
+    return {k for k in re.findall(r"[a-z]{6,}", sade + " " + dusuk) if k not in LOGO_GENEL}
+
+
+def _dosya_metni(url):
+    x = urllib.parse.unquote((url or "").rsplit("/", 1)[-1]).replace("ı", "i").replace("İ", "I")
+    return re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower())
+
+
+def logo_duzelt(cikti):
+    """TBF bazı eski sezonlarda kulübün başka dönemine ya da başka kulübe ait logoyu veriyor (ör. Banvit sezonlarında
+    "bandirma-bk-logo", Bandırma Kırmızı'da "Sigortam.net"). Kural: logo dosyasının adındaki bir kelime başka bir takımın
+    adında geçiyor ama o sezonun takım adında geçmiyorsa logo yanlış sayılır; yerine aynı kulübün aynı adlı en yakın sezonunun
+    doğru logosu konur, yoksa logo boş kalır (oyun baş harfleri gösterir). veri/logo_duzeltme.json elle düzeltmedir:
+    {"<takım-sezon id>": "<logo adresi ya da boş>"} ve her kuralın önüne geçer."""
+    yol = KOK / "logo_duzeltme.json"
+    elle = {k: v for k, v in json.loads(yol.read_text(encoding="utf-8")).items() if not k.startswith("_")} if yol.exists() else {}
+    hepsi = [t for takimlar in cikti.values() for t in takimlar]
+    ad_kelimeleri = set().union(*(_ad_bicimleri(t["ad"]) for t in hepsi))
+    def yanlis(t):
+        metin = _dosya_metni(t["logo"])
+        a = (t["ad"] or "").lower().replace("ı", "i").replace("i̇", "i")
+        sade = unicodedata.normalize("NFKD", a).encode("ascii", "ignore").decode()
+        dusuk = "".join(ch if ch.isascii() else "" for ch in a)  # dosya adlarında Türkçe harf düşmüş olabilir (KARIYAKA)
+        kendi = set(re.findall(r"[a-z]{4,}", sade + " " + dusuk)) - LOGO_GENEL
+        if any(k[:5] in metin for k in kendi):  # dosya adı kendi adından bir kelime içeriyorsa doğru sayılır
+            return False
+        return any(k in metin for k in ad_kelimeleri)
+    duzelen, bos = 0, 0
+    for t in hepsi:
+        if t["id"] in elle:
+            t["logo"] = elle[t["id"]]; continue
+        if not t["logo"] or not yanlis(t):
+            continue
+        yil = int(t["sezon"][:4])
+        adaylar = [x for x in hepsi if x["kulup"] == t["kulup"] and x["ad"] == t["ad"] and x["logo"] and not yanlis(x) and x["id"] != t["id"]]
+        eski = t["logo"]
+        if adaylar:
+            t["logo"] = min(adaylar, key=lambda x: abs(int(x["sezon"][:4]) - yil))["logo"]; duzelen += 1
+        else:
+            t["logo"] = ""; bos += 1
+        if os.environ.get("LOGO_RAPOR"):
+            print("  logo:", t["lig"], t["sezon"], t["ad"], "|", urllib.parse.unquote(eski.rsplit("/", 1)[-1])[-40:], "→", urllib.parse.unquote(t["logo"].rsplit("/", 1)[-1])[-40:] or "(baş harf)")
+    print("Logo: yanlış görünen", duzelen + bos, "takım-sezon;", duzelen, "en yakın doğru logoyla değişti,", bos, "boş (baş harf); elle:", len(elle), flush=True)
+
+
 def geri_test(cikti, esik=None):
     """Dürüst sınama: takımın gerçek galibiyet oranını, ilk beşinin (en çok süre alan 5) ÖNCEKİ sezondaki güçlerinden tahmin et.
     Oyun oyuncuları başka takımlarla birleştirdiği için asıl ölçü budur. 'transfer': yalnız önceki sezon başka kulüpte olanlar.
@@ -387,6 +447,7 @@ def main():
         cikti[lig] = takimlar_hepsi
 
     mevki_tutarla(cikti)
+    logo_duzelt(cikti)
     geri_test(cikti, esik)
 
     # galibiyet eğrisi: p = 1 / (1 + exp(-(R - orta) / olcek)). Güç ölçümündeki gürültü eğimi düzleştirmesin diye

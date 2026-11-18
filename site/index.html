@@ -90,6 +90,21 @@ details.kural b{color:var(--yazi)}
 .pul .etiket.iki{display:flex;flex-direction:column;align-items:center;line-height:1.05;padding:2px 6px;gap:0;color:var(--yazi)}
 .pul .etiket.iki small,.pul .etiket.iki b{max-width:84px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
 .pul .etiket.iki small,.pul .etiket.iki b{font-size:11px;font-weight:700;color:var(--yazi);margin:0}
+.panel-ust{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;min-height:28px;flex:none}
+.secili-serit{font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+.secili-serit .soluk{color:var(--soluk)}
+.cip.birak{background:var(--turuncu-acik);border-color:var(--turuncu);color:var(--turuncu);cursor:pointer}
+.panel-boy{display:none;border:1px solid var(--cizgi);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--soluk);flex:none}
+.panel-bes{display:none;gap:4px;margin:0 0 10px;overflow-x:auto;flex:none;align-items:center}
+.panel-bes .pb-bas{font-size:11px;font-weight:700;color:var(--soluk);text-transform:uppercase;margin-right:2px}
+.panel-bes .pb{flex:none;font-size:11.5px;font-weight:700;border:1px dashed var(--cizgi);border-radius:8px;padding:3px 7px;color:var(--soluk);white-space:nowrap}
+.panel-bes .pb.dolu{border-style:solid;border-color:var(--vurgu-koyu);color:var(--yazi)}
+.panel-bes .pb i{font-style:normal;color:var(--vurgu);margin-right:4px}
+@media (max-width:899px){.panel-boy{display:block}.panel-bes{display:flex}.panel.acik.yarim{max-height:42vh}}
+.bas-harf{display:grid;place-items:center;border-radius:50%;background:var(--vurgu-acik);color:var(--vurgu);font-family:var(--baslik);font-weight:800;letter-spacing:.5px;width:40px;height:40px;font-size:16px;flex:none}
+.mini .bas-harf{width:26px;height:26px;font-size:11px;margin:0 auto 3px}
+.sat .bas-harf{width:30px;height:30px;font-size:12px}
+.panel-bas .bas-harf{width:44px;height:44px;font-size:17px;border-radius:10px}
 .mini-ad{display:block;line-height:1.1}
 .mini-ad small,.mini-ad b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mini-ad small,.mini-ad b{font-size:10.5px;font-weight:700;color:var(--yazi);line-height:1.05}
@@ -300,10 +315,10 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
   <footer>Veri: Türkiye Basketbol Federasyonu (tbf.org.tr) sezon istatistikleri, normal sezon + play-off ortalamaları. Mevki Wikidata'dan (CC0), yoksa boy ve istatistikten tahmin. BSL 2004-05 ve 2006-07'de TBF yalnız sayı tuttuğu için bu iki sezon yok. Bir hayran oyunu; TBF ile bağlantısı yoktur.</footer>
 </div>
 <div class="toast" id="toast"></div>
-<script src="veri/bsl.js?v=20261118b"></script>
-<script src="veri/tbl.js?v=20261118b"></script>
-<script src="firebase-ayar.js?v=20261118b"></script>
-<script src="baglanti.js?v=20261118b"></script>
-<script src="oyun.js?v=20261118b"></script>
+<script src="veri/bsl.js?v=20261118c"></script>
+<script src="veri/tbl.js?v=20261118c"></script>
+<script src="firebase-ayar.js?v=20261118c"></script>
+<script src="baglanti.js?v=20261118c"></script>
+<script src="oyun.js?v=20261118c"></script>
 </body>
 </html>
