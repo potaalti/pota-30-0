@@ -703,13 +703,12 @@
     }
     const t = S.takim;
     k.innerHTML = '<div class="panel-ust"><div class="secili-serit" id="seciliSerit"></div><button class="panel-boy" id="panelBoy"></button></div>' +
-      '<div class="panel-bes" id="panelBes"></div>' +
       '<div class="panel-bas">' + logo(t.logo, t.ad) + '<div><div class="ad">' + kac(t.ad) + '</div><div class="alt">' + t.lig.toUpperCase() + " " + t.sezon +
       (t.gercek ? " · gerçek <b>" + t.gercek + "</b>" + (t.sira ? " (" + t.sira + ".)" : "") : "") + "</div></div></div>" +
-      '<div class="arac"><input id="ara" type="search" placeholder="Oyuncu ara" value="' + kac(S.ara) + '" autocomplete="off">' +
-      (ayar.zor ? "" : '<select id="sirala" aria-label="Sırala">' + Object.keys(SIRALAR).map((s) => '<option value="' + s + '"' + (S.sirala === s ? " selected" : "") + ">" + SIRALAR[s] + "</option>").join("") + "</select>") + "</div>" +
-      '<div class="suzgec" id="suzgec">' + (S.sistem === "ao" ? [0, "A", "O"] : [0, 1, 2, 3, 4, 5]).map((m) => '<button data-m="' + m + '" class="' + (S.suzgec === m ? "aktif" : "") + '" title="' +
+      '<div class="arac"><input id="ara" type="search" placeholder="Oyuncu ara" value="' + kac(S.ara) + '" autocomplete="off"></div>' +
+      '<div class="suzgec-satir"><div class="suzgec" id="suzgec">' + (S.sistem === "ao" ? [0, "A", "O"] : [0, 1, 2, 3, 4, 5]).map((m) => '<button data-m="' + m + '" class="' + (S.suzgec === m ? "aktif" : "") + '" title="' +
         (!m ? "Bütün mevkiler" : m === "A" ? "Arka" : m === "O" ? "Ön" : MEVKI_AD[m]) + '">' + (!m ? "Tümü" : m === "A" ? "Arka" : m === "O" ? "Ön" : m) + "</button>").join("") + "</div>" +
+      (ayar.zor ? "" : '<select id="sirala" aria-label="Sırala">' + Object.keys(SIRALAR).map((s) => '<option value="' + s + '"' + (S.sirala === s ? " selected" : "") + ">" + SIRALAR[s] + "</option>").join("") + "</select>") + "</div>" +
       '<div class="liste" id="liste"></div><div class="ipucu" id="kadroIpucu"></div>';
     $("panelBoy").onclick = () => { yaz("panelBoy", oku("panelBoy", "tam") === "yarim" ? "tam" : "yarim"); S.panelElle = "acik"; panelDurum(); listeCiz(); };
     $("ara").oninput = (e) => { S.ara = e.target.value; listeCiz(); };
@@ -744,9 +743,6 @@
     $("seciliSerit").innerHTML = S.secili ? "Seçili: <b>" + kac(S.secili.ad) + '</b> <button class="cip birak" data-birak="1">✕ Vazgeç</button>'
       : '<span class="soluk">' + (a !== null ? "Oyuncu seç" : sira !== null ? "Sıra: " + kac(S.taraflar[sira].ad) : "") + "</span>";
     $("panelBoy").textContent = oku("panelBoy", "tam") === "yarim" ? "▴ Büyüt" : "▾ Küçült";
-    const bt = S.taraflar[a !== null ? a : S.gorunen], byer = DZ()[bt.dizilis].yerler;
-    $("panelBes").innerHTML = '<span class="pb-bas">' + kac(bt.ad === "Sen" ? "Beşin" : bt.ad) + "</span>" + bt.bes.map((p, i) =>
-      '<span class="pb' + (p ? " dolu" : "") + '"><i>' + yerKisa(byer[i]) + "</i>" + (p ? kac(soyad(p.o.ad)) : "–") + "</span>").join("");
     Array.prototype.forEach.call(document.querySelectorAll("#seciliSerit [data-birak]"), (b) => { b.onclick = secimiBirak; });
     $("kadroIpucu").innerHTML = sira !== null && S.taraflar[sira].yz ? "<b>AI düşünüyor…</b>"
       : S.secili ? "<b>" + kac(S.secili.ad) + "</b> (" + mevkiUzun(S.secili) + ") seçildi: sahada parlayan bir yere dokun."
