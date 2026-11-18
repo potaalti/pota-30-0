@@ -303,13 +303,29 @@
   // dakikada lig ortalaması bir oyuncu konunca bu farkın ne kadar düştüğü. Etkenler: bir istatistiği lig ortalamasına
   // çekince farkın ne kadar değiştiği (sayı / maç).
   function motorKisiler(bes, yerler) { return bes.map((p, i) => (p ? { o: p.o, uyum: uyumCarpan(p.o, yerler[i]), ad: p.o.ad } : { ortalama: true, dk: 28, ad: "" })); }
+  function oyunSecenek() { const M = S.veri.motor; return { diklik: M.oyunDiklik, dakika: M.oyunDakika, sinerji: M.oyunSinerji }; }
+  // beşteki rol sayıları (yalnız seçilenler): sahanın altındaki rol şeridi ve sonuç ekranı için
+  function rolDurumu(taraf) {
+    const M = S.veri.motor; if (!M.roller) return null;
+    const yerler = DZ()[taraf.dizilis].yerler, kis = [];
+    taraf.bes.forEach((p, i) => { if (p) kis.push({ o: p.o, uyum: uyumCarpan(p.o, yerler[i]) }); });
+    const n = Motor.sinerji(kis, M).n;
+    return M.roller.map((k) => ({ k: k, ad: Motor.ROL_AD[k], n: n[k], hedef: Motor.ROL_HEDEF[k] }));
+  }
+  function rolCipleri(taraf) {
+    const d = rolDurumu(taraf); if (!d || ayar.zor) return "";
+    return d.map((x) => '<span class="cip ' + (x.n >= x.hedef * 0.75 ? "tamam" : "eksik") + '" title="Beşte ' + kac(x.ad.toLocaleLowerCase("tr")) +
+      " rolü: " + x.n.toFixed(1).replace(".", ",") + " (hedef " + x.hedef + "; ilk oyuncu çok, sonrakiler daha az değerli)\">" + kac(x.ad) + " " +
+      (x.n >= x.hedef * 0.75 ? "✓" : x.n.toFixed(1).replace(".", ",") + "/" + x.hedef) + "</span>").join("");
+  }
   function motorFark(kisiler) {
-    const M = S.veri.motor;
-    return Motor.beklenenFark(Motor.takimKur(kisiler, M, { diklik: M.oyunDiklik }), { r: Motor.ligTakimi(M).r }, M, 0);
+    const M = S.veri.motor; Motor.havuz(S.veri); // havuz sinerji tabanını da kurar
+    return Motor.beklenenFark(Motor.takimKur(kisiler, M, oyunSecenek()), { r: Motor.ligTakimi(M).r }, M, 0);
   }
   function hesap(taraf) {
+    Motor.havuz(S.veri);
     const M = S.veri.motor, yerler = DZ()[taraf.dizilis].yerler, kisiler = motorKisiler(taraf.bes, yerler);
-    const A = Motor.takimKur(kisiler, M, { diklik: M.oyunDiklik }), R = motorFark(kisiler);
+    const A = Motor.takimKur(kisiler, M, oyunSecenek()), R = motorFark(kisiler);
     const satirlar = taraf.bes.map((p, i) => {
       const yerine = kisiler.slice(); yerine[i] = { ortalama: true, dk: p.o.m[0], ad: "" };
       let kayip = 0;
@@ -400,12 +416,12 @@
       '<div><div class="isim">' + kac(s.p.o.ad) + trRozet(s.p.o) + '</div><div class="ust">' + kac(s.p.t.ad) + " " + s.p.t.sezon + " · " + mevkiYaz(s.p.o) +
       (s.uyum < 1 ? " → " + yerAdi(s.yer) + " ×" + s.uyum : "") + " · " + sayi1(s.p.o.sy) + " sy · " + sayi1(s.p.o.rb) + " rb · " + sayi1(s.p.o.as) + " as</div></div>" +
       '<div class="guc" title="Katkı: yerine aynı dakikada lig ortalaması bir oyuncu konsa beşin beklenen farkı bu kadar değişirdi (sayı/maç)">' + isaretli(s.guc) + "</div></div>").join("") + "</div>";
-    const ozet = (r) => '<div class="ozet"><div><b>En iyi seçim</b>' + kac(enIyiSecim(r.h)) + "</div><div><b>En büyük zayıflık</b>" + kac(enZayif(r.h)) + "</div></div>" + dengeSatir(r);
-    const dengeSatir = (r) => { // dört alan; hiçbiri eksi değilse denge ödülü
-      const d = r.h.A.denge; if (!d) return "";
-      const zayif = d.alan.filter((x) => x.d < 0).map((x) => x.ad.toLocaleLowerCase("tr"));
-      return '<div class="etkiler denge-satir"><b>' + (d.puan > 0 ? "Dengeli beş +" + d.puan.toFixed(1).replace(".", ",") : "Denge ödülü yok (" + zayif.join(", ") + " zayıf)") + "</b>" +
-        d.alan.map((x) => '<span class="' + (x.d >= 0 ? "arti" : "eksi") + '">' + kac(x.ad) + " " + isaretli(x.d) + "</span>").join("") + "</div>";
+    const ozet = (r) => '<div class="ozet"><div><b>En iyi seçim</b>' + kac(enIyiSecim(r.h)) + "</div><div><b>En büyük zayıflık</b>" + kac(enZayif(r.h)) + "</div></div>" + rolSatir(r);
+    const rolSatir = (r) => { // beşin rolleri ve sinerjinin sayı katkısı
+      const sin = r.h.etkiler.filter((e) => /sinerjisi$/.test(e.ad)), top = sin.reduce((x, e) => x + e.d, 0);
+      return '<div class="etkiler rol-satir"><b>Roller</b>' + rolCipleri(r.taraf) + "</div>" +
+        '<div class="etkiler rol-satir"><b>Sinerji ' + isaretli(top) + " sayı/maç</b>" + sin.map((e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' +
+        kac(e.ad.replace(" sinerjisi", "")) + " " + isaretli(e.d) + "</span>").join("") + "</div>";
     };
     const sezonKutu = (r) => {
       const k = kutuTopla(r.maclar.map((m) => m.kutu), r.maclar.length), kis = r.h.A.kisiler;
@@ -451,7 +467,8 @@
       "Her oyuncu o sezonki kutu istatistikleri ve dakikasıyla oynar (dönem farkı giderilir, az maç oynayanlar lig ortalamasına çekilir); kalan dakikayı lig ortalaması yedekler oynar. " +
       "Takımının sayı averajından dakika payı kutuya yansımayan katkıyı taşır. Mevki dışı ×" + (S.sistem === "ao" ? AO_DISI : UYUM_CARPAN.slice(1).join(" / ×")) +
       ": ribaund, asist, savunma azalır, top kaybı artar. Rakipler ligin gerçek takımları (en çok süre alan beşleri); iç sahada +" + Motor.AYAR.ev + " sayı. " +
-      "Motor gerçek takımlarla sınandı; oyunda kurulan beşlerin lig ortalamasından farkı ×" + String(S.veri.motor.oyunDiklik).replace(".", ",") + ".</p>";
+      "Roller (şutör, oyun kurucu, içeri skorer, pota koruyucu, top çalan, ribaundçu) sinerji verir: her rolün ilk oyuncusu çok, sonrakiler daha az değerli; eksik rol isabeti ve ribaundu düşürür. " +
+      "Motor gerçek takımlarla sınandı. Oyun ayarı: kurduğun beşin oyuncuları en az " + S.veri.motor.oyunDakika + " dakika oynar, rol sinerjisi ×" + S.veri.motor.oyunSinerji + ", fark ×" + String(S.veri.motor.oyunDiklik).replace(".", ",") + ".</p>";
     el.innerHTML = html;
     sonuclar.forEach((r, j) => {
       let i = 0, gs = 0;
@@ -528,7 +545,7 @@
     $("turAd").innerHTML = (S.bitti || hepsiDolu() ? (S.cift ? "Beşler hazır" : "Beşin hazır") : "Tur " + tur + " <span>/ 5</span>");
     $("cubuklar").innerHTML = [0, 1, 2, 3, 4].map((i) => '<i class="' + (i < secilen ? "dolu" : "") + '"></i>').join("");
     const tr = trSayisi(taraf), sira = siradaki();
-    $("durum").innerHTML = '<span class="cip ' + (tr >= minTr() ? "tamam" : "eksik") + '">Türk ' + tr + "/" + minTr() + "</span>" +
+    $("durum").innerHTML = '<span class="cip ' + (tr >= minTr() ? "tamam" : "eksik") + '">Türk ' + tr + "/" + minTr() + "</span>" + rolCipleri(taraf) +
       '<span class="cip">' + DZ()[taraf.dizilis].ad + "</span>" +
       (S.cift && !S.bitti && S.takim && !S.cevriliyor && sira !== null ? '<span class="cip sira">Sıra: ' + kac(S.taraflar[sira].ad) + "</span>" : "") +
       (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" + '<button class="cip birak" data-birak="1">✕ Vazgeç</button>' : "") +
@@ -622,6 +639,8 @@
     else if (S.sirala !== "dk") oy = oy.slice().sort((x, y) => (y[S.sirala] || 0) - (x[S.sirala] || 0));
     const sayilar = (o) => zor ? "" : '<div class="sayilar">' + sayi1(o.sy) + " <span>sy</span> · " + sayi1(o.rb) + " <span>rb</span> · " + sayi1(o.as) + " <span>as</span> · " +
       sayi1(o.kul) + ' <span title="' + BASLIK_UZUN.kul + '">kul</span> · ' + sayi1(o.st) + " <span>tç</span> · " + sayi1(o.bl) + " <span>blk</span></div>";
+    const roller = (o) => zor || !o.r || !S.veri.motor.roller ? "" : '<div class="roller">' + S.veri.motor.roller.map((k, i) => ({ k: k, v: o.r[i] }))
+      .filter((x) => x.v >= 0.5).sort((x, y) => y.v - x.v).slice(0, 3).map((x) => "<span>" + kac(Motor.ROL_AD[x.k]) + "</span>").join("") + "</div>";
     const sag = (o) => zor ? '<div class="vp"><b>' + o.mac + "</b><span>maç</span></div>" : '<div class="vp" title="Verimlilik puanı"><b>' + sayi1(o.vp) + "</b><span>VP</span></div>";
     $("liste").innerHTML = oy.length ? oy.map((o) => {
       const neden = secilebilir(taraf, o), kim = S.alinan[alinanAnahtar(t, o)];
@@ -631,7 +650,7 @@
         mkRozet(o) + '<div style="min-width:0"><div class="isim">' + kac(o.ad) + trRozet(o) +
         (kim !== undefined ? '<span class="alindi">' + kac(S.taraflar[kim].ad === "Sen" ? "sende" : S.taraflar[kim].ad) + "</span>" : "") +
         (bakilan ? '<span class="alindi">' + kac(S.taraflar[1 - S.cevrim.ben].ad) + " bakıyor</span>" : "") +
-        '</div><div class="ust">' + mevkiUzun(o) + " · " + o.mac + " maç" + (zor ? "" : " · " + o.dk.toFixed(0) + " dk") + "</div>" + sayilar(o) + "</div>" + sag(o) + "</button>";
+        '</div><div class="ust">' + mevkiUzun(o) + " · " + o.mac + " maç" + (zor ? "" : " · " + o.dk.toFixed(0) + " dk") + "</div>" + sayilar(o) + roller(o) + "</div>" + sag(o) + "</button>";
     }).join("") : '<div class="bos" style="padding:20px">Bu süzgeçle oyuncu yok</div>';
     // panelin üst şeridi (telefonda panel küçükken de görünür) ve panel içindeki beş (telefonda sahayı görmeden seçtiklerin)
     $("seciliSerit").innerHTML = S.secili ? "Seçili: <b>" + kac(S.secili.ad) + '</b> <button class="cip birak" data-birak="1">✕ Vazgeç</button>'

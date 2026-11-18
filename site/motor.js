@@ -7,26 +7,44 @@
 // Takımın sayı averajından gelen dakika payı ("nt") kutuya yansımayan etkiyi taşır.
 (function () {
   const K = ["a2", "m2", "a3", "m3", "fa", "fm", "or", "dr", "as", "st", "bl", "tk", "pf"];
-  // Katsayılar gerçek takımlarla sınandı (2026-11-18): önceki sezon verisiyle kurulan ilk beş bu sezonun galibiyet
-  // oranını BSL'de r≈0,73 (eski güç modeli 0,75), TBL'de r≈0,47 (eski 0,57) tahmin ediyor. kFazla oyun ayarı
-  // (2026-11-18, kullanıcı): en yüksek VP'lilerle ve en skorerlerle kurulan beş aynı yerde (~20 / 30) dursun, yalnız
-  // dengeli kurmak ödüllensin. −0,15'ten −0,55'e çekince BSL tahmini 0,76 → 0,73, TBL aynı.
+  // Katsayılar gerçek takımlarla sınandı (2026-11-18): önceki sezon verisiyle kurulan gerçek ilk beş bu sezonun
+  // galibiyet oranını BSL'de r≈0,73, TBL'de r≈0,46 tahmin ediyor (eski güç modeli 0,75 / 0,57; sinerjisiz motor 0,76 / 0,46).
   const AYAR = {
     kAs: 0.12,     // asist oranı lig ortalamasından 0,1 fazlaysa şut isabeti +1,2 puan
     kEksik: 0.6,   // takımın doğal şut yaratması gerekenin %10 altındaysa isabet −6 puan (zorlama şutlar)
-    kFazla: -0.55, // şut yaratan oyuncu çoksa (doğal kullanım fazlası %10) zor şutlar da girer: isabet +5,5 puan (en çok %50 fazla)
+    kFazla: -0.2,  // şut yaratan çoksa zor şutlar da girer: kullanım fazlası %10 başına +2 isabet puanı (en çok %50 fazla)
     lambda: 1.5,   // takım averajı payının sayıya geçen kısmı
     guvenMac: 8,   // az maç oynayanın istatistiği bu kadar maçta yarı yarıya lig ortalamasına çekilir
     ev: 3,         // ev sahibi avantajı, sayı
-    sigma: 13.9    // maç sonucunun beklenen farktan sapması (motorun kendi maçlarında ölçüldü)
+    sigma: 13.9,   // maç sonucunun beklenen farktan sapması (motorun kendi maçlarında ölçüldü)
+    // Rol sinerjisi (Basketball GM'nin beceri etiketlerinden esinle): beşteki rol sayıları azalan getiriyle hücum, savunma
+    // ve ribaund sinerjisi verir; gerçek ilk beşlerin ortalamasından sapma isabeti ve ribaund payını kaydırır.
+    sinOff: 0.06, sinDef: 0.05, sinRib: 0.25
   };
+  const SIN = { // rol: [hangi sinerji, ağırlık, kaçıncı oyuncuda yarı yarıya]; ilk oyuncu çok, sonrakiler azalan değer
+    sut: ["off", 0.45, 1.5], ok: ["off", 0.35, 0.7], ic: ["off", 0.2, 0.7],
+    pota: ["def", 0.55, 0.7], cevre: ["def", 0.45, 0.9], rib: ["rib", 1, 1.2]
+  };
+  const ROL_AD = { sut: "Şutör", ok: "Oyun kurucu", ic: "İçeri skorer", pota: "Pota koruyucu", cevre: "Top çalan", rib: "Ribaundçu" };
+  const ROL_HEDEF = { sut: 2, ok: 1, ic: 1, pota: 1, cevre: 1, rib: 1 }; // sinerjinin büyük kısmı bu sayıda dolar
+  function sinerji(kisiler, M) { // kisiler: takimKur girdisi (yedekler hariç beş)
+    const n = {}; (M.roller || []).forEach((k) => { n[k] = 0; });
+    kisiler.forEach((x) => {
+      const rp = x.ortalama ? M.rolOrt : x.o.r, dk = x.ortalama ? x.dk : x.o.dk, ag = Math.min(1, dk / 24) * (x.uyum == null ? 1 : x.uyum);
+      if (rp) M.roller.forEach((k, i) => { n[k] += rp[i] * ag; });
+    });
+    const s = { off: 0, def: 0, rib: 0, n: n };
+    Object.keys(SIN).forEach((k) => { if (k in n) { const [t, a, m] = SIN[k]; s[t] += a / (1 + Math.exp(-3 * (n[k] - m))); } });
+    return s;
+  }
 
   function sinir(x, a, b) { return Math.max(a, Math.min(b, x)); }
 
   // kisiler: [{ o, uyum, ad }] ya da { ortalama: true, dk, ad } (lig ortalaması oyuncu)
+  // secenek (yalnız kurulan beşler, oyun ayarı; değerler veride motor.oyun*): diklik = lig ortalamasından farkların katı,
+  // dakika = beşin oyuncuları en az bu kadar oynar (en çok %35 fazla), sinerji = rol sinerjisinin ağırlığı.
   function takimKur(kisiler, M, secenek) {
     // M.diklik: motorun farkları gerçek takımlarınkinden dar çıkıyor, lig başına gerçeğe göre açılır (veri/isle.py).
-    // secenek.diklik: oyunun kendi ayarı (yalnız kurulan beşler).
     const L = M.L, D = ((secenek && secenek.diklik) || 1) * (M.diklik || 1);
     const liste = kisiler.map((x) => {
       const v = {};
@@ -43,7 +61,11 @@
         const dus = (1 - u) * 0.15;
         v.m2 = Math.max(0, v.m2 - v.a2 * dus); v.m3 = Math.max(0, v.m3 - v.a3 * dus);
       }
-      return { ad: x.ad, v: v, nt: x.o.nt || 0 };
+      let nt = x.o.nt || 0;
+      if (secenek && secenek.dakika && v.dk < secenek.dakika) {
+        const c = Math.min(1.35, secenek.dakika / v.dk); v.dk *= c; K.forEach((k) => { v[k] *= c; }); nt *= c;
+      }
+      return { ad: x.ad, v: v, nt: nt };
     });
     let dk = liste.reduce((a, p) => a + p.v.dk, 0);
     if (dk > 200) { const c = 200 / dk; liste.forEach((p) => { p.v.dk *= c; K.forEach((k) => { p.v[k] *= c; }); p.nt *= c; }); dk = 200; }
@@ -51,45 +73,14 @@
     if (yedekDk > 0.5) { const v = { dk: yedekDk }; K.forEach((k) => { v[k] = yedekDk * L[k]; }); liste.push({ ad: "Yedekler", yedek: true, v: v, nt: 0 }); }
     const T = {}; K.forEach((k) => { T[k] = liste.reduce((a, p) => a + p.v[k], 0); });
     T.nt = liste.reduce((a, p) => a + p.nt, 0) / 5; // beşin takım averajındaki payı (sayı/maç)
-    const lr = ligOranlari(M), ham = oranlar(T);
-    const ac = (Dx) => {
-      const r = oranlar(T);
-      if (Dx !== 1) { Object.keys(r).forEach((k) => { if (k in lr) r[k] = lr[k] + Dx * (r[k] - lr[k]); }); r.nt *= Dx; }
-      const kul = r.kul / lr.kul;
-      r.eksik = Math.max(0, 1 - kul); r.fazla = Math.max(0, kul - 1);
-      return r;
-    };
-    let r = ac(D), denge = null;
-    // Denge ödülü (yalnız kurulan beşler): dört alan (şut, ribaund, oyun kurma, savunma) ayrı ayrı lig ortalamasına
-    // göre sayıya çevrilir; hiçbiri lig ortalamasının altında değilse dengeTaban + dengeK × en zayıf alan (en çok dengeTavan). Zayıf alanı olmayan beş ödüllenir (2026-11-18, kullanıcı:
-    // "en dengeli beşi kurmanın 30-0 ihtimali daha yüksek olmalı").
-    if (secenek && secenek.diklik && M.dengeK) {
-      const alan = dengeAlanlari(r, M), enZayif = Math.min.apply(null, alan.map((x) => x.d));
-      denge = { alan: alan, puan: enZayif >= 0 ? Math.min(M.dengeTavan, M.dengeTaban + M.dengeK * enZayif) : 0 };
-      r.denge = denge.puan;
-    }
-    // Üst uç (yalnız kurulan beşler): beklenen farkı M.ustEsik'i aşan beşin farkları ayrıca açılır; ortalama beşler aynı
-    // kalır, en iyi beşlerin 30-0 şansı artar (2026-11-18, kullanıcı: "en iyi beşlerin ihtimali artsın").
-    if (secenek && secenek.diklik && M.ustBeta) {
-      const f = beklenenFark({ r: r }, { r: ligTakimi(M).r }, M, 0);
-      if (f > M.ustEsik) { r = ac(D * (1 + M.ustBeta * (f - M.ustEsik) / 10)); if (denge) r.denge = denge.puan; }
-    }
+    const lr = ligOranlari(M), ham = oranlar(T), r = oranlar(T);
+    if (D !== 1) { Object.keys(r).forEach((k) => { if (k in lr) r[k] = lr[k] + D * (r[k] - lr[k]); }); r.nt *= D; }
+    const kul = r.kul / lr.kul;
+    r.eksik = Math.max(0, 1 - kul); r.fazla = Math.max(0, kul - 1);
     const pay = (k) => { const t = liste.reduce((a, p) => a + Math.max(0, p.v[k]), 0) || 1; return liste.map((p) => Math.max(0, p.v[k]) / t); };
     const paylar = {}; ["a2", "a3", "fa", "or", "dr", "as", "st", "bl", "tk"].forEach((k) => { paylar[k] = pay(k); });
-    return { kisiler: liste, T: T, r: r, ham: ham, paylar: paylar, denge: denge };
-  }
-  const DENGE_ALAN = [
-    { ad: "Şut", alanlar: ["p2", "p3", "s3", "ft", "pf", "eksik", "fazla"] },
-    { ad: "Ribaund", alanlar: ["or", "dr"] },
-    { ad: "Oyun kurma", alanlar: ["ast", "tov"] },
-    { ad: "Savunma", alanlar: ["st", "bl", "foul"] }
-  ];
-  function dengeAlanlari(r, M) { // her alanın lig ortalamasına göre sayı katkısı
-    const lig = ligTakimi(M), L = { r: lig.r }, taban = beklenenFark({ r: r }, L, M, 0);
-    return DENGE_ALAN.map((a) => {
-      const x = Object.assign({}, r); a.alanlar.forEach((k) => { x[k] = lig.r[k]; });
-      return { ad: a.ad, d: taban - beklenenFark({ r: x }, L, M, 0) };
-    });
+    return { kisiler: liste, T: T, r: r, ham: ham, paylar: paylar, sin: M.roller ? sinerji(kisiler, M) : null,
+      sinK: (secenek && secenek.sinerji) || 1 };
   }
 
   function oranlar(T) {
@@ -118,11 +109,15 @@
     const atis = (Lt.a2 + Lt.a3) * 2.2; // maç başı şutla gelen sayı ölçeği: sayı farkını isabet farkına çevirir
     const tov = sinir(A.r.tov + (B.r.st - lr.st) / lr.kul, 0.04, 0.32);
     const ft = sinir(A.r.ft * Math.sqrt(sinir(B.r.foul / lr.foul, 0.6, 1.6)), 0.02, 0.35);
-    const kalite = AYAR.kAs * (A.r.ast - lr.ast) - AYAR.kEksik * A.r.eksik - AYAR.kFazla * Math.min(0.5, A.r.fazla) +
-      (AYAR.lambda * (A.r.nt - B.r.nt) + ((A.r.denge || 0) - (B.r.denge || 0)) + ev * AYAR.ev) / 2 / atis; // farkın yarısı hücumdan, yarısı savunmadan
+    const sb = sinerjiTaban(M), sA = A.sin || sb, sB = B.sin || sb;
+    const kA = A.sinK || 1, kB = B.sinK || 1;
+    const kalite = AYAR.sinOff * kA * (sA.off - sb.off) - AYAR.sinDef * kB * (sB.def - sb.def) + AYAR.kAs * (A.r.ast - lr.ast) -
+      AYAR.kEksik * A.r.eksik - AYAR.kFazla * Math.min(0.5, A.r.fazla) +
+      (AYAR.lambda * (A.r.nt - B.r.nt) + ev * AYAR.ev) / 2 / atis; // farkın yarısı hücumdan, yarısı savunmadan
     const p2 = sinir(A.r.p2 - (B.r.bl - lr.bl) / Lt.a2 + kalite, 0.25, 0.78);
     const p3 = sinir(A.r.p3 + kalite * 0.8, 0.12, 0.55);
-    const a = A.r.or / (A.r.or + lr.dr), d = B.r.dr / (B.r.dr + lr.or), lp = lr.or / (lr.or + lr.dr);
+    const a0 = A.r.or * (1 + AYAR.sinRib * kA * (sA.rib - sb.rib)), d0 = B.r.dr * (1 + AYAR.sinRib * kB * (sB.rib - sb.rib));
+    const a = a0 / (a0 + lr.dr), d = d0 / (d0 + lr.or), lp = lr.or / (lr.or + lr.dr);
     const od = (a / (1 - a)) * ((1 - d) / d) / (lp / (1 - lp));
     return {
       tov: tov, ft: ft, s3: sinir(A.r.s3, 0.05, 0.7), p2: p2, p3: p3, pf: sinir(A.r.pf, 0.4, 0.95), por: sinir(od / (1 + od), 0.08, 0.5),
@@ -208,18 +203,24 @@
     { ad: "Şut yaratma", alanlar: ["eksik", "fazla"], ipucu: "topu isteme payı: kimse şut yaratmıyorsa zorlama şut; şut yaratan çoksa zor şutlar da girer",
       goster: (r, lr) => "top kullanımı lig ortalamasının " + yz(r.kul / lr.kul) },
     { ad: "Takım katkısı", alanlar: ["nt"], ipucu: "oyuncuların takımlarının sayı averajından dakika payı (kutuya yansımayan savunma, uyum)",
-      goster: (r) => (r.nt >= 0 ? "+" : "") + bir(r.nt) + " sayı / maç" },
-    { ad: "Denge", alanlar: ["denge"], ipucu: "zayıf alanı olmayan beşe ödül: şut, ribaund, oyun kurma ve savunmanın en zayıfı bile iyiyse",
-      goster: (r, lr, A) => A && A.denge ? A.denge.alan.map((x) => x.ad + " " + (x.d >= 0 ? "+" : "") + bir(x.d)).join(", ") : "—" }
+      goster: (r) => (r.nt >= 0 ? "+" : "") + bir(r.nt) + " sayı / maç" }
   ];
   function katkilar(A, M) {
     const lig = ligTakimi(M), L = { r: lig.r, paylar: {} }, taban = beklenenFark(A, L, M, 0);
     return ETKENLER.map((et) => {
       const r = Object.assign({}, A.r); et.alanlar.forEach((k) => { r[k] = lig.r[k]; });
-      return { ad: et.ad, ipucu: et.ipucu, deger: et.goster(A.ham, lig.lr, A), lig: et.alanlar[0] === "denge" ? "0" : et.goster(lig.lr, lig.lr), d: taban - beklenenFark({ r: r }, L, M, 0) };
-    });
+      return { ad: et.ad, ipucu: et.ipucu, deger: et.goster(A.ham, lig.lr), lig: et.goster(lig.lr, lig.lr), d: taban - beklenenFark({ r: r, sin: A.sin }, L, M, 0) };
+    }).concat(A.sin ? [["off", "Hücum sinerjisi", "şutör, oyun kurucu, içeri skorer"], ["def", "Savunma sinerjisi", "pota koruyucu, top çalan"], ["rib", "Ribaund sinerjisi", "ribaundçu"]].map(([k, ad, roller]) => {
+      const sin = Object.assign({}, A.sin); sin[k] = sinerjiTaban(M)[k];
+      return { ad: ad, ipucu: "beşteki roller: " + roller + " (ilki çok, sonrakiler daha az değerli)", deger: "gerçek ilk beş ortalamasına göre " + (A.sin[k] >= sin[k] ? "+" : "") + bir(100 * (A.sin[k] - sin[k])) + " puan", lig: "0",
+        d: taban - beklenenFark({ r: A.r, sin: sin }, L, M, 0) };
+    }) : []);
   }
 
+  const sinTabanOnbellek = new WeakMap();
+  function sinerjiTaban(M) { // gerçek ilk beşlerin ortalama sinerjisi (havuz kurulunca hesaplanır; yoksa 0)
+    return sinTabanOnbellek.get(M) || { off: 0, def: 0, rib: 0 };
+  }
   // Rakip havuzu: ligin bütün gerçek takımları, en çok süre alan beşi + lig ortalaması yedek
   const havuzOnbellek = new WeakMap();
   function havuz(V) {
@@ -228,6 +229,9 @@
         const bes = t.oyuncular.slice().sort((a, b) => b.dk * b.mac - a.dk * a.mac || a.k - b.k).slice(0, 5);
         return { t: t, A: takimKur(bes.map((o) => ({ o: o, ad: o.ad })), V.motor) };
       }));
+      const h = havuzOnbellek.get(V), ort = { off: 0, def: 0, rib: 0 };
+      h.forEach((x) => { if (x.A.sin) ["off", "def", "rib"].forEach((k) => { ort[k] += x.A.sin[k] / h.length; }); });
+      sinTabanOnbellek.set(V.motor, ort);
     }
     return havuzOnbellek.get(V);
   }
@@ -242,5 +246,6 @@
   }
 
   window.Motor = { AYAR: AYAR, takimKur: takimKur, beklenenFark: beklenenFark, olasilik: olasilik, mac: mac, katkilar: katkilar,
-    ligTakimi: ligTakimi, havuz: havuz, takvim: takvim };
+    ligTakimi: ligTakimi, havuz: havuz, takvim: takvim, sinerji: sinerji, sinerjiTaban: sinerjiTaban,
+    ROL_AD: ROL_AD, ROL_HEDEF: ROL_HEDEF };
 })();

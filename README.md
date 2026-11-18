@@ -67,34 +67,34 @@ Sezon, gerçek takımlara karşı sahiplik sahiplik oynanan maçlarla simüle ed
   ortalamasından 0,1 fazlaysa isabet +1,2 puan. Kaçan şutta hücum ribaundu iki takımın ribaundu karşılaştırılarak (log5)
   belirlenir; alınırsa hücum sürer.
 - **Şut yaratma**: takımın doğal top kullanımı (şut + 0,44×serbest atış + top kaybı) lig ortalamasının altındaysa eksik
-  her %10 için isabet −6 puan (zorlama şutlar); üstündeyse şutlar paylaşılır ve şut yaratan oyuncular zor şutları da
-  soktuğu için her %10 için +5,5 puan (en çok %50 fazlaya kadar). Oyun ayarı (2026-11-18, kullanıcı): skorerlerle kurulan
-  beş, en yüksek VP'lilerle kurulanla aynı yerde dursun; gerçek takım tahmini BSL 0,76 → 0,73, TBL değişmedi.
+  her %10 için isabet −6 puan (zorlama şutlar); üstündeyse şutlar paylaşılır, şut yaratan oyuncular zor şutları da soktuğu
+  için her %10 için +2 puan (en çok %50 fazlaya kadar).
 - **Takım katkısı**: oyuncunun takımının sayı averajından dakika payı (`averaj × dk/40 × maç/(maç+8)`, beş için toplam/5),
   ×1,5 sayı olarak eklenir: kutuya yansımayan savunma ve uyum. Gerçek takımlarda önceki sezonun en güçlü tek göstergesi.
+- **Roller ve sinerji** (Basketball GM'nin beceri etiketlerinden esinle): her oyuncuya 40 dakikaya vurulmuş istatistiğinden
+  altı rol puanı (0-1): şutör (isabetli üçlük), oyun kurucu (asist − 0,3 × top kaybı), içeri skorer (ikilik + serbest atış),
+  pota koruyucu (blok + savunma ribaundu), top çalan, ribaundçu. Düzenli oyuncuların (15+ dk) üst çeyreği 0,5, üst %10'u
+  ~0,9 (`veri/isle.py` rol_hesapla; oyuncu başına `r`). Beşteki rol sayıları azalan getiriyle (her rolün ilk oyuncusu çok,
+  sonrakiler daha az; şutörde iki) hücum, savunma ve ribaund sinerjisi verir; gerçek ilk beşlerin ortalamasından sapma
+  isabeti (hücum: kendi, savunma: rakibin) ve hücum ribaundu payını kaydırır. Bütün takımlara (rakiplere de) uygulanır.
 - **Maç**: lig ortalaması ~74 hücum (±4), beraberlikte uzatma; iç sahada +3 sayı. Lig ortalaması takımlar kendi aralarında
   BSL 78,2 sayı, 16,8 asist, 33,4 ribaund, 12,3 top kaybı üretir (gerçek lig ortalaması 79,2 / 16,8 / 31,5 / 12,2).
-- **Sınama**: önceki sezon verisiyle kurulan gerçek ilk beşin bu sezonki galibiyet oranıyla korelasyonu BSL 0,75 (eski güç
-  modeli 0,75), TBL 0,46 (eski 0,57). Motorun beklenen farkları gerçeğinkinden dar çıkıyor; galibiyet oranlarına sıralama
-  eşleştirmesiyle lig başına açılır (`motor.diklik`: BSL 1,25, TBL 1,15).
-- **Oyun ayarı** (`motor.oyunDiklik`: BSL 0,9, TBL 0,9): kurulan beşlerin lig ortalamasından farkları bu katla ölçeklenir.
-  Taslak simülasyonuyla (her tur rastgele takım-sezon, ortalama galibiyet) ölçüldü, kullanıcının hedefi "en yüksek VP ile en
-  skorer beş aynı, ~20; yalnız dengeli kurmak ödüllensin": en yüksek VP'liyi alan BSL 20,2 / 30, TBL 21,2 / 32; en skoreri
-  alan BSL 20,0, TBL 20,2; dengeli kuran (motoru bilen) BSL 22,1, TBL 23,2.
-- **Üst uç** (`motor.ustEsik` 12, `motor.ustBeta` 0,3): ortalama rakibe beklenen farkı 12 sayıyı aşan kurulan beşin farkları
-  her 10 sayı fazlası için ayrıca %30 açılır. Ortalamalar aynı kalır; BSL'de VP'ye göre kurulanların en iyi %10'u 23,9 → 24,9,
-  en iyi %1'i 26,6 → 28,8 galibiyet, en iyi %10'un 30-0 şansı %1 → %8 (dengeli kurulanlarda %10). TBL'de 32-0 %0,3 → %3.
-- **Denge ödülü** (`motor.dengeTaban` 4, `dengeK` 2,5, `dengeTavan` 8): beşin dört alanı (şut: isabet + serbest atış + şut
-  yaratma; ribaund; oyun kurma: asist + top kaybı; savunma: top çalma + blok + faul) ayrı ayrı lig ortalamasına göre sayıya
-  çevrilir. Hiçbiri eksi değilse `4 + 2,5 × en zayıf alan` sayı (en çok 8). Taslak ölçümü: VP'ye ve skora göre kurulan
-  beşlerin %13'ü dengeli çıkıyor; BSL'de dengeliler ortalama ~24 galibiyet ve %5-7 30-0, dengesizler ~19,7 ve %0,3-0,6.
-  TBL'de dengeliler 25-26 galibiyet, 32-0 %2-4. Sonuç ekranında dört alan ve ödül tek satırda görünür.
+- **Sınama**: önceki sezon verisiyle kurulan gerçek ilk beşin bu sezonki galibiyet oranıyla korelasyonu BSL ~0,70, TBL ~0,45
+  (eski güç modeli 0,75 / 0,57; sinerjisiz ve şut yaratma artısız motor 0,76 / 0,46). Rol sinerjisi tahmini biraz düşürüyor:
+  gerçek takımlarda rol kuralları galibiyeti ayrıca açıklamıyor (eski uyum kurallarında da öyleydi); oyun hissi için var.
+  Motorun farkları lig başına gerçek galibiyet oranlarına sıralama eşleştirmesiyle oturtulur (`motor.diklik`: BSL 1,03, TBL 0,94).
+- **Oyun ayarı** (yalnız kurulan beşler; `motor.oyunDiklik` 1,15, `oyunDakika` 34, `oyunSinerji` 2): farklar ×1,15,
+  beşin oyuncuları en az 34 dakika oynar (gerçek dakikasından en çok %35 fazla), rol sinerjisi ×2. Taslak ölçümü (her tur
+  rastgele takım-sezon, ortalama galibiyet): BSL'de VP'ye göre kuran 20,7 / 30, skora göre 17,4, rolleri tamamlayarak 21,8;
+  en iyi %10'un 30-0 şansı VP'de ~%6, rolleri tamamlayanda ~%10. TBL (32 maç): 21,8 / 17,8 / 22,8, 32-0 ~%2 / ~%4.
+  Sinerji beşlerin %80'inde −3…+14 sayı/maç. (Aynı gün denenip bırakılanlar: kullanım fazlasına −0,55 artı, üst uç açılması,
+  dört alanlı denge ödülü; yerlerini rol sinerjisi aldı.)
 - **Rakipler**: ligin bütün gerçek takımları (en çok süre alan beşi + lig ortalaması yedek). Sezonda N/2 farklı takım,
   her biriyle bir iç saha bir deplasman. İkili modda iki beş 2-2-1-1-1 düzeninde 7 maçlık seri oynar.
-- **Sonuç ekranı**: ortalama rakibe beklenen fark ve bu fikstürde beklenen galibiyet; oyuncu katkısı (yerine aynı dakikada
-  lig ortalaması bir oyuncu konsa fark ne kadar düşerdi); etkenler (bir istatistik lig ortalamasına çekilse fark ne kadar
-  değişirdi: şut isabeti, serbest atış, top kaybı, hücum/savunma ribaundu, asist, top çalma, blok, faul, şut yaratma, takım
-  katkısı); sezonun simüle kutu istatistikleri; maç maç rakipler ve skorlar.
+- **Ekran**: kadro listesinde oyuncunun güçlü rolleri (en çok 3), sahanın altında beşin rol durumu (ör. "Şutör 0,9/2",
+  "Pota koruyucu ✓"). Sonuçta ortalama rakibe beklenen fark ve bu fikstürde beklenen galibiyet, oyuncu katkısı (yerine aynı
+  dakikada lig ortalaması bir oyuncu konsa fark ne kadar düşerdi), roller ve sinerjinin sayı katkısı (hücum / savunma /
+  ribaund); kapalı bölümlerde sezonun simüle kutu istatistikleri, maç maç rakipler ve bütün etkenlerin dökümü.
 - AI seçimini motorla yapar: her aday için o yere konunca beşin beklenen farkı (boş yerler lig ortalaması).
 - Eski güç değeri (`g`: büzülmüş VP + averaj payı) veride duruyor; geri test (`veri/test_sonucu.json`) onu ölçer.
 

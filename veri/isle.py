@@ -31,19 +31,15 @@ KULLANIM_SINIR = 6.0
 # kurulan beşi ~%70'te tutuyordu). Zayıf beşler neredeyse aynı kalır, güçlüler daha çok kazanır. 1 = gerçekçi.
 OYUN_DIKLIK = 1.3
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
-# eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü). Oyun ayarı: kurulan
-# beşlerin farkı ayrıca bu kat açılır; bilgili kurulan beşte eski sisteme göre +1-1,5 galibiyet (kullanıcıyla).
-MOTOR_GERCEK = {"bsl": 1.25, "tbl": 1.15}
-MOTOR_OYUN = {"bsl": 0.9, "tbl": 0.9}  # <1: kurulan beşlerin farkı biraz daraltılır (şut yaratma artısı dengelenir)
-# Üst uç: ortalama rakibe beklenen farkı 12 sayıyı aşan kurulan beşin farkları her 10 sayı için ayrıca %30 açılır
-# (ortalama beş aynı; en iyi %10'un 30-0 şansı BSL %1 → %8). 2026-11-18, kullanıcı: "en iyi beşlerin ihtimali artsın".
-MOTOR_UST = {"esik": 12.0, "beta": 0.3}
-# Denge ödülü: şut, ribaund, oyun kurma, savunma alanlarının hiçbiri lig ortalamasının altında değilse taban + K × en zayıf
-# alan sayısı (en çok tavan). 2026-11-18, kullanıcı: "en dengeli beşi kurmanın 30-0 ihtimali daha yüksek olmalı".
-# BSL taslak ölçümü: dengeli beşler (VP/skorer taslaklarının %13'ü) ort. 21,2 → 24,0, 30-0 %1,6 → %5,5; dengesizler aynı (19,7).
-MOTOR_DENGE = {"taban": 4.0, "K": 2.5, "tavan": 8.0}
-
-
+# eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
+MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)
+# Oyun ayarı (yalnız kurulan beşler): farklar ×1,15, beşin oyuncuları en az 34 dk oynar (en çok %35 fazla), rol sinerjisi
+# ×2. Taslak ölçümü (BSL, ortalama galibiyet / 30): VP'ye göre 20,7, skora göre 17,4, rolleri tamamlayarak 21,8; en iyi
+# %10'un 30-0 şansı VP'de ~%6, rolleri tamamlayanda ~%10. Sinerji beşlerin %80'inde −3…+14 sayı/maç arası
+# (×3'te AI'nın rolleri tam beşi +19 buluyordu: yeteneği bastırıyordu).
+MOTOR_OYUN = {"bsl": 1.15, "tbl": 1.15}
+MOTOR_OYUN_DAKIKA = 34
+MOTOR_OYUN_SINERJI = 2
 # Maç motoru (site/motor.js) için oyuncunun maç başı ham kutu istatistikleri. Dönem farkı sezonun lig ortalamasına
 # bölünüp bütün sezonların ortalamasıyla çarpılarak giderilir; isabet yüzdeleri az denemede lig ortalamasına çekilir.
 MOTOR_ALAN = [("a2", "puan21Ortalama"), ("m2", "puan20Ortalama"), ("a3", "puan31Ortalama"), ("m3", "puan30Ortalama"),
@@ -71,6 +67,42 @@ def motor_vektor(o, Ls, La):
         yuzde = (m[mm] * o["mac"] + K * ps) / (m[a] * o["mac"] + K)
         cikis[mm] = cikis[a] * max(0.0, min(1.0, yuzde - ps + pa))
     return [round(o["dk"], 1)] + [round(cikis[k], 2) for k, _ in MOTOR_ALAN]
+
+
+# Roller (Basketball GM'nin beceri etiketlerinden esinle): oyuncunun 40 dakikaya vurulmuş, dönem farkı giderilmiş, az
+# maçta lig ortalamasına çekilmiş istatistiğinden altı rol puanı (0-1). Düzenli oyuncuların (15+ dk) üst çeyreği 0,5,
+# üst %10'u ~0,9 alır. Motor beşteki rol sayılarından sinerji hesaplar (site/motor.js).
+ROLLER = ["sut", "ok", "ic", "pota", "cevre", "rib"]
+
+
+def rol_ham(r40):
+    p3, p3L = r40["m3"] / max(0.1, r40["a3"]), r40["_p3L"]
+    return {"sut": r40["m3"] * max(0.7, min(1.3, p3 / p3L)), "ok": r40["as"] - 0.3 * r40["tk"], "ic": r40["m2"] + 0.4 * r40["fm"],
+            "pota": r40["bl"] + 0.1 * r40["dr"], "cevre": r40["st"], "rib": r40["or"] + r40["dr"]}
+
+
+def rol_hesapla(takimlar, La):
+    p3L = La["m3"] / La["a3"]
+
+    def r40(o):
+        m = dict(zip(MOTOR_SIRA, o["m"])); dk = max(1.0, m["dk"]); w = o["mac"] / (o["mac"] + GUVEN_MAC)
+        x = {k: w * m[k] / dk * 40 + (1 - w) * La[k] * 40 for k in MOTOR_SIRA if k != "dk"}
+        x["_p3L"] = p3L
+        return x
+    ham = [(o, rol_ham(r40(o))) for t in takimlar for o in t["oyuncular"]]
+    duzenli = [h for o, h in ham if o["dk"] >= 15]
+    esik = {}
+    for k in ROLLER:
+        v = sorted(h[k] for h in duzenli)
+        esik[k] = (v[int(0.75 * len(v))], max(1e-6, v[int(0.9 * len(v))] - v[int(0.75 * len(v))]))
+
+    def puan(h):
+        return [round(1 / (1 + math.exp(-2.2 * (h[k] - esik[k][0]) / esik[k][1])), 2) for k in ROLLER]
+    for o, h in ham:
+        o["r"] = puan(h)
+    ort = {k: La[k] * 40 for k in MOTOR_SIRA if k != "dk"}
+    ort["_p3L"] = p3L
+    return puan(rol_ham(ort))
 
 
 def sayi(x):
@@ -493,8 +525,7 @@ def main():
                 La[k] = sum(L_[k] * sum(o["dk"] * o["mac"] for tk in sk for o in tk["oyuncular"])
                             for _, sk, _, L_ in kayitlar if L_["or"] > 1e-6) / dk_or
         motor_lig[lig] = {"sira": MOTOR_SIRA, "L": {k: round(v, 5) for k, v in La.items()}, "diklik": MOTOR_GERCEK[lig], "oyunDiklik": MOTOR_OYUN[lig],
-                          "ustEsik": MOTOR_UST["esik"], "ustBeta": MOTOR_UST["beta"],
-                          "dengeTaban": MOTOR_DENGE["taban"], "dengeK": MOTOR_DENGE["K"], "dengeTavan": MOTOR_DENGE["tavan"]}
+                          "oyunDakika": MOTOR_OYUN_DAKIKA, "oyunSinerji": MOTOR_OYUN_SINERJI}
         esik[lig] = esikler([tk for _, sk, _, _ in kayitlar for tk in sk])
         print(lig, "denge eşikleri", esik[lig], flush=True)
         takimlar_hepsi = []
@@ -513,6 +544,8 @@ def main():
                     if g + m >= 10:
                         kalibrasyon.append((lig, R, g / (g + m)))
                 takimlar_hepsi.append(tk)
+        motor_lig[lig]["roller"] = ROLLER
+        motor_lig[lig]["rolOrt"] = rol_hesapla(takimlar_hepsi, La)
         cikti[lig] = takimlar_hepsi
 
     mevki_tutarla(cikti)
