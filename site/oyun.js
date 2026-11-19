@@ -712,13 +712,17 @@
     const sr = S.cift && !lig ? seri(sonuclar[0].h, sonuclar[1].h) : null;
     const ligTablo = !lig ? "" : '<details class="dokum-kap" open><summary>lig tablosu (' + lig.tablo.length + " takım, çift devre)</summary><div class=\"yatay\"><table class=\"lig-tablo\"><thead><tr><th>#</th><th>Takım</th><th>G</th><th>M</th><th>Av.</th></tr></thead><tbody>" +
       lig.tablo.map((x, i) => '<tr class="' + (x.biz ? "biz" : "") + '"><td>' + (i + 1) + "</td><td>" + kac(x.ad) + (x.sezon ? ' <span class="ipucu">' + kac(x.sezon) + "</span>" : "") + "</td><td>" + x.g + "</td><td>" + x.m +
-        "</td><td>" + isaretli((x.at - x.ye) / (x.g + x.m)) + "</td></tr>").join("") + "</tbody></table></div></details>" +
-      '<details class="dokum-kap" open><summary>play-off (ilk 8 · çeyrek ve yarı final 5, final 7 maç)</summary><div class="playoff">' +
-      lig.po.turlar.map((tur) => "<div><b>" + tur.ad + "</b>" + tur.seriler.map((x) => {
-        const ad = (y) => '<span class="' + (y.biz ? "biz" : "") + '">' + (lig.tablo.indexOf(y) + 1) + ". " + kac(y.ad) + (y.sezon ? " " + kac(y.sezon) : "") + "</span>";
-        return '<div class="po-seri">' + ad(x.ust) + " <b>" + x.u + "–" + x.a + "</b> " + ad(x.alt) + ' <span class="ipucu">' + x.maclar.join(", ") + "</span></div>";
-      }).join("") + "</div>").join("") + '<div class="po-sampiyon">Şampiyon: <span class="' + (lig.po.sampiyon.biz ? "biz" : "") + '">' + kac(lig.po.sampiyon.ad) +
-      (lig.po.sampiyon.sezon ? " " + kac(lig.po.sampiyon.sezon) : "") + "</span></div></div></details>";
+        "</td><td>" + isaretli((x.at - x.ye) / (x.g + x.m)) + "</td></tr>").join("") + "</tbody></table></div></details>";
+    // play-off ağacı: çeyrek final → yarı final → final → şampiyon (telefonda yatay kayar)
+    const poSatir = (y, skor, kazandi) => '<div class="po-satir' + (kazandi ? " kazandi" : "") + (y.biz ? " biz" : "") + '"><span class="po-tohum">' + (lig.tablo.indexOf(y) + 1) + "</span>" +
+      logo(y.logo, y.ad) + '<span class="po-ad">' + kac(y.ad) + (y.sezon ? "<small>" + kac(y.sezon) + "</small>" : "") + '</span><b class="po-skor">' + skor + "</b></div>";
+    const poAgac = !lig ? "" : '<details class="dokum-kap" open><summary>play-off</summary><div class="yatay"><div class="po-agac">' +
+      lig.po.turlar.map((tur) => '<div class="po-tur"><div class="po-baslik">' + tur.ad + "<small>" + (tur.ad === "Final" ? "7 maç, 4 alan" : "5 maç, 3 alan") + '</small></div><div class="po-kartlar">' +
+        tur.seriler.map((x) => '<div class="po-kart' + (x.ust.biz || x.alt.biz ? " biz" : "") + '">' + poSatir(x.ust, x.u, x.kazanan === x.ust) + poSatir(x.alt, x.a, x.kazanan === x.alt) +
+          '<div class="po-maclar">' + x.maclar.join(" · ") + "</div></div>").join("") + "</div></div>").join("") +
+      '<div class="po-tur po-kupa"><div class="po-baslik">Şampiyon</div><div class="po-kartlar"><div class="po-sampiyon' + (lig.po.sampiyon.biz ? " biz" : "") + '"><div class="kupa">🏆</div>' +
+      logo(lig.po.sampiyon.logo, lig.po.sampiyon.ad) + "<b>" + kac(lig.po.sampiyon.ad) + "</b>" + (lig.po.sampiyon.sezon ? "<small>" + kac(lig.po.sampiyon.sezon) + "</small>" : "") +
+      "</div></div></div></div></div></details>";
     const el = $("sonuc"), n = S.veri.mac, a = adlar();
     el.classList.remove("gizli");
     const skorbord = (r, j) =>
@@ -777,7 +781,7 @@
       html += '<div class="seri">Lig: ' + kac(a[0]) + " " + kac(sonuclar[0].lig.soz.toLocaleLowerCase("tr")) + " · " + kac(a[1]) + " " + kac(sonuclar[1].lig.soz.toLocaleLowerCase("tr")) + " · " +
         kac(a[k]) + (a[k] === "Sen" ? " kazandın" : " kazandı") +
         (S.cevrim ? "<small>Oda skoru: " + kac(a[0]) + " " + S.odaSkor[0] + " – " + S.odaSkor[1] + " " + kac(a[1]) + " · " + (S.oyunNo + 1) + ". oyun</small>" : "") + "</div>";
-      html += ligTablo + '<div class="iki">' + sonuclar.map((r) => "<div>" + satirlar(r) + (klasik() ? "" : sezonKutu(r)) + macListesi(r) + dokum(r) + "</div>").join("") + "</div>";
+      html += poAgac + ligTablo + '<div class="iki">' + sonuclar.map((r) => "<div>" + satirlar(r) + (klasik() ? "" : sezonKutu(r)) + macListesi(r) + dokum(r) + "</div>").join("") + "</div>";
     } else if (S.cift) {
       html = '<div class="iki">' + sonuclar.map((r, j) => "<div>" + skorbord(r, j) + ozet(r) + "</div>").join("") + "</div>";
       const baskiYazi = (sr.baski || []).filter((x) => x).map((x) => "<br>Top çalma baskısı: " + kac(a[x.kim]) + " beşi maç başı " + x.st.toFixed(1).replace(".", ",") +
@@ -787,7 +791,7 @@
         "<small>Maç başı " + kac(a[0]) + " kazanma olasılığı ~%" + Math.round(sr.p * 100) + " · " + sr.maclar.map((m) => m.biz + "-" + m.onlar + (m.uz ? " (U)" : "")).join(", ") + baskiYazi +
         (S.cevrim ? "<br>Oda skoru: " + kac(a[0]) + " " + S.odaSkor[0] + " – " + S.odaSkor[1] + " " + kac(a[1]) + " · " + (S.oyunNo + 1) + ". oyun" : "") + "</small></div>";
       html += '<div class="iki">' + sonuclar.map((r) => "<div>" + satirlar(r) + (klasik() ? "" : sezonKutu(r)) + (r.maclar[0] && r.maclar[0].rakip ? macListesi(r) : "") + dokum(r) + "</div>").join("") + "</div>";
-    } else html = skorbord(sonuclar[0], 0) + satirlar(sonuclar[0]) + ozet(sonuclar[0]) + ligTablo + (klasik() ? "" : sezonKutu(sonuclar[0])) + (sonuclar[0].maclar[0] && sonuclar[0].maclar[0].rakip ? macListesi(sonuclar[0]) : "") + dokum(sonuclar[0]);
+    } else html = skorbord(sonuclar[0], 0) + satirlar(sonuclar[0]) + ozet(sonuclar[0]) + poAgac + ligTablo + (klasik() ? "" : sezonKutu(sonuclar[0])) + (sonuclar[0].maclar[0] && sonuclar[0].maclar[0].rakip ? macListesi(sonuclar[0]) : "") + dokum(sonuclar[0]);
     html += '<div class="dugmeler"><button class="ana-btn ikincil" id="paylas">Sonucu kopyala</button>' +
       (ayar.mod === "gunluk" ? '<button class="ana-btn" id="serbeste">Serbest oyna</button>'
         : S.cevrim ? '<button class="ana-btn" id="rovans">Rövanş (aynı oda)</button><button class="ana-btn ikincil" id="tekrar">Odadan çık</button>'
