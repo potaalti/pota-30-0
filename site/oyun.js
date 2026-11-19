@@ -386,7 +386,8 @@
     const L = S.veri.motor.L, top = (k) => kisiler.reduce((x, y) => x + (y.ortalama ? L[k] * y.dk : (y.o[k] || 0)), 0), b = calmaBaremi();
     const st = top("st"), tk = top("tk");
     A.kirpSt = true; A.calmaTov = st >= b.st ? calmaArtisi(st, b.st).tov : 0; A.kayipTov = tk >= b.tk ? calmaArtisi(tk, b.tk).tov : 0;
-    const ts = besTS(kisiler.filter((k) => !k.ortalama).map((k) => k.o)); A.isabetArti = ts >= b.ts && kisiler.every((k) => !k.ortalama) ? isabetArtisi(ts, b.ts).oran : 0;
+    const ts = besTS(kisiler.filter((k) => !k.ortalama).map((k) => k.o)); const tam = kisiler.every((k) => !k.ortalama);
+    A.isabetArti = !tam ? 0 : ts >= b.ts ? isabetArtisi(ts, b.ts).oran : ts > 0 && ts < b.tsAlt ? -isabetArtisi(b.tsAlt, ts).oran : 0;
     return A;
   }
   function motorFark(kisiler) {
@@ -446,7 +447,8 @@
       S.veri.takimlar.forEach((t) => { const b = t.oyuncular.slice().sort((a, c) => c.dk * c.mac - a.dk * a.mac).slice(0, 5);
         st.push(b.reduce((x, o) => x + (o.st || 0), 0)); tk.push(b.reduce((x, o) => x + (o.tk || 0), 0)); ts.push(besTS(b)); });
       const ceyrek = (v) => { v.sort((a, c) => a - c); return v[Math.floor(v.length * 0.75)]; };
-      baremOnbellek[lig] = { st: ceyrek(st), tk: ceyrek(tk) + 1, ts: ceyrek(ts) }; // top kaybı baremi üst çeyreğin 1 üstü (2026-11-19, kullanıcı: BSL 9,7 → 10,7)
+      const alt = (v) => { v.sort((a, c) => a - c); return v[Math.floor(v.length * 0.25)]; };
+      baremOnbellek[lig] = { st: ceyrek(st), tk: ceyrek(tk) + 1, ts: ceyrek(ts), tsAlt: alt(ts) }; // top kaybı baremi üst çeyreğin 1 üstü (2026-11-19, kullanıcı: BSL 9,7 → 10,7)
     }
     return baremOnbellek[lig];
   }
@@ -513,6 +515,8 @@
     const tk = top("tk"), tkB = calmaBaremi().tk;
     const ts = besTS(os), tsB = calmaBaremi().ts;
     if (ts >= tsB) etkiler.push({ ad: "Efektif şut", aciklama: "beşin gerçek şut yüzdesi %" + ts.toFixed(1) + " ≥ %" + tsB.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği)", d: isabetArtisi(ts, tsB).guc });
+    const tsA = calmaBaremi().tsAlt; // alt çeyreğin altı ceza (2026-11-19, kullanıcı); aradaki bölge sıfır
+    if (ts > 0 && ts < tsA) etkiler.push({ ad: "Efektif şut", aciklama: "beşin gerçek şut yüzdesi %" + ts.toFixed(1) + " < %" + tsA.toFixed(1) + " (gerçek ilk beşlerin alt çeyreği)", d: -isabetArtisi(tsA, ts).guc });
     if (tk >= tkB) etkiler.push({ ad: "Top kaybı baremi", aciklama: "beşin top kaybı " + tk.toFixed(1) + " ≥ " + tkB.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği)", d: -calmaArtisi(tk, tkB).guc });
     const kul = top("kul");
     const bant = V.kullanimBant || 0, ust = V.esik.kullanim * (1 + bant), alt = V.esik.kullanim * (1 - bant);

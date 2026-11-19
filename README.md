@@ -66,7 +66,8 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   oranı +%0,8 + %0,8 × fark (en çok %3).
 - **Efektif şut baremi** (ekranda "Efektif şut") (her maçta; 2026-11-19, kullanıcı: diğer baremlerden zayıf olsun): beşin gerçek şut yüzdesi
   (TS% = toplam sayı / 2 × (şut + 0,44 × serbest atış)) gerçek ilk beşlerin üst çeyreğindeyse (BSL %59,7, TBL %58,5) artı,
-  altındaysa sıfır. Klasik +0,5 + 0,5 × fark güç (en çok +2); motor isabet +%0,3 + %0,3 × fark (en çok %1,2). Deneme: gerçek
+  alt çeyreğin altındaysa (BSL %55,4, TBL %54,7) ceza, arası sıfır. Klasik ±(0,5 + 0,5 × fark) güç (en çok ±2); motor isabet
+  ±(%0,3 + %0,3 × fark) (en çok %1,2). Alt ceza taslaklarda nadir (beşlerin %2-3'ü, skorerlerle kurulanların %7-10'u). Deneme: gerçek
   ilk beşlerde güç sabitken 1 TS puanı ~1,2 güce denk (galibiyeti açıklama BSL %64,6 → %66,5); oyunda bilerek daha küçük.
 - **Dünden bugüne zorluk (Klasik, aynı taslaklar, ortalama galibiyet / 30)**: 2026-11-18 başındaki sistem → bugün; güçle
   kurulan beş BSL 20,3 → Sezon 22,0 (+%8,5) / Lig 21,7 (+%7,0), VP'yle 20,0 → 21,7 (+%8,8) / 21,5 (+%7,4), skorerle 17,4 →
