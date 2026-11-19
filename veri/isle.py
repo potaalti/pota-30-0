@@ -213,8 +213,10 @@ def mevki(boy, rib, ast, bl, u3, dk, wd_mevkiler=None):
 #   birimiyle) EKSEN_KATSAYI kadar artı/eksi alır, en çok ±EKSEN_SINIR. Bir eksende çok iyi olan, diğerindeki eksiyi kapatabilir.
 # - Rol eksikliği: asist ya da ribaund gerçek ilk beşlerin en alt %10'unun altındaysa eksik birim başına ceza.
 EKSENLER = {
-    "hucum": {"ad": "Hücum", "formul": {"sy": 1.0, "as": 1.5, "u3": 1.0, "tk": -1.0}},
-    "savunma": {"ad": "Savunma", "formul": {"st": 2.0, "bl": 2.0, "rb": 0.5}},
+    # 2026-11-19 (kullanıcı: uyum kuralları tekil kurallarla çakışmasın): üçlük ve blok eksenlerden çıktı, yalnız uyum
+    # kurallarında sayılır.
+    "hucum": {"ad": "Hücum", "formul": {"sy": 1.0, "as": 1.5, "tk": -1.0}},
+    "savunma": {"ad": "Savunma", "formul": {"st": 2.0, "rb": 0.5}},
 }
 EKSEN_KATSAYI, EKSEN_SINIR = 3.0, 4.0
 # Rol eksikliği: beşin TOPLAMI gerçek ilk beşlerin alt %10'unun altındaysa eksik birim başına ceza. Asist toplamdan bakılır:
@@ -224,14 +226,15 @@ DENGE = {"rb": 0.6, "as": 1.0}
 # Uyum kuralları (oyun tasarımı; 2026-11-17'de gerçek ilk beşlerle sınandı: güç sabitken hiçbiri galibiyeti artırmadı,
 # bazıları ters yönde çıktı; NBA'deki benzer oyunlar gibi oyun hissi için). Her kural: oyuncu koşulları (hepsi sağlanmalı),
 # bunu sağlayan oyuncu sayısı en_az / en_cok sınırına uyarsa puan. Toplam etki ±UYUM_SINIR.
+# 2026-11-19 (kullanıcı): uyum kuralları başka kuralın baktığı istatistiğe bakmaz. Asist (asist baremi), top çalma, top
+# kaybı, ribaund, top kullanımı, şut verimi ve VP (oyuncu gücü) kendi kurallarında; uyum yalnız blok, üçlük ve mevkiye bakar.
+# Çıkanlar: "Oyun kurucu var" (asist), "Yıldız ikilisi" (VP). "Boyalı alan kalabalık" ribaund yerine mevkiye bakar.
 UYUM = [
-    {"ad": "Oyun kurucu var", "aciklama": "biri maç başı ≥5,5 asist", "kosul": [["as", ">=", 5.5]], "en_az": 1, "puan": 2},
-    {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,2 blok", "kosul": [["bl", ">=", 1.2]], "en_az": 1, "puan": 2},  # 2026-11-19: 1,3 → 1,2 (kullanıcı)
+    {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,2 blok", "kosul": [["bl", ">=", 1.2]], "en_az": 1, "puan": 2},
     {"ad": "Pota boş", "aciklama": "kimse ≥0,6 blok yapmıyor", "kosul": [["bl", ">=", 0.6]], "en_cok": 0, "puan": -2},
     {"ad": "Dış şut bol", "aciklama": "en az 3 kişi ≥1,2 üçlük", "kosul": [["u3", ">=", 1.2]], "en_az": 3, "puan": 2},
     {"ad": "Şutör yok", "aciklama": "kimse ≥1,2 üçlük atmıyor", "kosul": [["u3", ">=", 1.2]], "en_cok": 0, "puan": -3},
-    {"ad": "Yıldız ikilisi", "aciklama": "en az 2 kişi ≥16 VP", "kosul": [["vp", ">=", 16]], "en_az": 2, "puan": 2},
-    {"ad": "Boyalı alan kalabalık", "aciklama": "en az 3 kişi üçlük atmayan (<0,3) ribaundçu (≥5)", "kosul": [["u3", "<", 0.3], ["rb", ">=", 5]], "en_az": 3, "puan": -3},
+    {"ad": "Boyalı alan kalabalık", "aciklama": "en az 3 uzun (mevki 4-5) üçlük atmıyor (<0,3)", "kosul": [["uz", ">=", 1], ["u3", "<", 0.3]], "en_az": 3, "puan": -3},
 ]
 UYUM_SINIR = 5.0
 
@@ -496,7 +499,7 @@ def main():
                         "tk": round(sayi(p.get("topKaybiOrtalama")), 1),
                         "fga": round(sayi(p.get("agDeneme")), 2), "fta": round(sayi(p.get("sA1Ortalama")), 2),
                         "u3": round(sayi(p.get("puan30Ortalama")), 1), "vp": round(sayi(p.get("vpOrtalama")), 1),
-                        "p": mk, "pk": mk_kaynak, "_m": ham_m,
+                        "p": mk, "pk": mk_kaynak, "_m": ham_m, "uz": 1 if max(mk) >= 4 else 0,
                     })
                 if len(oyuncular) < 5:
                     continue
@@ -563,6 +566,10 @@ def main():
         cikti[lig] = takimlar_hepsi
 
     mevki_tutarla(cikti)
+    for takimlar_ in cikti.values():  # uzun (mevki 4-5): "Boyalı alan kalabalık" kuralı için, kesinleşen mevkiden
+        for t in takimlar_:
+            for o in t["oyuncular"]:
+                o["uz"] = 1 if max(o["p"]) >= 4 else 0
     logo_duzelt(cikti)
     geri_test(cikti, esik)
 

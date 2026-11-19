@@ -125,7 +125,8 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   averaj payıyla 0,84 (BSL) / 0,84 (TBL).
 - Mevki dışı yerleşim ×0,88.
 - Beşin karakteri (oyun tasarımı tercihi): iki eksen, gerçek ilk beşlerin (en çok süre alan 5) ortancasına göre.
-  - Hücum = sayı + 1,5×asist + üçlük − top kaybı; Savunma = 2×(top çalma + blok) + 0,5×ribaund (beşin toplamları).
+  - Hücum = sayı + 1,5×asist − top kaybı; Savunma = 2×top çalma + 0,5×ribaund (beşin toplamları). Üçlük ve blok 2026-11-20'den
+    beri eksenlerde sayılmaz, yalnız uyum kurallarında (aynı şey iki kez puanlanmasın).
   - Ortancadan iyiyse artı, kötüyse eksi: `3 × (değer − ortanca) / çeyrekler arası açıklık`, en çok ±6.
     Bir eksende çok iyi olan beş, diğerindeki eksiyi kapatabilir.
   - Rol eksikliği: beşin toplam asisti ya da toplam ribaundu gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1;
@@ -133,8 +134,12 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
     bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
   - Veriyle sınandığında bu eksenler galibiyeti güce ek olarak açıklamadı (katsayılar sıfıra yakın); oyun hissi için var.
     Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,85 → 0,76, TBL 0,84 → 0,79.
-- Uyum kuralları (oyun hissi için; toplam ±5): oyun kurucu var +2, pota koruyucu var (biri ≥1,2 blok; 2026-11-19 öncesi 1,3) +2,
-  pota boş −2, dış şut bol +2, şutör yok −3, yıldız ikilisi +2, top tek isteyen çok −2, boyalı alan kalabalık −3.
+- Uyum kuralları (oyun hissi için; toplam ±5): pota koruyucu var (biri ≥1,2 blok) +2, pota boş (kimse ≥0,6 blok yapmıyor) −2,
+  dış şut bol (en az 3 kişi ≥1,2 üçlük) +2, şutör yok (kimse ≥1,2 üçlük atmıyor) −3, boyalı alan kalabalık (en az 3 uzun —
+  mevki 4-5 — üçlük atmıyor, <0,3) −3. 2026-11-20 (kullanıcı: uyum kuralları tekil kurallarla çakışmasın): yalnız tek tek
+  oyunculara bakan, başka hiçbir kuralın ölçmediği şeyler kaldı. "Oyun kurucu var" (asist baremi ve "Top paylaşımı zayıf"
+  zaten ölçüyor) ve "Yıldız ikilisi" (VP zaten güçte) çıktı; "boyalı alan kalabalık" ribaund yerine mevkiye bakıyor (ribaund
+  "Ribaund alan yok"ta). Zorluk değişmedi (güçle kurulan beş BSL 21,5/30, TBL 22,1/32).
   Gerçek ilk beşlerle sınandığında (güç sabitken) hiçbiri galibiyeti artırmadı; bazıları ters yönde çıktı (ör. iki yıldızlı
   ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).
   Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,76 → 0,72, TBL 0,79 → 0,76. Hücum/savunma ekseni sınırı ±4'e indi.
