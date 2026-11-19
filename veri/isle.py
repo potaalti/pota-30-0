@@ -38,6 +38,9 @@ OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOL
 # Kullanım bandı (±%7) tek başına güçle kurulan beşi BSL'de 20,1 → 21,0, TBL'de 20,6 → 21,1 yapıyor; kalan kayma toplamı
 # ~%6-7'de tutar: BSL → ~21,45 / 30 (+%6,7), TBL → ~21,9 / 32 (+%6,5).
 KLASIK_KOLAY = {"bsl": 1.5, "tbl": 3.5}
+# Tek lig (2026-11-19): sezon gerçek takımlara karşı ikili oynanınca rakiplerin güç dağılımı yüzünden güçle kurulan beş
+# BSL 21,5 → 20,7, TBL 22,0 → 21,5 oluyordu; kurulan beşe bu kadar güç eklenince kolaylık yine ~%6-7.
+KLASIK_LIG_EK = {"bsl": 2.8, "tbl": 1.8}
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
 MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)
@@ -606,7 +609,7 @@ def main():
     for lig, takimlar in cikti.items():
         veri = {"lig": lig, "mac": mac_sayisi[lig], "egri": dict(parametreler[lig], olcekGercek=parametreler[lig]["olcek"], diklik=OYUN_DIKLIK,
                                                                    olcek=round(parametreler[lig]["olcek"] / OYUN_DIKLIK, 2),
-                                                                   ortaGercek=parametreler[lig]["orta"], kolay=KLASIK_KOLAY[lig],
+                                                                   ortaGercek=parametreler[lig]["orta"], kolay=KLASIK_KOLAY[lig], ligEk=KLASIK_LIG_EK[lig],
                                                                    orta=round(parametreler[lig]["orta"] - KLASIK_KOLAY[lig], 2)), "esik": esik[lig], "denge": DENGE,
                 "eksenler": EKSENLER, "eksenKatsayi": EKSEN_KATSAYI, "eksenSinir": EKSEN_SINIR,
                 "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "kullanimBant": KULLANIM_BANT,

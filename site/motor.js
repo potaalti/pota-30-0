@@ -108,7 +108,7 @@
     const lig = ligTakimi(M), lr = lig.lr, Lt = lig.T;
     const atis = (Lt.a2 + Lt.a3) * 2.2; // maç başı şutla gelen sayı ölçeği: sayı farkını isabet farkına çevirir
     const stEtki = (B.r.st - lr.st) / lr.kul; // kirpSt: kurulan beşin az top çalması rakibe kolaylık sağlamaz
-    const tov = sinir(A.r.tov + (B.kirpSt ? Math.max(0, stEtki) : stEtki) + (B.calmaTov || 0) + (A.ekTov || 0), 0.04, 0.34); // ekTov: ikili seride top çalma baskısı
+    const tov = sinir(A.r.tov + (B.kirpSt ? Math.max(0, stEtki) : stEtki) + (B.calmaTov || 0) + (A.kayipTov || 0) + (A.ekTov || 0), 0.04, 0.34); // ekTov: ikili seride top çalma baskısı
     const ft = sinir(A.r.ft * Math.sqrt(sinir(B.r.foul / lr.foul, 0.6, 1.6)), 0.02, 0.35);
     const sb = sinerjiTaban(M), sA = A.sin || sb, sB = B.sin || sb;
     const kA = A.sinK || 1, kB = B.sinK || 1;
