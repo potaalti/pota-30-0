@@ -52,14 +52,12 @@ OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOL
 # kayar; akıllı kurulan beşin (her tur en yüksek güç × mevki uyumu) ortalama galibiyeti ~%6-7 artar.
 # Kullanım bandı (±%7) tek başına güçle kurulan beşi BSL'de 20,1 → 21,0, TBL'de 20,6 → 21,1 yapıyor; kalan kayma toplamı
 # ~%6-7'de tutar: BSL → ~21,45 / 30 (+%6,7), TBL → ~21,9 / 32 (+%6,5).
-# 2026-11-20: averaj eğrisiyle (AVERAJ_EGRI) galibiyet eğrisi dikleşti (BSL ölçek 20,4 → 15,0); eski kaydırmayla güçle
-# kurulan beş BSL 23,4 / TBL 24,3 oluyordu. Zorluk aynı kalsın (BSL ~21,5 / 30, TBL ~22,05 / 32) diye kaydırma BSL 1,5 → −4,
-# TBL 3,5 → −3,75 (eksi: eğrinin ortası yukarı kayar).
-KLASIK_KOLAY = {"bsl": -4.0, "tbl": -3.75}
+# 2026-11-20: averaj eğrisinden (AVERAJ_EGRI) sonra kaydırma değiştirilmedi (kullanıcı: %7'de tutma hedefi yok);
+# eğrinin getirdiği kolaylık oyunda kalır.
+KLASIK_KOLAY = {"bsl": 1.5, "tbl": 3.5}
 # Tek lig (2026-11-19): sezon gerçek takımlara karşı ikili oynanınca rakiplerin güç dağılımı yüzünden güçle kurulan beş
 # BSL 21,5 → 20,7, TBL 22,0 → 21,5 oluyordu; kurulan beşe bu kadar güç eklenince kolaylık yine ~%6-7.
-# 2026-11-20 (averaj eğrisi): Lig = Sezon için BSL 2,8 → 1,75, TBL 1,8 → 1,75.
-KLASIK_LIG_EK = {"bsl": 1.75, "tbl": 1.75}
+KLASIK_LIG_EK = {"bsl": 2.8, "tbl": 1.8}
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
 MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)
