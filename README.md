@@ -56,22 +56,24 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   çeyreğinde (BSL 5,4) ve rakibin toplam top kaybı da üst çeyrekte (BSL 9,7) ise çalıcılar rakibi cezalandırır:
   baskı = (çalma − barem) + (rakibin kaybı − barem); Klasik'te +1 + 1,5 × baskı güç (en çok 5), Maç motorunda rakibin top
   kaybı oranı +%1 + %1 × baskı (en çok %4). Seri satırında yazılır.
-- **Top çalma baremi** (her maçta, gerçek takımlara karşı sezon dahil; 2026-11-19, kullanıcı): kurulan beşin toplam top
-  çalması gerçek ilk beşlerin üst çeyreğindeyse (BSL 5,4, TBL 5,2) artı, altındaysa eksi yok. Klasik: +1 + 1,5 × (çalma −
-  barem) güç (en çok 4). Maç motoru: rakibin top kaybı oranı +%0,8 + %0,8 × fark (en çok %3); ayrıca kurulan beşin lig
-  ortalamasının altındaki top çalması rakibe kolaylık sağlamaz (eksi kırpılır). Taslaklarda beşlerin ~yarısı baremi aşıyor,
-  ortalama +1,1 güç ≈ sezonda +0,3 galibiyet.
-- **Top kaybı baremi** (her maçta; 2026-11-19, kullanıcı): beşin toplam top kaybı gerçek ilk beşlerin üst çeyreğinin 1
-  üstündeyse (BSL 10,7) eksi, altındaysa artı yok. İkili serideki baskı kuralı da bu baremi kullanır. Klasik: −(1 + 1,5 × (kayıp − barem)) güç (en çok −4). Maç motoru: kendi top kaybı
-  oranı +%0,8 + %0,8 × fark (en çok %3).
-- **Efektif şut baremi** (ekranda "Efektif şut") (her maçta; 2026-11-19, kullanıcı: diğer baremlerden zayıf olsun): beşin gerçek şut yüzdesi
-  (TS% = toplam sayı / 2 × (şut + 0,44 × serbest atış)) gerçek ilk beşlerin üst çeyreğindeyse (BSL %59,7, TBL %58,5) artı,
-  alt çeyreğin altındaysa (BSL %55,4, TBL %54,7) ceza, arası sıfır. Klasik ±(0,5 + 0,5 × fark) güç (en çok ±2); motor isabet
-  ±(%0,3 + %0,3 × fark) (en çok %1,2). Alt ceza taslaklarda nadir (beşlerin %2-3'ü, skorerlerle kurulanların %7-10'u). Deneme: gerçek
-  ilk beşlerde güç sabitken 1 TS puanı ~1,2 güce denk (galibiyeti açıklama BSL %64,6 → %66,5); oyunda bilerek daha küçük.
-- **Dünden bugüne zorluk (Klasik, aynı taslaklar, ortalama galibiyet / 30)**: 2026-11-18 başındaki sistem → bugün; güçle
-  kurulan beş BSL 20,3 → Sezon 22,0 (+%8,5) / Lig 21,7 (+%7,0), VP'yle 20,0 → 21,7 (+%8,8) / 21,5 (+%7,4), skorerle 17,4 →
-  19,1 (+%9,9) / 19,1 (+%10,2). TBL: güç 20,6 → 22,2 (+%7,9) / 22,1 (+%7,5), skorer 18,1 → 19,9 (+%9,9) / 20,0 (+%10,8).
+- **Baremler** (her maçta, gerçek takımlara karşı sezon dahil; 2026-11-19, kullanıcı: "aralıklar dar"). Eşikler gerçek ilk
+  beşlerin (en çok süre alan 5) dağılımından: artı en iyi ~%15'lik dilime, eksi en kötü ~%15'lik dilime, arası nötr.
+  | Barem | BSL | TBL | Klasik (güç) | Maç motoru |
+  |---|---|---|---|---|
+  | Top çalma (≥, %85 dilimi) | 5,8 | 5,5 | +1 + 1,5 × fark, en çok +4 | rakibin top kaybı +%0,8…%3 |
+  | Top kaybı (≥, kullanıcı: 10) | 10 | 10 | −(1 + 1,5 × fark), en çok −4 | kendi top kaybı +%0,8…%3 |
+  | Efektif şut üst (≥ TS%, %85) | %61,1 | %59,7 | +0,5 + 0,5 × fark, en çok +2 | isabet +%0,3…%1,2 |
+  | Efektif şut alt (< TS%, %15) | %54,1 | %53,0 | −(0,5 + 0,5 × fark), en çok −2 | isabet −%0,3…%1,2 |
+  | Asist üst (≥, %85) | 14,6 | 15,8 | +1 + 0,5 × fark, en çok +3 | isabet +%0,3…%1 |
+  | Asist alt (<, %10; "Top paylaşımı zayıf") | 9,0 | 10,3 | eksik her asist −1 | (motorda sürekli) |
+  | Ribaund alt (<, %10; "Ribaund alan yok") | 17,1 | 18,4 | eksik her ribaund −0,6 | (motorda sürekli) |
+  | Top kullanımı cezasız aralık (kullanıcı) | 58,0–67,0 | 58,3–67,3 | dışında her birim −0,5 | (motorda şut yaratma) |
+  Efektif şut = gerçek şut yüzdesi (TS% = toplam sayı / 2 × (şut + 0,44 × serbest atış)); gerçek ilk beşlerde güç sabitken
+  1 TS puanı ~1,2 güce denk (galibiyeti açıklama BSL %64,6 → %66,5), oyunda bilerek daha küçük.
+  Taslaklarda tetiklenme (BSL, güçle kurulan beş): top çalma %34, top kaybı ~%40, efektif şut üst %37 / alt ~%0, asist üst %23.
+- **Dünden bugüne zorluk (Klasik, aynı taslaklar, ortalama galibiyet / 30)**: 2026-11-18 başındaki sistem → bugün;
+  güçle kurulan beş BSL 20,3 → Sezon 21,7 (+%6,9) / Lig 21,4 (+%5,7); VP'yle 20,0 → 21,4 (+%7,2) / 21,2 (+%6,2); skorerle
+  17,4 → 18,8 (+%8,1) / 18,9 (+%8,9). TBL: güç 20,6 → 22,0 (+%6,9 / +%6,9), skorer 18,1 → 19,8 (+%9,3) / 20,0 (+%10,7).
 - **Oyun türü** (üstte "Sezon / Lig + play-off"; Serbest, vs AI ve 2 kişide; çevrim içi odada kuranın seçimi):
   Sezon = 30 (TBL 32) maçlık sezon (Klasik: eğriden, motor: gerçek takımlara karşı fikstür), ikili modda 7 maçlık seri.
   Lig + play-off = aşağıdaki tek lig, ardından ilk 8 play-off: çeyrek ve yarı final 5 maç (3 alan), final 7 maç (4 alan),

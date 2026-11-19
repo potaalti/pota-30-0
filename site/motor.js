@@ -113,7 +113,7 @@
     const sb = sinerjiTaban(M), sA = A.sin || sb, sB = B.sin || sb;
     const kA = A.sinK || 1, kB = B.sinK || 1;
     const kalite = AYAR.sinOff * kA * (sA.off - sb.off) - AYAR.sinDef * kB * (sB.def - sb.def) + AYAR.kAs * (A.r.ast - lr.ast) -
-      AYAR.kEksik * A.r.eksik - AYAR.kFazla * Math.min(0.5, A.r.fazla) + (A.isabetArti || 0) +
+      AYAR.kEksik * A.r.eksik - AYAR.kFazla * Math.min(0.5, A.r.fazla) + (A.isabetArti || 0) + (A.asistArti || 0) +
       (AYAR.lambda * (A.r.nt - B.r.nt) + ev * AYAR.ev) / 2 / atis; // farkın yarısı hücumdan, yarısı savunmadan
     const p2 = sinir(A.r.p2 - (B.r.bl - lr.bl) / Lt.a2 + kalite, 0.25, 0.78);
     const p3 = sinir(A.r.p3 + kalite * 0.8, 0.12, 0.55);

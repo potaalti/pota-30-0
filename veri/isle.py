@@ -27,9 +27,10 @@ GAMMA = float(os.environ.get("GAMMA", "0"))  # verimlilik katkısı: (TS% − se
 # (eşik + ~11 birim ≈ −5,5), ötesi kanıtsız; beş skorer yan yana tek başına takımı çökertmesin.
 KULLANIM_KATSAYI = 0.5
 KULLANIM_SINIR = 99.0  # klasik sistem dünkü hâliyle: eşik üst çeyrek, tavan yok (2026-11-18, kullanıcı)
-# Eşiğin ±%7'si cezasız bant (2026-11-18, kullanıcı): üstünü aşan her birim "Top yetmiyor", altında kalan her birim
-# "Şut yaratan yok" −0,5 güç (BSL 59,2–68,2, TBL 59,5–68,5).
-KULLANIM_BANT = 0.07
+# Cezasız bant (2026-11-19, kullanıcı: BSL 58–67): eşiğin (gerçek ilk beşlerin üst çeyreği, BSL 63,7) 0,9105 ile 1,0518
+# katı arası; üstünü aşan her birim "Top yetmiyor", altında kalan her birim "Şut yaratan yok" −0,5 güç.
+# BSL 58,0–67,0, TBL 58,3–67,3. (Önce ±%7: 59,2–68,2.)
+KULLANIM_ALT_ORAN, KULLANIM_UST_ORAN = 58.0 / 63.7, 67.0 / 63.7
 # Oyun eğrisi: gerçek takımlardan uydurulan eğri bu kat dikleştirilir (2026-11-18, kullanıcıyla: gerçekçi eğri iyi
 # kurulan beşi ~%70'te tutuyordu). Zayıf beşler neredeyse aynı kalır, güçlüler daha çok kazanır. 1 = gerçekçi.
 OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOLAY ile
@@ -276,8 +277,8 @@ def denge(oyuncular, esik):
         d += max(-EKSEN_SINIR, min(EKSEN_SINIR, EKSEN_KATSAYI * z))
     d -= sum(max(0.0, esik["rol"][k] - toplam(oyuncular, k)) * c for k, c in DENGE.items())
     kul = toplam(oyuncular, "kul")
-    d -= min(KULLANIM_SINIR, max(0.0, kul - esik["kullanim"] * (1 + KULLANIM_BANT)) * KULLANIM_KATSAYI)
-    d -= min(KULLANIM_SINIR, max(0.0, esik["kullanim"] * (1 - KULLANIM_BANT) - kul) * KULLANIM_KATSAYI)
+    d -= min(KULLANIM_SINIR, max(0.0, kul - esik["kullanim"] * KULLANIM_UST_ORAN) * KULLANIM_KATSAYI)
+    d -= min(KULLANIM_SINIR, max(0.0, esik["kullanim"] * KULLANIM_ALT_ORAN - kul) * KULLANIM_KATSAYI)
     return d + uyum_kurallari(oyuncular)[1]
 
 
@@ -612,7 +613,7 @@ def main():
                                                                    ortaGercek=parametreler[lig]["orta"], kolay=KLASIK_KOLAY[lig], ligEk=KLASIK_LIG_EK[lig],
                                                                    orta=round(parametreler[lig]["orta"] - KLASIK_KOLAY[lig], 2)), "esik": esik[lig], "denge": DENGE,
                 "eksenler": EKSENLER, "eksenKatsayi": EKSEN_KATSAYI, "eksenSinir": EKSEN_SINIR,
-                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "kullanimBant": KULLANIM_BANT,
+                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "kullanimAlt": round(esik[lig]["kullanim"] * KULLANIM_ALT_ORAN, 1), "kullanimUst": round(esik[lig]["kullanim"] * KULLANIM_UST_ORAN, 1),
                 "motor": motor_lig[lig], "takimlar": takimlar}
         (SITE / f"{lig}.js").write_text("window.VERI=window.VERI||{};window.VERI." + lig + "=" + json.dumps(veri, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
         oy = sum(len(t["oyuncular"]) for t in takimlar)
