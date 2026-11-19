@@ -1,3 +1,13 @@
 {
-  "_aciklama": "Elle logo düzeltmesi: anahtar takım-sezon id'si (oyun verisindeki id, ör. bsl1213-12345), değer doğru logo adresi ya da \"\" (logo yok, baş harfler gösterilir). Otomatik düzeltmenin önüne geçer."
+  "_aciklama": "Elle logo düzeltmesi: anahtar takım-sezon id'si (oyun verisindeki id, ör. bsl1213-12345), değer doğru logo adresi ya da \"\" (logo yok, baş harfler gösterilir). Otomatik düzeltmenin önüne geçer.",
+  "_kaynak": "2026-11-19: TBF bu sezonlarda lisansı devralan kulübün logosunu veriyor; Bandırma Kırmızı ve Acıbadem Üniversitesi logoları tr.wikipedia, Artvin Belediye logosu eurobasket.com",
+  "bsl1112-22746": "https://upload.wikimedia.org/wikipedia/tr/f/fd/Band%C4%B1rma_K%C4%B1rm%C4%B1z%C4%B1_BK.png",
+  "tbl1516-36126": "https://upload.wikimedia.org/wikipedia/tr/f/fd/Band%C4%B1rma_K%C4%B1rm%C4%B1z%C4%B1_BK.png",
+  "tbl1617-46022": "https://upload.wikimedia.org/wikipedia/tr/f/fd/Band%C4%B1rma_K%C4%B1rm%C4%B1z%C4%B1_BK.png",
+  "tbl1718-55422": "https://upload.wikimedia.org/wikipedia/tr/f/fd/Band%C4%B1rma_K%C4%B1rm%C4%B1z%C4%B1_BK.png",
+  "tbl1819-66208": "https://upload.wikimedia.org/wikipedia/tr/f/fd/Band%C4%B1rma_K%C4%B1rm%C4%B1z%C4%B1_BK.png",
+  "tbl1920-75263": "https://upload.wikimedia.org/wikipedia/tr/f/fd/Band%C4%B1rma_K%C4%B1rm%C4%B1z%C4%B1_BK.png",
+  "tbl1516-36149": "https://upload.wikimedia.org/wikipedia/tr/thumb/6/63/Ac%C4%B1badem_%C3%9Cniversitesi_SK.jpg/250px-Ac%C4%B1badem_%C3%9Cniversitesi_SK.jpg",
+  "tbl1617-46019": "https://upload.wikimedia.org/wikipedia/tr/thumb/6/63/Ac%C4%B1badem_%C3%9Cniversitesi_SK.jpg/250px-Ac%C4%B1badem_%C3%9Cniversitesi_SK.jpg",
+  "tbl1819-66435": "https://www.eurobasket.com/logos/arbele.png"
 }

@@ -67,8 +67,8 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   | Asist üst (≥, %85) | 14,6 | 15,8 | +1 + 0,5 × fark, en çok +3 | isabet +%0,3…%1 |
   | Asist alt (<, %10; "Top paylaşımı zayıf") | 9,0 | 10,3 | eksik her asist −1 | (motorda sürekli) |
   | Ribaund alt (<, %10; "Ribaund alan yok") | 17,1 | 18,4 | eksik her ribaund −0,6 | (motorda sürekli) |
-  | Top kullanımı cezasız aralık (kullanıcı) | 58,0–67,0 | 58,3–67,3 | dışında her birim −0,5 | (motorda şut yaratma) |
-  Efektif şut = gerçek şut yüzdesi (TS% = toplam sayı / 2 × (şut + 0,44 × serbest atış)); gerçek ilk beşlerde güç sabitken
+  | Top kullanımı cezasız aralık (kullanıcı) | 58,5–67,5 | 58,8–67,8 | dışında her birim −0,5 | (motorda şut yaratma) |
+  Efektif şut ekranda görünmez, güce gizlice işler (kullanıcı). Efektif şut = gerçek şut yüzdesi (TS% = toplam sayı / 2 × (şut + 0,44 × serbest atış)); gerçek ilk beşlerde güç sabitken
   1 TS puanı ~1,2 güce denk (galibiyeti açıklama BSL %64,6 → %66,5), oyunda bilerek daha küçük.
   Taslaklarda tetiklenme (BSL, güçle kurulan beş): top çalma %34, top kaybı ~%40, efektif şut üst %37 / alt ~%0, asist üst %23.
 - **Dünden bugüne zorluk (Klasik, aynı taslaklar, ortalama galibiyet / 30)**: 2026-11-18 başındaki sistem → bugün;

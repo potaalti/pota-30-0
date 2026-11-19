@@ -28,7 +28,7 @@
   const BASLIK = { sy: "Sayı", rb: "Rib", as: "Ast", st: "TÇ", bl: "Blk", tk: "TK", kul: "Kul", vp: "VP" };
   const BASLIK_UZUN = { sy: "Sayı", rb: "Ribaund", as: "Asist", st: "Top çalma", bl: "Blok", tk: "Top kaybı",
     kul: "Top kullanımı: şut + 0,44×serbest atış + top kaybı (maç başı)", vp: "Verimlilik puanı" };
-  const SIRALAR = { vp: "VP", dk: "Süre", sy: "Sayı", rb: "Ribaund", as: "Asist", kul: "Kullanım" }; // ilki varsayılan
+  const SIRALAR = { vp: "VP", dk: "Süre", sy: "Sayı", rb: "Ribaund", as: "Asist", st: "Top çalma", tk: "Top kaybı", kul: "Kullanım" }; // ilki varsayılan
   const ILK_GUN = Date.UTC(2026, 10, 17);
   const MK_KAYNAK = { w: "Wikidata", b: "boy ve istatistikten tahmin (bütün sezonlarından)", o: "istatistikten tahmin (bütün sezonlarından)", e: "elle düzeltme" };
   const MODLAR = ["serbest", "yz", "iki"]; // "gunluk" şimdilik kapalı (2026-11-17); kodu duruyor, buraya ve index.html'e eklenince geri gelir
@@ -517,9 +517,10 @@
     // Top kaybı baremi (2026-11-19, kullanıcı): beşin toplam top kaybı gerçek ilk beşlerin üst çeyreğindeyse eksi, altındaysa artı yok
     const tk = top("tk"), tkB = calmaBaremi().tk;
     const ts = besTS(os), tsB = calmaBaremi().ts;
-    if (ts >= tsB) etkiler.push({ ad: "Efektif şut", aciklama: "beşin gerçek şut yüzdesi %" + ts.toFixed(1) + " ≥ %" + tsB.toFixed(1) + " (gerçek ilk beşlerin en iyi %15'i)", d: isabetArtisi(ts, tsB).guc });
+    // Efektif şut ekranda görünmez, güce gizlice işler (2026-11-19, kullanıcı)
+    let gizli = ts >= tsB ? isabetArtisi(ts, tsB).guc : 0;
     const tsA = calmaBaremi().tsAlt; // alt çeyreğin altı ceza (2026-11-19, kullanıcı); aradaki bölge sıfır
-    if (ts > 0 && ts < tsA) etkiler.push({ ad: "Efektif şut", aciklama: "beşin gerçek şut yüzdesi %" + ts.toFixed(1) + " < %" + tsA.toFixed(1) + " (gerçek ilk beşlerin en kötü %15'i)", d: -isabetArtisi(tsA, ts).guc });
+    if (ts > 0 && ts < tsA) gizli = -isabetArtisi(tsA, ts).guc;
     if (tk >= tkB) etkiler.push({ ad: "Top kaybı baremi", aciklama: "beşin top kaybı " + tk.toFixed(1) + " ≥ " + tkB.toFixed(1) + " (barem)", d: -calmaArtisi(tk, tkB).guc });
     // Asist baremi (üst): beşin toplam asisti gerçek ilk beşlerin en iyi %15'indeyse artı (alt taraf: "Top paylaşımı zayıf")
     const asT = top("as"), asB = calmaBaremi().as;
@@ -531,7 +532,7 @@
     } else if (alt && kul < alt) {
       etkiler.push({ ad: "Şut yaratan yok", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " < " + alt.toFixed(1) + " (cezasız aralık " + alt.toFixed(1) + "–" + ust.toFixed(1) + ")", d: -(alt - kul) * V.kullanimKatsayi });
     }
-    const R = os.reduce((a, o, i) => a + o.g * uyumlar[i], 0) + etkiler.reduce((a, e) => a + e.d, 0);
+    const R = os.reduce((a, o, i) => a + o.g * uyumlar[i], 0) + etkiler.reduce((a, e) => a + e.d, 0) + gizli;
     return { etkiler: etkiler, R: R };
   }
 
@@ -967,7 +968,7 @@
     if (zor) oy = oy.slice().sort((x, y) => x.ad.localeCompare(y.ad, "tr"));
     else if (S.sirala !== "dk") oy = oy.slice().sort((x, y) => (y[S.sirala] || 0) - (x[S.sirala] || 0));
     const sayilar = (o) => zor ? "" : '<div class="sayilar">' + sayi1(o.sy) + " <span>sy</span> · " + sayi1(o.rb) + " <span>rb</span> · " + sayi1(o.as) + " <span>as</span> · " +
-      sayi1(o.kul) + ' <span title="' + BASLIK_UZUN.kul + '">kul</span> · ' + sayi1(o.st) + " <span>tç</span> · " + sayi1(o.bl) + " <span>blk</span></div>";
+      sayi1(o.kul) + ' <span title="' + BASLIK_UZUN.kul + '">kul</span> · ' + sayi1(o.st) + ' <span title="Top çalma">tç</span> · ' + sayi1(o.tk) + ' <span title="Top kaybı">tk</span> · ' + sayi1(o.bl) + " <span>blk</span></div>";
     const roller = (o) => zor || klasik() || !o.r || !S.veri.motor.roller ? "" : '<div class="roller">' + S.veri.motor.roller.map((k, i) => ({ k: k, v: o.r[i] }))
       .filter((x) => x.v >= 0.5).sort((x, y) => y.v - x.v).slice(0, 3).map((x) => "<span>" + kac(Motor.ROL_AD[x.k]) + "</span>").join("") + "</div>";
     const sag = (o) => zor ? '<div class="vp"><b>' + o.mac + "</b><span>maç</span></div>" : '<div class="vp" title="Verimlilik puanı"><b>' + sayi1(o.vp) + "</b><span>VP</span></div>";
