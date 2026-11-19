@@ -64,7 +64,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 - **Top kaybı baremi** (her maçta; 2026-11-19, kullanıcı): beşin toplam top kaybı gerçek ilk beşlerin üst çeyreğinin 1
   üstündeyse (BSL 10,7) eksi, altındaysa artı yok. İkili serideki baskı kuralı da bu baremi kullanır. Klasik: −(1 + 1,5 × (kayıp − barem)) güç (en çok −4). Maç motoru: kendi top kaybı
   oranı +%0,8 + %0,8 × fark (en çok %3).
-- **Şut verimi baremi** (her maçta; 2026-11-19, kullanıcı: diğer baremlerden zayıf olsun): beşin gerçek şut yüzdesi
+- **Efektif şut baremi** (ekranda "Efektif şut") (her maçta; 2026-11-19, kullanıcı: diğer baremlerden zayıf olsun): beşin gerçek şut yüzdesi
   (TS% = toplam sayı / 2 × (şut + 0,44 × serbest atış)) gerçek ilk beşlerin üst çeyreğindeyse (BSL %59,7, TBL %58,5) artı,
   altındaysa sıfır. Klasik +0,5 + 0,5 × fark güç (en çok +2); motor isabet +%0,3 + %0,3 × fark (en çok %1,2). Deneme: gerçek
   ilk beşlerde güç sabitken 1 TS puanı ~1,2 güce denk (galibiyeti açıklama BSL %64,6 → %66,5); oyunda bilerek daha küçük.
