@@ -258,7 +258,7 @@
 
   function secimYap(tarafNo, o, i) {
     const taraf = S.taraflar[tarafNo], t = S.takim;
-    taraf.bes[i] = { o: o, t: { id: t.id, ad: t.ad, sezon: t.sezon, logo: t.logo } };
+    taraf.bes[i] = { o: o, t: { id: t.id, kulup: t.kulup, ad: t.ad, sezon: t.sezon, logo: t.logo } };
     S.alinan[alinanAnahtar(t, o)] = tarafNo;
     S.turdaSecen.push(tarafNo);
     S.son = { taraf: tarafNo, i: i };
@@ -310,7 +310,7 @@
     const yerler = yerlerOf({ esnek: esnek }, diz);
     if (klasik()) {
       const ort = ortalamaOyuncu();
-      return klasikDeger(bes.map((p) => (p ? p.o : ort)), bes.map((p, i) => (p ? uyumCarpan(p.o, yerler[i]) : 1))).R;
+      return klasikDeger(bes.map((p) => (p ? p.o : ort)), bes.map((p, i) => (p ? uyumCarpan(p.o, yerler[i]) : 1)), bes.map((p) => (p ? p.t : null))).R;
     }
     return motorFark(motorKisiler(bes, yerler));
   }
@@ -325,7 +325,7 @@
           if (p) return;
           let v;
           if (!seviye.bes) v = o.g * uyumCarpan(o, yerler[i]);
-          else { const b = yz.bes.slice(); b[i] = { o: o }; v = besDegeri(b, diz, yz.esnek); }
+          else { const b = yz.bes.slice(); b[i] = { o: o, t: takim }; v = besDegeri(b, diz, yz.esnek); }
           a.push({ o: o, i: i, diz: diz, v: v });
         });
       });
@@ -490,11 +490,34 @@
       const uyum = uyumCarpan(p.o, yerler[i]);
       return { p: p, yer: yerler[i], uyum: uyum, guc: p.o.g * uyum, kayip: p.o.g * (1 - uyum) };
     });
-    const k = klasikDeger(taraf.bes.map((p) => p.o), satirlar.map((x) => x.uyum));
+    const k = klasikDeger(taraf.bes.map((p) => p.o), satirlar.map((x) => x.uyum), taraf.bes.map((p) => p.t));
     return { satirlar: satirlar, etkiler: k.etkiler, R: k.R, p: 1 / (1 + Math.exp(-(k.R - S.veri.egri.orta) / S.veri.egri.olcek)) };
   }
   // beşin klasik gücü: oyuncu güçleri × mevki uyumu + eksenler + uyum kuralları + rol eksikliği + top kullanımı
-  function klasikDeger(os, uyumlar) {
+  // Kadro kimyası (2026-11-20, kullanıcı): istatistiğe bakmayan küçük gizli uyum artıları; eksisi yok.
+  // Yalnız kurulan beşlere işler (takimlar verilince); gerçek takımlar ve eğri bunlarsız.
+  // Kulüp ruhu: aynı kulübün farklı sezonlarından üç seçim (forma ortak, birlikte oynamamış olabilirler).
+  // Eski takım arkadaşları: üç oyuncu kariyerlerinin bir sezonunda aynı kadroda oynamış (hangi takımdan seçildikleri fark etmez).
+  const kariyerOnbellek = {};
+  function kariyer(k) { // oyuncu kimliği → oynadığı takım-sezonlar
+    const lig = S.veri.lig;
+    if (!kariyerOnbellek[lig]) { const m = {}; S.veri.takimlar.forEach((t) => t.oyuncular.forEach((o) => { (m[o.k] = m[o.k] || []).push(t.id); })); kariyerOnbellek[lig] = m; }
+    return kariyerOnbellek[lig][k] || [];
+  }
+  function kimyaUyumu(os, takimlar) {
+    const c = [];
+    if (os.filter((o) => o.tr).length >= (S.veri.lig === "tbl" ? 4 : 3)) c.push({ ad: "Yerli omurga", d: 1 });
+    if (S.kaynak !== "sabit") { // tek takım-sezon havuzunda herkes zaten aynı kadrodan
+      const kulup = {};
+      takimlar.forEach((t) => { if (t && t.kulup) (kulup[t.kulup] = kulup[t.kulup] || []).push(t.id); });
+      if (Object.values(kulup).some((l) => l.length >= 3 && new Set(l).size >= 2)) c.push({ ad: "Kulüp ruhu", d: 1 });
+      const birlikte = {};
+      os.forEach((o) => { if (o.k) new Set(kariyer(o.k)).forEach((id) => { birlikte[id] = (birlikte[id] || 0) + 1; }); });
+      if (Object.values(birlikte).some((n) => n >= 3)) c.push({ ad: "Eski takım arkadaşları", d: 1 });
+    }
+    return c;
+  }
+  function klasikDeger(os, uyumlar, takimlar) {
     const V = S.veri;
     const top = (k) => os.reduce((a, o) => a + (o[k] || 0), 0);
     const etkiler = [];
@@ -511,6 +534,7 @@
       const n = os.filter((o) => k.kosul.every((c) => (c[1] === ">=" ? (o[c[0]] || 0) >= c[2] : (o[c[0]] || 0) < c[2]))).length;
       if ((k.en_az !== undefined && n >= k.en_az) || (k.en_cok !== undefined && n <= k.en_cok)) { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.puan, uyum: true }); uyumTop += k.puan; }
     });
+    if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: "kadro kimyası", d: k.d, uyum: true }); uyumTop += k.d; });
     if (Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop, uyum: true, sinir: true });
     const ROL_AD = { rb: ["Ribaund alan yok", "beşin ribaundu"], as: ["Top paylaşımı zayıf", "beşin toplam asisti"] };
     Object.keys(V.denge).forEach((k) => {
@@ -1322,7 +1346,7 @@
       if (!S.takim || S.takim.id !== h.id || siradaki() !== h.kim) return;
       const taraf = S.taraflar[h.kim], o = S.takim.oyuncular.filter((x) => x.k === h.k)[0];
       if (!o || taraf.bes[h.i] || secilebilir(taraf, o)) return;
-      taraf.bes[h.i] = { o: o, t: { id: S.takim.id, ad: S.takim.ad, sezon: S.takim.sezon, logo: S.takim.logo } };
+      taraf.bes[h.i] = { o: o, t: { id: S.takim.id, kulup: S.takim.kulup, ad: S.takim.ad, sezon: S.takim.sezon, logo: S.takim.logo } };
       S.alinan[alinanAnahtar(S.takim, o)] = h.kim;
       S.turdaSecen.push(h.kim);
       S.son = { taraf: h.kim, i: h.i };
