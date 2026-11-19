@@ -43,6 +43,19 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
     yerler canlı görünür (oyuncular/{i}/bakiyor alanı). Beşler dolunca sonuç iki telefonda da kendiliğinden açılır;
     "Rövanş" aynı odada yeni oyun başlatır (ilk seçen sırayla değişir, oda skoru tutulur), "Odadan çık" odayı bırakır.
   - *Bu cihazda*: aynı telefonda sırayla; sıra kimdeyse saha onun beşini gösterir.
+- **AI seviyeleri** (2026-11-19, yeniden):
+  - Kolay: yalnız oyuncunun gücüne bakar (güç × mevki uyumu), en iyi 5 aday arasından rastgele; diziliş sabit, atlama yok.
+  - Orta: beşin bütününe bakar: adayı beşe koyunca beşin değeri (Klasik: güç + eksenler + uyum + rol eksikliği + kullanım
+    bandı; Maç motoru: beklenen sayı farkı; boş yerler gerçek ilk beşlerin ortalama oyuncusu). En iyi 2 arasından seçer,
+    iki dizilişi de dener (gerekirse 3 Arka 2 Ön'e geçer), gelen kadro çok kötüyse atlama hakkını kullanır.
+  - Zor: Orta gibi ama hep en iyisini alır; gelen kadronun en iyi seçeneği, rastgele 12 kadronun (başka takım ya da aynı
+    kulübün başka sezonu) ortalamasından belirgin kötüyse (Klasik 2,5 güç, motor 1,2 sayı) atlar.
+  - Ölçüm (Klasik, AI tek başına 150 beş, maç başı olasılık × 30): Kolay ~15,6, Orta ~21,6, Zor ~23,5 galibiyet (eski Zor
+    21,9). Zor oyunların ~%90'ında atlama hakkını kullanıyor, ~1/3'ünde diziliş değiştiriyor.
+- **Top çalma baremi** (ikili seri: 1'e 1 ve AI'ya karşı): bir beşin maç başı toplam top çalması gerçek ilk beşlerin üst
+  çeyreğinde (BSL 5,4) ve rakibin toplam top kaybı da üst çeyrekte (BSL 9,7) ise çalıcılar rakibi cezalandırır:
+  baskı = (çalma − barem) + (rakibin kaybı − barem); Klasik'te +1 + 1,5 × baskı güç (en çok 5), Maç motorunda rakibin top
+  kaybı oranı +%1 + %1 × baskı (en çok %4). Seri satırında yazılır. Sezon (gerçek takımlara karşı) etkilenmez.
 - İki taraflı modlarda (vs AI, 2 kişi) her oyuncunun oyun başına 1 atlama hakkı var: "Başka takım" ya da "Başka sezon"
   (tek takım-sezon havuzunda yok). Hak yalnız turun ilk seçimini yapacak oyuncunundur: turda biri seçtikten sonra
   ikinci seçen kadroyu değiştiremez (2026-11-18, kullanıcı isteği).
