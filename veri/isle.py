@@ -345,6 +345,29 @@ def _dosya_metni(url):
     return re.sub(r"[^a-z]", "", unicodedata.normalize("NFKD", x).encode("ascii", "ignore").decode().lower())
 
 
+def vatandaslik_uygula(cikti):
+    """TBF profili bugünkü uyruğu verir; sonradan vatandaş olanlar her sezonda Türk görünür. veri/vatandaslik.json'daki
+    sezon aralıkları dışında bu oyuncular yabancı sayılır (2026-11-19, kullanıcı)."""
+    yol = KOK / "vatandaslik.json"
+    if not yol.exists():
+        return
+    liste = {int(k): v for k, v in json.loads(yol.read_text(encoding="utf-8")).items() if not k.startswith("_")}
+    degisen = 0
+    for takimlar in cikti.values():
+        for t in takimlar:
+            for o in t["oyuncular"]:
+                v = liste.get(o["k"])
+                if not v:
+                    continue
+                turk = any(a <= t["sezon"] and (b is None or t["sezon"] <= b) for a, b in v["turk"])
+                if o["tr"] != (1 if turk else 0):
+                    degisen += 1
+                o["tr"] = 1 if turk else 0
+                o["ulke"] = "TÜRKİYE" if turk else v.get("ulke")
+                o["ad"] = v["ad"] if turk else v.get("ad_yabanci", v["ad"])
+    print("Vatandaşlık:", len(liste), "oyuncu,", degisen, "oyuncu-sezon yabancıya döndü", flush=True)
+
+
 def logo_duzelt(cikti):
     """TBF bazı eski sezonlarda kulübün başka dönemine ya da başka kulübe ait logoyu veriyor (ör. Banvit sezonlarında
     "bandirma-bk-logo", Bandırma Kırmızı'da "Sigortam.net"). Kural: logo dosyasının adındaki bir kelime başka bir takımın
@@ -566,6 +589,7 @@ def main():
         cikti[lig] = takimlar_hepsi
 
     mevki_tutarla(cikti)
+    vatandaslik_uygula(cikti)
     for takimlar_ in cikti.values():  # uzun (mevki 4-5): "Boyalı alan kalabalık" kuralı için, kesinleşen mevkiden
         for t in takimlar_:
             for o in t["oyuncular"]:

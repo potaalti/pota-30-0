@@ -254,7 +254,11 @@ benzeyen Wikidata kaydı eşlenir: 2.614 tekil oyuncunun 1.450'si bulundu (1.342
 | TBL (2.691 oyuncu-sezon) | 830 | 339 | 1.522 |
 
 Proballers.com kullanılmadı: robots.txt dosyası Claude dahil yapay zekâ ajanlarını tüm siteden yasaklıyor. Uyruk profilden gelir
-(TÜRKİYE = Türk oyuncu).
+(TÜRKİYE = Türk oyuncu). Profil bugünkü uyruğu verdiği için sonradan vatandaş olanlar her sezonda Türk görünüyordu;
+`veri/vatandaslik.json` bu oyuncuların Türk sayıldığı sezonları tutar (2026-11-19: Shane Larkin, Scottie Wilbekin, Malachi Flynn,
+Ercan Osmani, Ali Muhammed/Bobby Dixon, Mert/Preston Shumpert). Sezon ortasında vatandaş olan bir sonraki sezondan Türk sayılır;
+Larkin ve Wilbekin 2023 yazında yerli statüsünü kaybettiği için sonraki sezonlarda yabancıdır. Yabancı sezonlarda eski ad
+(Bobby Dixon, Preston Shumpert) gösterilir. Elle mevki düzeltmeleri `veri/mevki_duzeltme.json`'da.
 
 Kullanılan uçlar:
 - `/League/get-standings-table?LeagueId=&SeasonId=&prefix=` → gerçek derece

@@ -1,0 +1,15 @@
+{
+  "_aciklama": "Sonradan Türk vatandaşı olan oyuncular: TBF profili bugünkü uyruğu verdiği için bu oyuncular bütün sezonlarda Türk görünüyordu. 'turk': Türk (yerli) sayıldığı sezon aralıkları [ilk, son] (son null = açık). Sezon ortasında vatandaş olan bir sonraki sezondan Türk sayılır (sezon ortalaması çoğunlukla yabancı dönemden). 'ulke': yabancı sayıldığı sezonlarda uyruk. 'ad'/'ad_yabanci': gösterilen ad. Anahtar TBF oyuncu numarası (k). Kullanıcı isteği 2026-11-19.",
+  "442131": {"ad": "SHANE LARKIN", "ulke": "ABD", "turk": [["2020-21", "2022-23"], ["2025-26", null]],
+             "not": "vatandaşlık 6 Şubat 2020 (2019-20 ortası); 2023 yazında yerli statüsünü kaybetti (2023-24, 2024-25 yabancı); EuroBasket 2025 ile milli takıma döndü"},
+  "363061": {"ad": "SCOTTIE WILBEKIN", "ulke": "ABD", "turk": [["2018-19", "2022-23"]],
+             "not": "pasaport Haziran 2018; 2023 yazında yerli statüsünü kaybetti; 2025-26 statüsü belirsiz, yabancı sayıldı"},
+  "734506": {"ad": "MALACHI FLYNN", "ulke": "ABD", "turk": [["2026-27", null]],
+             "not": "vatandaşlık Ocak 2026 (2025-26 ortası)"},
+  "370740": {"ad": "ERCAN OSMANI", "ulke": "ARNAVUTLUK", "turk": [["2022-23", null]],
+             "not": "kesin tarih bulunamadı; ilk milli takım EuroBasket 2022, ondan önceki sezonlar yabancı sayıldı (kullanıcı)"},
+  "247675": {"ad": "MERT SHUMPERT", "ad_yabanci": "PRESTON SHUMPERT", "ulke": "ABD", "turk": [["2011-12", null]],
+             "not": "Galatasaray döneminde bir 10 Aralık'ta vatandaş oldu (kaynakta yıl kesik: 2010 ya da 2011); 2010 varsayıldı. Beşiktaş/Efes sezonları yabancı (kullanıcı)"},
+  "272528": {"ad": "ALİ MUHAMMED", "ad_yabanci": "BOBBY DIXON", "ulke": "ABD", "turk": [["2015-16", null]],
+             "not": "pasaport Haziran 2015; Karşıyaka sezonları (2012-15) Bobby Dixon olarak yabancı"}
+}

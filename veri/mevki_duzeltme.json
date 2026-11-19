@@ -1,4 +1,8 @@
 {
   "_aciklama": "Elle mevki/boy düzeltmeleri; her kaynağın (Wikidata, tahmin) önüne geçer. Anahtar TBF oyuncu numarası (oyun verisindeki k). p: oynayabildiği mevkiler 1-5 (1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot); boy isteğe bağlı (cm).",
-  "221455": {"ad": "HAKAN YAPAR", "p": [4, 5], "not": "kullanıcı, 2026-11-17"}
+  "221455": {"ad": "HAKAN YAPAR", "p": [4, 5], "not": "kullanıcı, 2026-11-17"},
+  "222914": {"ad": "ALİCAN GÜNEY", "p": [2], "not": "kullanıcı: arka oyuncusu, 2026-11-19"},
+  "130898": {"ad": "OKBEN ULUBAY", "p": [2], "not": "kullanıcı: arka oyuncusu, 2026-11-19"},
+  "410951": {"ad": "IVAN BUVA", "p": [5], "not": "kullanıcı: 5 numara, 2026-11-19"},
+  "502511": {"ad": "JOHNATHAN MOTLEY", "p": [4, 5], "not": "kullanıcı: 4/5, 2026-11-19"}
 }
