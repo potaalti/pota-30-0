@@ -630,53 +630,67 @@
     return { soz: "Play-off'a kalamadı (" + sira + ".)", deger: 50 - sira };
   }
   // ---- tek lig (2026-11-19, kullanıcı): kurulan beş(ler) + gerçek takımlar aynı ligde, çift devreli; BSL 16, TBL 17 takım ----
+  // Tarihî lig (2026-11-19, kullanıcı): tablodaki her sırada o sırayı gerçekten almış bir takım-sezon (kulüp tekrar etmez).
+  // Kurulan beş(ler) bu takımlarla ikişer maç yapar; sırası galibiyet oranına göre, gerçek liglerde o oranın tipik geldiği
+  // sıradır. Kalan sıralar gerçek sıralarıyla dolar; onların galibiyet-mağlubiyeti gerçek kayıt değil, o sıranın tipik
+  // oranından ve sıralamayla tutarlı üretilir (averaj gerçek). Play-off ilk 8 arasında gerçek güçlerle oynanır.
   function ligSezonu(hesaplar) {
-    const V = S.veri, T = V.mac / 2 + 1, rng = mulberry(hash(S.tohum + "|lig|" + S.taraflar.map(tarafTohumu).join("#")));
-    // Rakipler tek bir gerçek sezonun takımları (2026-11-19, kullanıcı: "mantık çerçevesinde"): kulüp tekrar etmez;
-    // kurulan beş(ler) o sezonun son sıradaki takım(lar)ının yerine girer.
-    const K = T - S.taraflar.length;
-    const sezonlar = Array.from(new Set(V.takimlar.map((t) => t.sezon))).filter((sz) => V.takimlar.filter((t) => t.sezon === sz).length >= K).sort();
-    const ligSezon = sezonlar[Math.floor(rng() * sezonlar.length)];
-    const sezonun = V.takimlar.map((t, i) => i).filter((i) => V.takimlar[i].sezon === ligSezon)
-      .sort((a, b) => (V.takimlar[a].sira || 99) - (V.takimlar[b].sira || 99) || V.takimlar[a].id.localeCompare(V.takimlar[b].id));
-    const gercek = sezonun.slice(0, K), cikan = sezonun.slice(K).map((i) => V.takimlar[i].ad);
+    const V = S.veri, N = V.mac, T = N / 2 + 1, rng = mulberry(hash(S.tohum + "|lig|" + S.taraflar.map(tarafTohumu).join("#")));
     const havuz = klasik() ? null : Motor.havuz(V);
-    const takimlar = S.taraflar.map((t, j) => ({ ad: t.ad, sezon: "", logo: "", biz: true, j: j, R: hesaplar[j].R + (klasik() ? (V.egri.kolay || 0) + (V.egri.ligEk || 0) + 1.5 * S.taraflar.length : 0), A: hesaplar[j].A }))
-      // + 1,5 × kurulan beş sayısı: tek sezonda son sıradakiler çıkınca rakipler ortalama bu kadar güçleniyor (ölçüm: BSL 1,5 / 2,9, TBL 1,5 / 3,2)
-      .concat(gercek.slice(0, T - S.taraflar.length).map((i) => {
-        const t = V.takimlar[i], bes = t.oyuncular.slice().sort((a, b) => b.dk * b.mac - a.dk * a.mac || a.k - b.k).slice(0, 5);
-        return { ad: t.ad, sezon: t.sezon, logo: t.logo, t: t, R: klasik() ? klasikDeger(bes, [1, 1, 1, 1, 1]).R : 0, A: havuz ? havuz[i].A : null };
-      }));
-    takimlar.forEach((x, i) => { x.g = 0; x.m = 0; x.at = 0; x.ye = 0; x.no = i; x.ikili = {}; });
-    const maclar = S.taraflar.map(() => []), aradaki = [];
-    // çember yöntemiyle devreler (tek sayıda takımda her devre biri dinlenir)
-    const sira = takimlar.map((x, i) => i); if (sira.length % 2) sira.push(-1);
-    const n = sira.length, devreler = [];
-    for (let d = 0; d < n - 1; d++) {
-      const dv = []; for (let k = 0; k < n / 2; k++) { const a = sira[k], b = sira[n - 1 - k]; if (a >= 0 && b >= 0) dv.push(d % 2 ? [b, a] : [a, b]); }
-      devreler.push(dv); sira.splice(1, 0, sira.pop());
+    const oran = (t) => { const x = t.gercek.split("-").map(Number); return x[0] / (x[0] + x[1]); };
+    const sirada = {}, tipik = {};
+    V.takimlar.forEach((t, i) => { if (t.sira && t.gercek) (sirada[t.sira] = sirada[t.sira] || []).push(i); });
+    for (let r = 1; r <= T; r++) { const v = (sirada[r] || []).map((i) => oran(V.takimlar[i])).sort((a, b) => a - b); tipik[r] = v.length ? v[v.length >> 1] : 0; }
+    // her sıra için bir aday
+    const kulup = {}, aday = {};
+    for (let r = 1; r <= T; r++) {
+      const tum = sirada[r] || sirada[Math.max(1, r - 1)] || [], uygun = tum.filter((i) => !kulup[V.takimlar[i].kulup]), l = uygun.length ? uygun : tum;
+      const i = l[Math.floor(rng() * l.length)], t = V.takimlar[i];
+      kulup[t.kulup] = 1;
+      const bes = t.oyuncular.slice().sort((a, b) => b.dk * b.mac - a.dk * a.mac || a.k - b.k).slice(0, 5);
+      aday[r] = { ad: t.ad, sezon: t.sezon, logo: t.logo, t: t, gercekSira: r, R: klasik() ? klasikDeger(bes, [1, 1, 1, 1, 1]).R : 0, A: havuz ? havuz[i].A : null };
     }
-    const hepsi = devreler.concat(devreler.map((dv) => dv.map(([a, b]) => [b, a]))); // ikinci devre: saha değişir
-    hepsi.forEach((dv) => dv.forEach(([ev, dep]) => {
-      const A = takimlar[ev], B = takimlar[dep], m = ligMaci(A, B, rng);
-      const as = m.as, bs = m.bs, p = m.p, kutuA = m.kA, kutuB = m.kB, uz = m.uz;
-      A.at += as; A.ye += bs; B.at += bs; B.ye += as;
-      if (as > bs) { A.g++; B.m++; } else { B.g++; A.m++; }
-      const ik = (x, y, a2, b2) => { const k = x.ikili[y.no] || (x.ikili[y.no] = { g: 0, f: 0 }); if (a2 > b2) k.g++; k.f += a2 - b2; };
-      ik(A, B, as, bs); ik(B, A, bs, as);
-      if (A.biz && B.biz) aradaki.push({ ev: A.j, a: as, b: bs }); // iki kurulan beş arasındaki lig maçları
-      const rakipBilgi = (x) => ({ ad: x.ad, sezon: x.sezon || (x.biz ? "kurulan beş" : ""), logo: x.logo || "" });
-      if (A.biz) maclar[A.j].push({ g: as > bs, biz: as, onlar: bs, uz: uz, ev: 1, rakip: rakipBilgi(B), kutu: kutuA, p: p });
-      if (B.biz) maclar[B.j].push({ g: bs > as, biz: bs, onlar: as, uz: uz, ev: -1, rakip: rakipBilgi(A), kutu: kutuB, p: 1 - p });
-    }));
-    // sıralama: galibiyet; eşitlikte eşit takımlar arasındaki maçlar (ikili averaj: galibiyet, sonra sayı farkı), sonra genel averaj
-    const gruplar = {}; takimlar.forEach((x) => { (gruplar[x.g] = gruplar[x.g] || []).push(x); });
-    takimlar.forEach((x) => {
-      const grup = gruplar[x.g];
-      x.ikG = grup.reduce((t, y) => t + ((x.ikili[y.no] || {}).g || 0), 0); x.ikF = grup.reduce((t, y) => t + ((x.ikili[y.no] || {}).f || 0), 0);
+    const biz = S.taraflar.map((t, j) => ({ ad: t.ad, sezon: "", logo: "", biz: true, j: j, R: hesaplar[j].R + (klasik() ? (V.egri.kolay || 0) + (V.egri.ligEk || 0) : 0), A: hesaplar[j].A }));
+    // kurulan beşlerin maçları: bütün adaylarla ikişer (biri iç saha), birbirleriyle ikişer
+    const rakipBilgi = (x) => ({ ad: x.ad, sezon: x.sezon || (x.biz ? "kurulan beş" : ""), logo: x.logo || "" });
+    const oyna = (A, B) => { const m = ligMaci(A, B, rng); return { as: m.as, bs: m.bs, p: m.p, kA: m.kA, kB: m.kB, uz: m.uz }; };
+    const adayMac = biz.map((b) => { const o = {}; for (let r = 1; r <= T; r++) o[r] = [oyna(b, aday[r]), oyna(aday[r], b)]; return o; });
+    const aradaki = [], bizMac = [];
+    if (biz.length === 2) { [[0, 1], [1, 0]].forEach(([e, d]) => { const m = oyna(biz[e], biz[d]); bizMac.push({ ev: e, m: m }); aradaki.push({ ev: e, a: m.as, b: m.bs }); }); }
+    // sıra: bütün adaylara karşı galibiyet oranı → tipik oranı bundan yüksek olan sıra sayısı + 1; çakışırsa alta kayar
+    const onOran = biz.map((b, j) => { let g = 0, n = 0; for (let r = 1; r <= T; r++) adayMac[j][r].forEach((m, k) => { n++; if (k === 0 ? m.as > m.bs : m.bs > m.as) g++; }); return g / n; });
+    const yer = {}, sirala = biz.map((b, j) => j).sort((a, c) => onOran[c] - onOran[a]);
+    let son = 0;
+    sirala.forEach((j) => { let p = 1; for (let r = 1; r <= T; r++) if (tipik[r] > onOran[j]) p = r + 1; p = Math.min(T, Math.max(p, son + 1)); yer[j] = p; son = p; });
+    // ikisi de en sona düştüyse üsttekini bir yukarı it (sıralı düzende)
+    const pler = sirala.map((j) => yer[j]); for (let k = pler.length - 1; k > 0; k--) if (pler[k] <= pler[k - 1]) pler[k - 1] = pler[k] - 1;
+    sirala.forEach((j, k) => { yer[j] = pler[k]; });
+    const bizYer = {}; biz.forEach((b, j) => { bizYer[yer[j]] = b; });
+    // kurulan beşlerin kayıtları: tabloda kalan adaylarla maçlar + birbirleriyle maçlar
+    const maclar = biz.map(() => []);
+    biz.forEach((b, j) => {
+      b.g = 0; b.m = 0; b.at = 0; b.ye = 0;
+      const ekle = (m, ev, rakip) => {
+        const bizS = ev > 0 ? m.as : m.bs, onS = ev > 0 ? m.bs : m.as, g = bizS > onS;
+        b.at += bizS; b.ye += onS; if (g) b.g++; else b.m++;
+        maclar[j].push({ g: g, biz: bizS, onlar: onS, uz: m.uz, ev: ev, rakip: rakipBilgi(rakip), kutu: ev > 0 ? m.kA : m.kB, p: ev > 0 ? m.p : 1 - m.p });
+      };
+      for (let r = 1; r <= T; r++) if (!bizYer[r]) { ekle(adayMac[j][r][0], 1, aday[r]); ekle(adayMac[j][r][1], -1, aday[r]); }
+      bizMac.forEach((x) => { if (x.ev === j) ekle(x.m, 1, biz[1 - j]); else ekle(x.m, -1, biz[x.ev]); });
+      // maç sırası karışsın (rakipler sıra sırasıyla gelmesin)
+      for (let i = maclar[j].length - 1; i > 0; i--) { const k = Math.floor(rng() * (i + 1)); const x = maclar[j][i]; maclar[j][i] = maclar[j][k]; maclar[j][k] = x; }
     });
-    const tablo = takimlar.slice().sort((a, b) => b.g - a.g || b.ikG - a.ikG || b.ikF - a.ikF || (b.at - b.ye) - (a.at - a.ye) || a.no - b.no);
-    return { tablo: tablo, maclar: maclar, po: playoff(tablo, rng), takimlar: takimlar, sezon: ligSezon, cikan: cikan, aradaki: aradaki };
+    // tablo: her sıra ya kurulan beş ya o sırayı gerçekten almış aday; adayların kaydı tipik orandan, sıralamayla tutarlı
+    const tablo = [];
+    for (let q = 1; q <= T; q++) tablo.push(bizYer[q] || aday[q]);
+    let ust = N;
+    tablo.forEach((x, i) => {
+      if (x.biz) { ust = x.g; return; }
+      const alt = Math.max(0, ...tablo.slice(i + 1).filter((y) => y.biz).map((y) => y.g));
+      x.g = Math.max(alt, Math.min(ust, Math.round(tipik[i + 1] * N))); x.m = N - x.g; ust = x.g;
+      x.at = (x.t.net || 0) * N; x.ye = 0;
+    });
+    return { tablo: tablo, maclar: maclar, po: playoff(tablo, rng), takimlar: biz, sezon: "tarihî", cikan: [], aradaki: aradaki, tarihi: true };
   }
   function seri(a, b) { return klasik() ? seriK(a, b) : seriM(a, b); }
   function enIyiSecim(h) { return klasik() ? enIyiSecimK(h) : enIyiSecimM(h); }
@@ -726,8 +740,7 @@
     if (lig) sonuclar.forEach((r, j) => { r.lig = ligDurumu(lig.takimlar[j], lig.tablo); });
     if (ayar.mod === "gunluk") { const b = S.taraflar[0]; yaz("gunluk:" + S.tohum, { bes: b.bes, atla: b.atla, dizilis: b.dizilis }); }
     const sr = S.cift && !lig ? seri(sonuclar[0].h, sonuclar[1].h) : null;
-    const ligTablo = !lig ? "" : '<details class="dokum-kap" open><summary>lig tablosu · ' + S.veri.lig.toUpperCase() + " " + kac(lig.sezon) + " (" + lig.tablo.length + " takım, çift devre" +
-      (lig.cikan.length ? "; kurulan beş" + (S.taraflar.length > 1 ? "ler " : " ") + kac(lig.cikan.join(", ")) + " yerine" : "") + ")</summary><div class=\"yatay\"><table class=\"lig-tablo\"><thead><tr><th>#</th><th>Takım</th><th>G</th><th>M</th><th>Av.</th></tr></thead><tbody>" +
+    const ligTablo = !lig ? "" : '<details class="dokum-kap" open><summary>tarihî ' + S.veri.lig.toUpperCase() + " lig tablosu (her sırada o sırayı gerçekten almış bir takım-sezon; " + lig.tablo.length + " takım)</summary><div class=\"yatay\"><table class=\"lig-tablo\"><thead><tr><th>#</th><th>Takım</th><th>G</th><th>M</th><th>Av.</th></tr></thead><tbody>" +
       lig.tablo.map((x, i) => '<tr class="' + (x.biz ? "biz" : "") + '"><td>' + (i + 1) + "</td><td>" + kac(x.ad) + (x.sezon ? ' <span class="ipucu">' + kac(x.sezon) + "</span>" : "") + "</td><td>" + x.g + "</td><td>" + x.m +
         "</td><td>" + isaretli((x.at - x.ye) / (x.g + x.m)) + "</td></tr>").join("") + "</tbody></table></div></details>";
     // play-off ağacı: çeyrek final → yarı final → final → şampiyon (telefonda yatay kayar)
