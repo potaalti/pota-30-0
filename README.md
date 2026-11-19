@@ -55,7 +55,12 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 - **Top çalma baremi** (ikili seri: 1'e 1 ve AI'ya karşı): bir beşin maç başı toplam top çalması gerçek ilk beşlerin üst
   çeyreğinde (BSL 5,4) ve rakibin toplam top kaybı da üst çeyrekte (BSL 9,7) ise çalıcılar rakibi cezalandırır:
   baskı = (çalma − barem) + (rakibin kaybı − barem); Klasik'te +1 + 1,5 × baskı güç (en çok 5), Maç motorunda rakibin top
-  kaybı oranı +%1 + %1 × baskı (en çok %4). Seri satırında yazılır. Sezon (gerçek takımlara karşı) etkilenmez.
+  kaybı oranı +%1 + %1 × baskı (en çok %4). Seri satırında yazılır.
+- **Top çalma baremi** (her maçta, gerçek takımlara karşı sezon dahil; 2026-11-19, kullanıcı): kurulan beşin toplam top
+  çalması gerçek ilk beşlerin üst çeyreğindeyse (BSL 5,4, TBL 5,2) artı, altındaysa eksi yok. Klasik: +1 + 1,5 × (çalma −
+  barem) güç (en çok 4). Maç motoru: rakibin top kaybı oranı +%0,8 + %0,8 × fark (en çok %3); ayrıca kurulan beşin lig
+  ortalamasının altındaki top çalması rakibe kolaylık sağlamaz (eksi kırpılır). Taslaklarda beşlerin ~yarısı baremi aşıyor,
+  ortalama +1,1 güç ≈ sezonda +0,3 galibiyet.
 - İki taraflı modlarda (vs AI, 2 kişi) her oyuncunun oyun başına 1 atlama hakkı var: "Başka takım" ya da "Başka sezon"
   (tek takım-sezon havuzunda yok). Hak yalnız turun ilk seçimini yapacak oyuncunundur: turda biri seçtikten sonra
   ikinci seçen kadroyu değiştiremez (2026-11-18, kullanıcı isteği).

@@ -107,7 +107,8 @@
   function eslesme(A, B, M, ev) {
     const lig = ligTakimi(M), lr = lig.lr, Lt = lig.T;
     const atis = (Lt.a2 + Lt.a3) * 2.2; // maç başı şutla gelen sayı ölçeği: sayı farkını isabet farkına çevirir
-    const tov = sinir(A.r.tov + (B.r.st - lr.st) / lr.kul + (A.ekTov || 0), 0.04, 0.34); // ekTov: ikili seride top çalma baskısı
+    const stEtki = (B.r.st - lr.st) / lr.kul; // kirpSt: kurulan beşin az top çalması rakibe kolaylık sağlamaz
+    const tov = sinir(A.r.tov + (B.kirpSt ? Math.max(0, stEtki) : stEtki) + (B.calmaTov || 0) + (A.ekTov || 0), 0.04, 0.34); // ekTov: ikili seride top çalma baskısı
     const ft = sinir(A.r.ft * Math.sqrt(sinir(B.r.foul / lr.foul, 0.6, 1.6)), 0.02, 0.35);
     const sb = sinerjiTaban(M), sA = A.sin || sb, sB = B.sin || sb;
     const kA = A.sinK || 1, kB = B.sinK || 1;
@@ -209,11 +210,13 @@
     const lig = ligTakimi(M), L = { r: lig.r, paylar: {} }, taban = beklenenFark(A, L, M, 0);
     return ETKENLER.map((et) => {
       const r = Object.assign({}, A.r); et.alanlar.forEach((k) => { r[k] = lig.r[k]; });
-      return { ad: et.ad, ipucu: et.ipucu, deger: et.goster(A.ham, lig.lr), lig: et.goster(lig.lr, lig.lr), d: taban - beklenenFark({ r: r, sin: A.sin }, L, M, 0) };
+      const x = Object.assign({}, A, { r: r }); if (et.alanlar.indexOf("st") >= 0) x.calmaTov = 0;
+      return { ad: et.ad, ipucu: et.ipucu, deger: et.goster(A.ham, lig.lr), lig: et.goster(lig.lr, lig.lr), d: taban - beklenenFark(x, L, M, 0) };
     }).concat(A.sin ? [["off", "Hücum sinerjisi", "şutör, oyun kurucu, içeri skorer"], ["def", "Savunma sinerjisi", "pota koruyucu, top çalan"], ["rib", "Ribaund sinerjisi", "ribaundçu"]].map(([k, ad, roller]) => {
       const sin = Object.assign({}, A.sin); sin[k] = sinerjiTaban(M)[k];
+      const x = Object.assign({}, A, { sin: sin });
       return { ad: ad, ipucu: "beşteki roller: " + roller + " (ilki çok, sonrakiler daha az değerli)", deger: "gerçek ilk beş ortalamasına göre " + (A.sin[k] >= sin[k] ? "+" : "") + bir(100 * (A.sin[k] - sin[k])) + " puan", lig: "0",
-        d: taban - beklenenFark({ r: A.r, sin: sin }, L, M, 0) };
+        d: taban - beklenenFark(x, L, M, 0) };
     }) : []);
   }
 

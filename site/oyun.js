@@ -381,14 +381,20 @@
       " rolü: " + x.n.toFixed(1).replace(".", ",") + " (hedef " + x.hedef + "; ilk oyuncu çok, sonrakiler daha az değerli)\">" + kac(x.ad) + " " +
       (x.n >= x.hedef * 0.75 ? "✓" : x.n.toFixed(1).replace(".", ",") + "/" + x.hedef) + "</span>").join("");
   }
+  // kurulan beş: top çalması lig ortalamasının altındaysa eksi yok (kirpSt); baremin üstündeyse rakibin top kaybı artar
+  function motorCalma(A, kisiler) {
+    const L = S.veri.motor.L, st = kisiler.reduce((x, k) => x + (k.ortalama ? L.st * k.dk : (k.o.st || 0)), 0), b = calmaBaremi().st;
+    A.kirpSt = true; A.calmaTov = st >= b ? calmaArtisi(st, b).tov : 0;
+    return A;
+  }
   function motorFark(kisiler) {
     const M = S.veri.motor; Motor.havuz(S.veri); // havuz sinerji tabanını da kurar
-    return Motor.beklenenFark(Motor.takimKur(kisiler, M, oyunSecenek()), { r: Motor.ligTakimi(M).r }, M, 0);
+    return Motor.beklenenFark(motorCalma(Motor.takimKur(kisiler, M, oyunSecenek()), kisiler), { r: Motor.ligTakimi(M).r }, M, 0);
   }
   function hesapM(taraf) {
     Motor.havuz(S.veri);
     const M = S.veri.motor, yerler = DZ()[taraf.dizilis].yerler, kisiler = motorKisiler(taraf.bes, yerler);
-    const A = Motor.takimKur(kisiler, M, oyunSecenek()), R = motorFark(kisiler);
+    const A = motorCalma(Motor.takimKur(kisiler, M, oyunSecenek()), kisiler), R = motorFark(kisiler);
     const satirlar = taraf.bes.map((p, i) => {
       const yerine = kisiler.slice(); yerine[i] = { ortalama: true, dk: p.o.m[0], ad: "" };
       let kayip = 0;
@@ -442,6 +448,10 @@
     }
     return baremOnbellek[lig];
   }
+  function calmaArtisi(st, barem) { // baremin üstündeki beşe artı (Klasik güç, motor: rakibin top kaybı oranı)
+    const f = Math.max(0, st - barem);
+    return { guc: Math.min(4, 1 + 1.5 * f), tov: Math.min(0.03, 0.008 + 0.008 * f) };
+  }
   function calmaBaskisi() { // [0'ın baskısı, 1'in baskısı] ya da null
     const b = calmaBaremi(), top = (t, k) => t.bes.reduce((x, p) => x + ((p && p.o[k]) || 0), 0);
     return [0, 1].map((kim) => {
@@ -488,6 +498,10 @@
       const v = top(k);
       if (v < V.esik.rol[k]) etkiler.push({ ad: (ROL_AD[k] || [k])[0], aciklama: (ROL_AD[k] || [k, "beşin " + k])[1] + " " + v.toFixed(1) + " < " + V.esik.rol[k], d: -(V.esik.rol[k] - v) * V.denge[k] });
     });
+    // Top çalma baremi (2026-11-19, kullanıcı): beşin toplam top çalması gerçek ilk beşlerin üst çeyreğindeyse artı,
+    // altındaysa eksi yok; sezonda (gerçek takımlara karşı) da geçerli.
+    const st = top("st"), stB = calmaBaremi().st;
+    if (st >= stB) etkiler.push({ ad: "Top çalma baremi", aciklama: "beşin top çalması " + st.toFixed(1) + " ≥ " + stB.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği)", d: calmaArtisi(st, stB).guc });
     const kul = top("kul");
     const bant = V.kullanimBant || 0, ust = V.esik.kullanim * (1 + bant), alt = V.esik.kullanim * (1 - bant);
     if (V.esik.kullanim && kul > ust) {
