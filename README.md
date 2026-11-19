@@ -61,10 +61,15 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   barem) güç (en çok 4). Maç motoru: rakibin top kaybı oranı +%0,8 + %0,8 × fark (en çok %3); ayrıca kurulan beşin lig
   ortalamasının altındaki top çalması rakibe kolaylık sağlamaz (eksi kırpılır). Taslaklarda beşlerin ~yarısı baremi aşıyor,
   ortalama +1,1 güç ≈ sezonda +0,3 galibiyet.
-- **Top kaybı baremi** (her maçta; 2026-11-19, kullanıcı): beşin toplam top kaybı gerçek ilk beşlerin üst çeyreğindeyse
-  (BSL 9,7) eksi, altındaysa artı yok. Klasik: −(1 + 1,5 × (kayıp − barem)) güç (en çok −4). Maç motoru: kendi top kaybı
+- **Top kaybı baremi** (her maçta; 2026-11-19, kullanıcı): beşin toplam top kaybı gerçek ilk beşlerin üst çeyreğinin 1
+  üstündeyse (BSL 10,7) eksi, altındaysa artı yok. İkili serideki baskı kuralı da bu baremi kullanır. Klasik: −(1 + 1,5 × (kayıp − barem)) güç (en çok −4). Maç motoru: kendi top kaybı
   oranı +%0,8 + %0,8 × fark (en çok %3).
-- **Tek lig** (2026-11-19, kullanıcı): sezon artık gerçek bir lig. Kurulan beş(ler) + rastgele gerçek takımlar (BSL 16,
+- **Oyun türü** (üstte "Sezon / Lig + play-off"; Serbest, vs AI ve 2 kişide; çevrim içi odada kuranın seçimi):
+  Sezon = 30 (TBL 32) maçlık sezon (Klasik: eğriden, motor: gerçek takımlara karşı fikstür), ikili modda 7 maçlık seri.
+  Lig + play-off = aşağıdaki tek lig, ardından ilk 8 play-off: çeyrek ve yarı final 5 maç (3 alan), final 7 maç (4 alan),
+  üst sıradaki 2-2-1 / 2-2-1-1-1 evinde; eşleşme 1-8 / 4-5 ve 2-7 / 3-6. İkili modda daha ileri giden (eşitse lig galibiyeti
+  çok olan) kazanır, 7 maçlık seri oynanmaz.
+- **Tek lig** (2026-11-19, kullanıcı): lig modunda sezon gerçek bir lig. Kurulan beş(ler) + rastgele gerçek takımlar (BSL 16,
   TBL 17 takım), çift devreli fikstür (çember yöntemi; tek sayıda takımda her devre biri dinlenir). vs AI ve 2 kişide iki beş
   aynı ligde, birbirleriyle de iki maç yapar; 7 maçlık seri ayrıca oynanır. Klasik'te maç: iki beşin gücü farkından eğri
   (+ maçtan maça oynama), Maç motorunda top top maç; gerçek takımlar kendi aralarında da oynar. Sonuçta lig tablosu

@@ -91,6 +91,7 @@ details.kural b{color:var(--yazi)}
 .surum-uyari{position:fixed;left:8px;right:8px;top:8px;z-index:60;display:flex;gap:10px;align-items:center;background:var(--turuncu-acik);border:1px solid var(--turuncu);color:var(--yazi);border-radius:12px;padding:10px 12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.4)}
 .surum-uyari span{flex:1}.surum-uyari button{flex:none;background:var(--turuncu);color:#111;border-radius:8px;padding:6px 10px;font-weight:800}
 .lig-tablo td,.lig-tablo th{padding:4px 6px;text-align:left}.lig-tablo td:nth-child(n+3),.lig-tablo th:nth-child(n+3){text-align:right}.lig-tablo tr.biz td{color:var(--vurgu);font-weight:800}
+.playoff>div{margin:6px 0}.po-seri{font-size:13px;padding:2px 0}.po-seri .biz,.po-sampiyon .biz,.po-sonuc{color:var(--vurgu);font-weight:800}.po-sampiyon{margin-top:8px;font-weight:700}.po-sonuc{margin-top:8px;font-size:14px}
 .mac-liste{margin:8px 0 0;padding-left:28px;font-size:13px}.mac-liste li{display:flex;gap:6px;align-items:baseline;padding:2px 0;border-bottom:1px solid var(--cizgi,rgba(127,127,127,.15))}.mac-liste li b{width:14px}.mac-liste li.G b{color:var(--yesil)}.mac-liste li.M b{color:var(--kirmizi)}.mac-liste .skr{margin-left:auto;font-variant-numeric:tabular-nums}
 .pul.dolu .daire img{width:34px;height:34px;object-fit:contain;display:block} /* 50 px dairenin içine sığan kare ~35 px: köşeler taşmasın */
 .pul .etiket.iki{display:flex;flex-direction:column;align-items:center;line-height:1.05;padding:2px 6px;gap:0;color:var(--yazi)}
@@ -269,6 +270,7 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
     <div class="ayarlar">
       <div class="secici" id="ligSec"><button data-lig="bsl" class="aktif">BSL</button><button data-lig="tbl">TBL</button></div>
       <div class="secici" id="modSec"><button data-mod="serbest" class="aktif">Serbest</button><button data-mod="yz">vs AI</button><button data-mod="iki">2 kişi</button></div>
+      <div class="secici" id="formatSec" title="Oyun türü"><button data-format="sezon" class="aktif" title="30 (TBL 32) maçlık sezon">Sezon</button><button data-format="lig" title="Gerçek takımlarla lig tablosu, ilk 8 play-off">Lig + play-off</button></div>
       <button class="yukle gizli" id="yukle" title="Telefona uygulama olarak kur">⬇ Uygulamayı yükle</button>
       <div class="secici" id="zorSec"><button data-zor="0" class="aktif">İstatistik</button><button data-zor="1">Gizli</button></div>
       <div class="secici" id="simSec" title="Simülasyon"><button data-sim="klasik" class="aktif" title="Güç + galibiyet eğrisi">Klasik</button><button data-sim="motor" title="Top top maç motoru, roller ve sinerji">Maç motoru</button></div>
@@ -330,11 +332,11 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
   <footer>Veri: Türkiye Basketbol Federasyonu (tbf.org.tr) sezon istatistikleri, normal sezon + play-off ortalamaları. Mevki Wikidata'dan (CC0), yoksa boy ve istatistikten tahmin. BSL 2004-05 ve 2006-07'de TBF yalnız sayı tuttuğu için bu iki sezon yok. Bir hayran oyunu; TBF ile bağlantısı yoktur.</footer>
 </div>
 <div class="toast" id="toast"></div>
-<script src="veri/bsl.js?v=20261119i"></script>
-<script src="veri/tbl.js?v=20261119i"></script>
-<script src="firebase-ayar.js?v=20261119i"></script>
-<script src="baglanti.js?v=20261119i"></script>
-<script src="motor.js?v=20261119i"></script>
-<script src="oyun.js?v=20261119i"></script>
+<script src="veri/bsl.js?v=20261119j"></script>
+<script src="veri/tbl.js?v=20261119j"></script>
+<script src="firebase-ayar.js?v=20261119j"></script>
+<script src="baglanti.js?v=20261119j"></script>
+<script src="motor.js?v=20261119j"></script>
+<script src="oyun.js?v=20261119j"></script>
 </body>
 </html>
