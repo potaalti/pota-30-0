@@ -119,8 +119,23 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 
 - Oyuncu gücü = o sezonki VP ortalaması; az maç oynayanlar yedek seviyesine (5) çekilir: `(maç×VP + 8×5) / (maç + 8)`.
   Sezonlar arası VP ölçeği farkı, her sezonun ortalama ilk beş gücüne göre normalleştirilir.
-- Buna takımın maç başı sayı averajından dakika payı eklenir: `1,0 × averaj × dk/40` (averaj en az -8; 2026-11-17'ye
-  kadar 0,6 idi, geri testle 1,0'a çıkarıldı).
+- Buna takımın maç başı sayı averajından dakika payı eklenir: `sayılan(averaj) × dk/40` (2026-11-17'ye kadar `0,6 × averaj`,
+  sonra geri testle `1,0 × averaj`, alt sınır −8).
+  2026-11-20 (kullanıcı: "liderler ödüllendirilsin, geri kalan çok öldürülmesin") averaj ligine göre bir eğriden geçer
+  (`AVERAJ_EGRI`): averaj ≥ 0 iken `c + p×averaj + q×max(0, averaj−k)`, eksiyken `c + s×max(−12, averaj)`;
+  BSL c 1,5 p 0,55 q 0,5 k 4 s 0,35, TBL c 1,8 p 0,2 q 1,1 k 6 s 0,3. 10 VP'li oyuncunun gücü takımının sırasına göre:
+
+  | Takımın sırası | BSL önce → şimdi | TBL önce → şimdi |
+  |---|---|---|
+  | Lider | 14,1 → 14,1 | 13,1 → 12,5 |
+  | 2.-4. | 12,2 → 12,2 | 11,7 → 11,0 |
+  | 5.-8. | 9,5 → 10,0 | 10,0 → 10,1 |
+  | Orta sıra | 7,2 → 9,0 | 7,6 → 9,3 |
+  | Son iki | 5,2 → 8,0 | 5,4 → 8,6 |
+
+  Bu bir oyun tercihi: kötü takımların oyuncuları gerçekte daha az kazandırıyor, geri test biraz düştü (önceki sezon gücü →
+  sonraki sezon galibiyet: BSL 0,716 → 0,668, takım değiştiren 0,600 → 0,558; TBL 0,551 → 0,507, 0,494 → 0,440).
+  Galibiyet eğrisi dikleşti (BSL ölçek 20,4 → 15,0); zorluk aynı kalsın diye kaydırma BSL −4, TBL −3,75, Lig eki 1,75.
   Yalnız VP ile ilk beş gücü gerçek galibiyet oranını zayıf açıklıyordu (korelasyon 0,20: kötü takımlarda VP şişiyor);
   averaj payıyla 0,84 (BSL) / 0,84 (TBL).
 - Mevki dışı yerleşim ×0,88.

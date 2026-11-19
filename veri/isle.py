@@ -21,6 +21,20 @@ BETA = float(os.environ.get("BETA", "1.0"))  # takım averajından (maç başı 
 # Ağırlıklar geri testle seçildi (2026-11-17, veri/test_sonucu.json): BETA 0,6 → 1,0 takım değiştirenlerde tahmini
 # BSL 0,56 → 0,60, TBL 0,46 → 0,49 yaptı. GAMMA (verimlilik) tahmini iyileştirmedi, 0'da bırakıldı.
 GAMMA = float(os.environ.get("GAMMA", "0"))  # verimlilik katkısı: (TS% − sezon ortalaması) × 2 × şut hacmi
+# Averaj eğrisi (2026-11-20, kullanıcı: "liderler ödüllendirilsin, geri kalan çok öldürülmesin"): doğrusal BETA × averaj
+# yerine ligine göre eğri: sayılan = c + p×averaj + q×max(0, averaj−k) (averaj ≥ 0), c + s×max(−12, averaj) (averaj < 0).
+# Hedef: 10 VP'li oyuncunun gücü takımının sırasına göre BSL lider 14,1 · 2.-4. 12,2 · 5.-8. 10 · orta 9 · son iki 8;
+# TBL 12,5 · 11 · 10 · 9,5 · 8,5. Parametreler bu hedeflere veriden uyduruldu (BSL en büyük sapma 0,02, TBL 0,17).
+# Önceki (BETA 1, alt sınır −8): BSL 14,1 · 12,2 · 9,5 · 7,2 · 5,2; TBL 13,1 · 11,7 · 10,0 · 7,6 · 5,4.
+AVERAJ_EGRI = {"bsl": {"c": 1.5, "p": 0.55, "q": 0.5, "k": 4, "s": 0.35},
+               "tbl": {"c": 1.8, "p": 0.2, "q": 1.1, "k": 6, "s": 0.3}}
+
+
+def averaj_sayilan(lig, net):
+    e = AVERAJ_EGRI[lig]
+    if net >= 0:
+        return e["c"] + e["p"] * net + e["q"] * max(0.0, net - e["k"])
+    return e["c"] + e["s"] * max(-12.0, net)
 # Top kullanımı çakışması: güç sabitken ilk beşin toplam kullanımı (şut + 0,44 serbest atış + top kaybı) arttıkça galibiyet
 # düşüyor (birim başına ~0,5 güç; BSL ve TBL'de aynı yönde). Gerçek ilk beşlerin üst %10'unu aşan her birim cezalı
 # (2026-11-18: üst çeyrekten yükseltildi). Ceza en çok KULLANIM_SINIR: veride ~79'un üstünde neredeyse takım yok
@@ -38,10 +52,14 @@ OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOL
 # kayar; akıllı kurulan beşin (her tur en yüksek güç × mevki uyumu) ortalama galibiyeti ~%6-7 artar.
 # Kullanım bandı (±%7) tek başına güçle kurulan beşi BSL'de 20,1 → 21,0, TBL'de 20,6 → 21,1 yapıyor; kalan kayma toplamı
 # ~%6-7'de tutar: BSL → ~21,45 / 30 (+%6,7), TBL → ~21,9 / 32 (+%6,5).
-KLASIK_KOLAY = {"bsl": 1.5, "tbl": 3.5}
+# 2026-11-20: averaj eğrisiyle (AVERAJ_EGRI) galibiyet eğrisi dikleşti (BSL ölçek 20,4 → 15,0); eski kaydırmayla güçle
+# kurulan beş BSL 23,4 / TBL 24,3 oluyordu. Zorluk aynı kalsın (BSL ~21,5 / 30, TBL ~22,05 / 32) diye kaydırma BSL 1,5 → −4,
+# TBL 3,5 → −3,75 (eksi: eğrinin ortası yukarı kayar).
+KLASIK_KOLAY = {"bsl": -4.0, "tbl": -3.75}
 # Tek lig (2026-11-19): sezon gerçek takımlara karşı ikili oynanınca rakiplerin güç dağılımı yüzünden güçle kurulan beş
 # BSL 21,5 → 20,7, TBL 22,0 → 21,5 oluyordu; kurulan beşe bu kadar güç eklenince kolaylık yine ~%6-7.
-KLASIK_LIG_EK = {"bsl": 2.8, "tbl": 1.8}
+# 2026-11-20 (averaj eğrisi): Lig = Sezon için BSL 2,8 → 1,75, TBL 1,8 → 1,75.
+KLASIK_LIG_EK = {"bsl": 1.75, "tbl": 1.75}
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
 MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)
@@ -576,7 +594,7 @@ def main():
                     guven = o["mac"] / (o["mac"] + GUVEN_MAC)
                     o["m"] = motor_vektor(o, Ls, La)
                     o["nt"] = round(max(-8.0, tk["net"]) * o["dk"] / 40 * guven, 2)  # takım averajından dakika payı (sayı/maç)
-                    o["g"] = round(o.pop("_ham") * olcek + (BETA * max(-8.0, tk["net"]) * o["dk"] / 40 + GAMMA * o["verim"]) * guven, 2)
+                    o["g"] = round(o.pop("_ham") * olcek + (BETA * averaj_sayilan(lig, tk["net"]) * o["dk"] / 40 + GAMMA * o["verim"]) * guven, 2)
                 bes = tk["oyuncular"][:5]
                 R = sum(o["g"] for o in bes) + denge(bes, esik[lig])
                 if tk["gercek"]:
