@@ -119,8 +119,11 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 
 - Oyuncu gücü = o sezonki VP ortalaması; az maç oynayanlar yedek seviyesine (5) çekilir: `(maç×VP + 8×5) / (maç + 8)`.
   Sezonlar arası VP ölçeği farkı, her sezonun ortalama ilk beş gücüne göre normalleştirilir.
-- Buna takımın maç başı sayı averajından dakika payı eklenir: `1,0 × averaj × dk/40` (averaj en az -8; 2026-11-17'ye
-  kadar 0,6 idi, geri testle 1,0'a çıkarıldı).
+- Buna takımın maç başı sayı averajından dakika payı eklenir: `1,5 × averaj × dk/40` (averaj en az -8; 2026-11-17'ye
+  kadar 0,6 idi, geri testle 1,0'a, 2026-11-20'de kullanıcı isteği ve geri testle 1,5'e çıkarıldı). Aynı VP'deki oyuncudan
+  iyi takımdaki (ör. Fenerbahçe, Efes: maç başı ~+10) daha güçlü, kötü takımdaki daha zayıf sayılır.
+  1,5 ile galibiyet eğrisi yayvanlaştı (BSL ölçek 20,4 → 28,6); zorluk aynı kalsın diye kaydırma BSL 1,5 → 10, TBL 3,5 → 7,5,
+  Lig eki TBL 1,8 → 3,0 (güçle kurulan beş yine BSL ~21,5 / 30, TBL ~22,1 / 32).
   Yalnız VP ile ilk beş gücü gerçek galibiyet oranını zayıf açıklıyordu (korelasyon 0,20: kötü takımlarda VP şişiyor);
   averaj payıyla 0,84 (BSL) / 0,84 (TBL).
 - Mevki dışı yerleşim ×0,88.
@@ -228,8 +231,13 @@ ilk beşinin (en çok süre alan 5) ÖNCEKİ sezondaki güçlerinden tahmin edil
 | BETA (averaj payı) | BSL herkes | BSL takım değiştiren | TBL herkes | TBL takım değiştiren |
 |---|---|---|---|---|
 | 0,6 (eski) | 0,655 | 0,560 | 0,532 | 0,457 |
-| **1,0 (şimdi)** | **0,716** | **0,601** | **0,559** | **0,493** |
-| 1,5 | 0,741 | 0,608 | 0,573 | 0,517 |
+| 1,0 | 0,716 | 0,600 | 0,551 | 0,494 |
+| **1,5 (şimdi)** | **0,741** | **0,607** | **0,565** | **0,520** |
+| 1,75 | 0,745 | 0,603 | 0,568 | 0,526 |
+| 2,0 | 0,747 | 0,596 | 0,568 | 0,531 |
+| 2,5 | 0,746 | 0,581 | 0,566 | 0,534 |
+
+1,75 ve üstünde BSL'de takım değiştirenlerin tahmini düşüyor ve galibiyet eğrisi veriye oturmuyor (hata BSL 0,025 → 0,047+).
 
 Karşılaştırma: ham VP ile BSL 0,34. Aynı sezon içinde ölçülen 0,85-0,88 abartılıdır (takım averajı sonucu zaten içerir).
 `tam` satırı (kurallar dahil tam takım gücü) yalnız beşin beşi de önceki sezonda bulunan takımlarla, örneklem küçük (22 / 13).
