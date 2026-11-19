@@ -79,6 +79,11 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   Lig + play-off = aşağıdaki tek lig, ardından ilk 8 play-off: çeyrek ve yarı final 5 maç (3 alan), final 7 maç (4 alan),
   üst sıradaki 2-2-1 / 2-2-1-1-1 evinde; eşleşme 1-8 / 4-5 ve 2-7 / 3-6. İkili modda daha ileri giden (eşitse lig galibiyeti
   çok olan) kazanır, 7 maçlık seri oynanmaz.
+- **Lig mantığı** (2026-11-19, kullanıcı): rakipler tek bir gerçek sezonun takımları (kulüp tekrar etmez); kurulan beş(ler)
+  o sezonun son sıradaki takım(lar)ının yerine girer (tabloda yazılır). Sıralama: galibiyet, eşitlikte eşit takımlar
+  arasındaki maçlar (ikili averaj: galibiyet, sonra sayı farkı), sonra genel averaj. Son sıradakiler çıkınca rakipler
+  ortalama 1,5 (iki kişide ~3) güç güçleniyor; Klasik'te kurulan beşe 1,5 × kurulan beş sayısı eklenir (zorluk aynı kalır).
+  İki kişide lig kutusunda normal sezon kayıtları ve sıralar, aranızdaki iki lig maçı ve play-off'ta karşılaştıysanız seri.
 - **Tek lig** (2026-11-19, kullanıcı): lig modunda sezon gerçek bir lig. Kurulan beş(ler) + rastgele gerçek takımlar (BSL 16,
   TBL 17 takım), çift devreli fikstür (çember yöntemi; tek sayıda takımda her devre biri dinlenir). vs AI ve 2 kişide iki beş
   aynı ligde, birbirleriyle de iki maç yapar; 7 maçlık seri ayrıca oynanır. Klasik'te maç: iki beşin gücü farkından eğri

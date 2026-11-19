@@ -20,8 +20,10 @@ window.Baglanti = (function () {
         await Promise.all([yukle(kok + "firebase-auth-compat.js"), yukle(kok + "firebase-database-compat.js")]);
       }
       if (!firebase.apps.length) firebase.initializeApp(window.FIREBASE_AYAR);
-      // kimlik sekmeye bağlı: yenilemede kalır, aynı tarayıcının iki sekmesi iki ayrı oyuncu olur
-      await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+      // Kimlik cihazda kalıcı (2026-11-19): sekme ya da tarayıcı kapanıp aynı linkten dönen oyuncu kendi koltuğuna
+      // oturur ("oda dolu" demez). Aynı tarayıcının iki sekmesinde iki oyuncu denemek için adrese ?ikisekme eklenir.
+      const ikiSekme = /[?&]ikisekme/.test(location.search);
+      await firebase.auth().setPersistence(ikiSekme ? firebase.auth.Auth.Persistence.SESSION : firebase.auth.Auth.Persistence.LOCAL);
       const c = await firebase.auth().signInAnonymously();
       uid = c.user.uid; db = firebase.database(); tur = "firebase";
     } else {
