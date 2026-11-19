@@ -386,6 +386,7 @@
     const L = S.veri.motor.L, top = (k) => kisiler.reduce((x, y) => x + (y.ortalama ? L[k] * y.dk : (y.o[k] || 0)), 0), b = calmaBaremi();
     const st = top("st"), tk = top("tk");
     A.kirpSt = true; A.calmaTov = st >= b.st ? calmaArtisi(st, b.st).tov : 0; A.kayipTov = tk >= b.tk ? calmaArtisi(tk, b.tk).tov : 0;
+    const ts = besTS(kisiler.filter((k) => !k.ortalama).map((k) => k.o)); A.isabetArti = ts >= b.ts && kisiler.every((k) => !k.ortalama) ? isabetArtisi(ts, b.ts).oran : 0;
     return A;
   }
   function motorFark(kisiler) {
@@ -441,14 +442,19 @@
   function calmaBaremi() {
     const lig = S.veri.lig;
     if (!baremOnbellek[lig]) {
-      const st = [], tk = [];
+      const st = [], tk = [], ts = [];
       S.veri.takimlar.forEach((t) => { const b = t.oyuncular.slice().sort((a, c) => c.dk * c.mac - a.dk * a.mac).slice(0, 5);
-        st.push(b.reduce((x, o) => x + (o.st || 0), 0)); tk.push(b.reduce((x, o) => x + (o.tk || 0), 0)); });
+        st.push(b.reduce((x, o) => x + (o.st || 0), 0)); tk.push(b.reduce((x, o) => x + (o.tk || 0), 0)); ts.push(besTS(b)); });
       const ceyrek = (v) => { v.sort((a, c) => a - c); return v[Math.floor(v.length * 0.75)]; };
-      baremOnbellek[lig] = { st: ceyrek(st), tk: ceyrek(tk) + 1 }; // top kaybı baremi üst çeyreğin 1 üstü (2026-11-19, kullanıcı: BSL 9,7 → 10,7)
+      baremOnbellek[lig] = { st: ceyrek(st), tk: ceyrek(tk) + 1, ts: ceyrek(ts) }; // top kaybı baremi üst çeyreğin 1 üstü (2026-11-19, kullanıcı: BSL 9,7 → 10,7)
     }
     return baremOnbellek[lig];
   }
+  // beşin gerçek şut yüzdesi (TS%, yüzde): toplam sayı / toplam 2 × (şut + 0,44 × serbest atış); oyuncunun ts'inden
+  function besTS(os) { let sy = 0, h = 0; os.forEach((o) => { if (o && o.ts > 0) { sy += o.sy; h += o.sy / o.ts; } }); return h ? 100 * sy / h : 0; }
+  // Şut verimi baremi (2026-11-19, kullanıcı: "diğer baremler kadar etki etmesin"): üst çeyreğin üstü artı, altı sıfır.
+  // Gerçek ilk beşlerde güç sabitken 1 TS puanı ~1,2 güce denk; oyunda daha küçük tutuldu: +0,5 + 0,5 × fark, en çok +2.
+  function isabetArtisi(ts, barem) { const f = Math.max(0, ts - barem); return { guc: Math.min(2, 0.5 + 0.5 * f), oran: Math.min(0.012, 0.003 + 0.003 * f) }; }
   function calmaArtisi(st, barem) { // baremin üstündeki beşe artı (Klasik güç, motor: rakibin top kaybı oranı)
     const f = Math.max(0, st - barem);
     return { guc: Math.min(4, 1 + 1.5 * f), tov: Math.min(0.03, 0.008 + 0.008 * f) };
@@ -505,6 +511,8 @@
     if (st >= stB) etkiler.push({ ad: "Top çalma baremi", aciklama: "beşin top çalması " + st.toFixed(1) + " ≥ " + stB.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği)", d: calmaArtisi(st, stB).guc });
     // Top kaybı baremi (2026-11-19, kullanıcı): beşin toplam top kaybı gerçek ilk beşlerin üst çeyreğindeyse eksi, altındaysa artı yok
     const tk = top("tk"), tkB = calmaBaremi().tk;
+    const ts = besTS(os), tsB = calmaBaremi().ts;
+    if (ts >= tsB) etkiler.push({ ad: "Şut verimi baremi", aciklama: "beşin gerçek şut yüzdesi %" + ts.toFixed(1) + " ≥ %" + tsB.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği)", d: isabetArtisi(ts, tsB).guc });
     if (tk >= tkB) etkiler.push({ ad: "Top kaybı baremi", aciklama: "beşin top kaybı " + tk.toFixed(1) + " ≥ " + tkB.toFixed(1) + " (gerçek ilk beşlerin üst çeyreği)", d: -calmaArtisi(tk, tkB).guc });
     const kul = top("kul");
     const bant = V.kullanimBant || 0, ust = V.esik.kullanim * (1 + bant), alt = V.esik.kullanim * (1 - bant);
