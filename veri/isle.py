@@ -17,11 +17,9 @@ GUVEN_MAC = 8        # bu kadar maçta güvenin yarısı
 EN_AZ_MAC = 6         # kadroda görünmek için en az maç
 # TBF bu sezonlarda yalnız sayı tutmuş (dakika, ribaund, asist yok): oyuna alınmaz
 EKSIK_SEZON = {("bsl", "2004-2005"), ("bsl", "2006-2007")}
-BETA = float(os.environ.get("BETA", "1.5"))  # takım averajından (maç başı sayı farkı × dakika/40) gelen pay
+BETA = float(os.environ.get("BETA", "1.0"))  # takım averajından (maç başı sayı farkı × dakika/40) gelen pay
 # Ağırlıklar geri testle seçildi (2026-11-17, veri/test_sonucu.json): BETA 0,6 → 1,0 takım değiştirenlerde tahmini
 # BSL 0,56 → 0,60, TBL 0,46 → 0,49 yaptı. GAMMA (verimlilik) tahmini iyileştirmedi, 0'da bırakıldı.
-# 2026-11-20 (kullanıcı: averaj daha değerli olsun): BETA 1,0 → 1,5. Geri test herkes BSL 0,716 → 0,741, TBL 0,551 → 0,565;
-# takım değiştiren BSL 0,600 → 0,607, TBL 0,494 → 0,520. 1,75 ve üstünde BSL transfer düşüyor, eğri veriye oturmuyor.
 GAMMA = float(os.environ.get("GAMMA", "0"))  # verimlilik katkısı: (TS% − sezon ortalaması) × 2 × şut hacmi
 # Top kullanımı çakışması: güç sabitken ilk beşin toplam kullanımı (şut + 0,44 serbest atış + top kaybı) arttıkça galibiyet
 # düşüyor (birim başına ~0,5 güç; BSL ve TBL'de aynı yönde). Gerçek ilk beşlerin üst %10'unu aşan her birim cezalı
@@ -40,13 +38,10 @@ OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOL
 # kayar; akıllı kurulan beşin (her tur en yüksek güç × mevki uyumu) ortalama galibiyeti ~%6-7 artar.
 # Kullanım bandı (±%7) tek başına güçle kurulan beşi BSL'de 20,1 → 21,0, TBL'de 20,6 → 21,1 yapıyor; kalan kayma toplamı
 # ~%6-7'de tutar: BSL → ~21,45 / 30 (+%6,7), TBL → ~21,9 / 32 (+%6,5).
-# 2026-11-20: averaj ağırlığı (BETA) 1,0 → 1,5 olunca güçler yayıldı, eğri yayvanlaştı (BSL ölçek 20,4 → 28,6); aynı
-# zorluk (güçle kurulan beş BSL ~21,5 / 30, TBL ~22,1 / 32) için kaydırma BSL 1,5 → 10, TBL 3,5 → 7,5.
-KLASIK_KOLAY = {"bsl": 10.0, "tbl": 7.5}
+KLASIK_KOLAY = {"bsl": 1.5, "tbl": 3.5}
 # Tek lig (2026-11-19): sezon gerçek takımlara karşı ikili oynanınca rakiplerin güç dağılımı yüzünden güçle kurulan beş
 # BSL 21,5 → 20,7, TBL 22,0 → 21,5 oluyordu; kurulan beşe bu kadar güç eklenince kolaylık yine ~%6-7.
-# 2026-11-20 (BETA 1,5): Lig = Sezon için BSL 2,8 aynı, TBL 1,8 → 3,0.
-KLASIK_LIG_EK = {"bsl": 2.8, "tbl": 3.0}
+KLASIK_LIG_EK = {"bsl": 2.8, "tbl": 1.8}
 # Maç motoru (site/motor.js): motorun beklenen farkları gerçek takımlarınkinden dar; galibiyet oranlarına sıralama
 # eşleştirmesiyle bakıldığında lig başına bu kat açılınca gerçeğe oturuyor (2026-11-18 ölçümü).
 MOTOR_GERCEK = {"bsl": 1.03, "tbl": 0.94}  # rol sinerjisiyle birlikte yeniden ölçüldü (2026-11-18)
