@@ -102,7 +102,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
     bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
   - Veriyle sınandığında bu eksenler galibiyeti güce ek olarak açıklamadı (katsayılar sıfıra yakın); oyun hissi için var.
     Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,85 → 0,76, TBL 0,84 → 0,79.
-- Uyum kuralları (oyun hissi için; toplam ±5): oyun kurucu var +2, pota koruyucu var +2,
+- Uyum kuralları (oyun hissi için; toplam ±5): oyun kurucu var +2, pota koruyucu var (biri ≥1,2 blok; 2026-11-19 öncesi 1,3) +2,
   pota boş −2, dış şut bol +2, şutör yok −3, yıldız ikilisi +2, top tek isteyen çok −2, boyalı alan kalabalık −3.
   Gerçek ilk beşlerle sınandığında (güç sabitken) hiçbiri galibiyeti artırmadı; bazıları ters yönde çıktı (ör. iki yıldızlı
   ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).

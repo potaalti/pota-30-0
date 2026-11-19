@@ -222,7 +222,7 @@ DENGE = {"rb": 0.6, "as": 1.0}
 # bunu sağlayan oyuncu sayısı en_az / en_cok sınırına uyarsa puan. Toplam etki ±UYUM_SINIR.
 UYUM = [
     {"ad": "Oyun kurucu var", "aciklama": "biri maç başı ≥5,5 asist", "kosul": [["as", ">=", 5.5]], "en_az": 1, "puan": 2},
-    {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,3 blok", "kosul": [["bl", ">=", 1.3]], "en_az": 1, "puan": 2},
+    {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,2 blok", "kosul": [["bl", ">=", 1.2]], "en_az": 1, "puan": 2},  # 2026-11-19: 1,3 → 1,2 (kullanıcı)
     {"ad": "Pota boş", "aciklama": "kimse ≥0,6 blok yapmıyor", "kosul": [["bl", ">=", 0.6]], "en_cok": 0, "puan": -2},
     {"ad": "Dış şut bol", "aciklama": "en az 3 kişi ≥1,2 üçlük", "kosul": [["u3", ">=", 1.2]], "en_az": 3, "puan": 2},
     {"ad": "Şutör yok", "aciklama": "kimse ≥1,2 üçlük atmıyor", "kosul": [["u3", ">=", 1.2]], "en_cok": 0, "puan": -3},
