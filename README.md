@@ -135,8 +135,8 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 
   Bu bir oyun tercihi: kötü takımların oyuncuları gerçekte daha az kazandırıyor, geri test biraz düştü (önceki sezon gücü →
   sonraki sezon galibiyet: BSL 0,716 → 0,668, takım değiştiren 0,600 → 0,558; TBL 0,551 → 0,507, 0,494 → 0,440).
-  Galibiyet eğrisi dikleşti (BSL ölçek 20,4 → 15,0). Kaydırma ve Lig eki değiştirilmedi; eğrinin getirdiği kolaylık oyunda
-  kalır (güçle kurulan beş BSL ~23,4 / 30, TBL ~24,3 / 32).
+  Galibiyet eğrisi dikleşti (BSL ölçek 20,4 → 15,0) ve oyun düne göre ~%17 kolaylaştı; kullanıcı isteğiyle ~%12'ye çekildi:
+  kaydırma BSL −1,25, TBL −0,5 (güçle kurulan beş BSL ~22,5 / 30, TBL ~23,1 / 32; Lig modu da aynı seviyede).
   Yalnız VP ile ilk beş gücü gerçek galibiyet oranını zayıf açıklıyordu (korelasyon 0,20: kötü takımlarda VP şişiyor);
   averaj payıyla 0,84 (BSL) / 0,84 (TBL).
 - Mevki dışı yerleşim ×0,88.

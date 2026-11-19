@@ -52,9 +52,9 @@ OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOL
 # kayar; akıllı kurulan beşin (her tur en yüksek güç × mevki uyumu) ortalama galibiyeti ~%6-7 artar.
 # Kullanım bandı (±%7) tek başına güçle kurulan beşi BSL'de 20,1 → 21,0, TBL'de 20,6 → 21,1 yapıyor; kalan kayma toplamı
 # ~%6-7'de tutar: BSL → ~21,45 / 30 (+%6,7), TBL → ~21,9 / 32 (+%6,5).
-# 2026-11-20: averaj eğrisinden (AVERAJ_EGRI) sonra kaydırma değiştirilmedi (kullanıcı: %7'de tutma hedefi yok);
-# eğrinin getirdiği kolaylık oyunda kalır.
-KLASIK_KOLAY = {"bsl": 1.5, "tbl": 3.5}
+# 2026-11-20: averaj eğrisinden (AVERAJ_EGRI) sonra oyun düne göre ~%17 kolaylaştı; kullanıcı ~%12 istedi: güçle kurulan
+# beş BSL 20,1 → ~22,5 / 30, TBL 20,6 → ~23,1 / 32 (Lig modu da ~22,7 / ~23,1).
+KLASIK_KOLAY = {"bsl": -1.25, "tbl": -0.5}
 # Tek lig (2026-11-19): sezon gerçek takımlara karşı ikili oynanınca rakiplerin güç dağılımı yüzünden güçle kurulan beş
 # BSL 21,5 → 20,7, TBL 22,0 → 21,5 oluyordu; kurulan beşe bu kadar güç eklenince kolaylık yine ~%6-7.
 KLASIK_LIG_EK = {"bsl": 2.8, "tbl": 1.8}
