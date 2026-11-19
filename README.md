@@ -140,6 +140,9 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   oyunculara bakan, başka hiçbir kuralın ölçmediği şeyler kaldı. "Oyun kurucu var" (asist baremi ve "Top paylaşımı zayıf"
   zaten ölçüyor) ve "Yıldız ikilisi" (VP zaten güçte) çıktı; "boyalı alan kalabalık" ribaund yerine mevkiye bakıyor (ribaund
   "Ribaund alan yok"ta). Zorluk değişmedi (güçle kurulan beş BSL 21,5/30, TBL 22,1/32).
+  Sonuç ekranında ayrı "Takım uyumu" başlığı altında yalnız tutan kuralın adı ve artı/eksi işareti görünür; neye baktığı
+  ve puanı yazmaz (2026-11-20, kullanıcı). Ayrıntılı dökümde uyumun toplamı tek satırdır. Eksenler ve baremler
+  "Karakter ve baremler" satırında, açıklamalarıyla.
   Gerçek ilk beşlerle sınandığında (güç sabitken) hiçbiri galibiyeti artırmadı; bazıları ters yönde çıktı (ör. iki yıldızlı
   ya da elit oyun kuruculu beşler aynı güçteki öbürlerinden biraz az kazanmış: kötü takımlarda istatistik şişmesi).
   Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,76 → 0,72, TBL 0,79 → 0,76. Hücum/savunma ekseni sınırı ±4'e indi.
