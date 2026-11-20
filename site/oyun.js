@@ -12,7 +12,8 @@
     "2-3": { ad: "2 Arka 3 Ön", yerler: [[1], [2], [3], [4], [5]] },
     "3-2": { ad: "3 Arka 2 Ön", yerler: [[1], [2], [1, 2], [4], [5]] },
   };
-  // TBL'de mevki verisi zayıf (Wikidata kapsamı %31): orada yalnız Arka (1-2) / Ön (3-5) kullanılır
+  // TBL'de mevki verisi zayıf (Wikidata kapsamı %31): orada yalnız Arka (1-2-3) / Ön (4-5) kullanılır
+  // (2026-11-20, kullanıcı: önce Arka 1-2 / Ön 3-5 idi, kısa forvetler yanlışlıkla öndeydi)
   const DIZILISLER_AO = {
     "2-3": { ad: "2 Arka 3 Ön", yerler: [["A"], ["A"], ["O"], ["O"], ["O"]] },
     "3-2": { ad: "3 Arka 2 Ön", yerler: [["A"], ["A"], ["A"], ["O"], ["O"]] },
@@ -80,7 +81,7 @@
 
   // ---- mevki ----
   const aoMu = (yer) => typeof yer[0] === "string";
-  function kat(o) { const k = []; if (o.p.some((x) => x <= 2)) k.push("A"); if (o.p.some((x) => x >= 3)) k.push("O"); return k; } // Arka / Ön
+  function kat(o) { const k = []; if (o.p.some((x) => x <= 3)) k.push("A"); if (o.p.some((x) => x >= 4)) k.push("O"); return k; } // Arka (1-2-3) / Ön (4-5)
   function mevkiYaz(o) { return S.sistem === "ao" ? kat(o).map((x) => (x === "A" ? "A" : "Ö")).join("/") : o.p.join("-"); }
   function mevkiUzun(o) { return S.sistem === "ao" ? kat(o).map((x) => (x === "A" ? "Arka" : "Ön")).join(" / ") : o.p.map((x) => MEVKI_AD[x]).join(" / "); }
   function yerKisa(yer) { return aoMu(yer) ? (yer[0] === "A" ? "A" : "Ö") : yer.join("/"); }
@@ -138,7 +139,7 @@
       ? kac(a[0]) + " ve " + kac(a[1]) + " " + (S.kaynak === "sabit" ? "aynı takım-sezondan" : "her tur çarktan çıkan takım-sezondan") + " <b>sırayla</b> oyuncu seçer (her tur ilk seçen değişir); seçilen oyuncu rakibe kalmaz. " +
         (S.iki ? "Aynı cihazda oynanır: sıra kimdeyse saha onun beşini gösterir, telefon ona geçer. " : "")
       : "Her turda " + S.veri.lig.toUpperCase() + " " + sz[0] + " … " + sz[sz.length - 1] + " arasından rastgele bir kulüp ve sezon çıkar; kadrodan <b>bir</b> oyuncu seç, sahada bir yere koy. ") +
-      (S.sistem === "ao" ? "Mevki: Arka (oyun kurucu, şutör) ya da Ön (forvet, pivot); ikisine uyan iki tarafa da konabilir, mevki dışı ×" + AO_DISI + ". "
+      (S.sistem === "ao" ? "Mevki: Arka (oyun kurucu, şutör, kısa forvet) ya da Ön (uzun forvet, pivot); ikisine uyan iki tarafa da konabilir, mevki dışı ×" + AO_DISI + ". "
         : "Beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot; komşu mevki ×" + UYUM_CARPAN[1] + ", daha uzağı ×" + UYUM_CARPAN[2] + ". ") +
       "En az <b>" + minTr() + " Türk</b>, aynı oyuncu bir kez" + (S.cift ? (S.kaynak === "sabit" ? "" : ", herkesin oyun başına 1 <b>atlama</b> hakkı (başka takım ya da sezon; yalnız turun ilk seçimini yaparken)") : ", bir <b>başka takım</b> ve bir <b>başka sezon</b> hakkı") + ". Hedef: <b>" + S.veri.mac + "-0</b>.";
   }
@@ -506,17 +507,23 @@
   }
   function kimyaUyumu(os, takimlar) {
     const c = [];
-    if (os.filter((o) => o.tr).length >= (S.veri.lig === "tbl" ? 4 : 3)) c.push({ ad: "Yerli omurga", d: 1 });
+    const enAzTr = S.veri.lig === "tbl" ? 4 : 3;
+    if (os.filter((o) => o.tr).length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 1 });
     if (S.kaynak !== "sabit") { // tek takım-sezon havuzunda herkes zaten aynı kadrodan
       const kulup = {};
       takimlar.forEach((t) => { if (t && t.kulup) (kulup[t.kulup] = kulup[t.kulup] || []).push(t.id); });
-      if (Object.values(kulup).some((l) => l.length >= 3 && new Set(l).size >= 2)) c.push({ ad: "Kulüp ruhu", d: 1 });
+      if (Object.values(kulup).some((l) => l.length >= 3 && new Set(l).size >= 2)) c.push({ ad: "Kulüp ruhu", aciklama: "aynı kulübün farklı sezonlarından 3 oyuncu", d: 1 });
       const birlikte = {};
       os.forEach((o) => { if (o.k) new Set(kariyer(o.k)).forEach((id) => { birlikte[id] = (birlikte[id] || 0) + 1; }); });
-      if (Object.values(birlikte).some((n) => n >= 3)) c.push({ ad: "Eski takım arkadaşları", d: 1 });
+      if (Object.values(birlikte).some((n) => n >= 3)) c.push({ ad: "Eski takım arkadaşları", aciklama: "3 oyuncu kariyerlerinin bir sezonunda aynı kadroda oynamış", d: 1 });
     }
     return c;
   }
+  const ETKI_BASLIK = ["Hücum", "Savunma", "Takım uyumu"];
+  const ETKI_GRUP = { "Asist baremi": "Hücum", "Top paylaşımı zayıf": "Hücum", "Top kaybı baremi": "Hücum", "Top yetmiyor": "Hücum",
+    "Şut yaratan yok": "Hücum", "Dış şut bol": "Hücum", "Şutör yok": "Hücum", "Boyalı alan kalabalık": "Hücum",
+    "Top çalma baremi": "Savunma", "Ribaund alan yok": "Savunma", "Pota koruyucu var": "Savunma", "Pota boş": "Savunma" };
+  function etkiBasligi(e) { return ETKI_GRUP[e.ad] || "Takım uyumu"; }
   function klasikDeger(os, uyumlar, takimlar) {
     const V = S.veri;
     const top = (k) => os.reduce((a, o) => a + (o[k] || 0), 0);
@@ -534,7 +541,7 @@
       const n = os.filter((o) => k.kosul.every((c) => (c[1] === ">=" ? (o[c[0]] || 0) >= c[2] : (o[c[0]] || 0) < c[2]))).length;
       if ((k.en_az !== undefined && n >= k.en_az) || (k.en_cok !== undefined && n <= k.en_cok)) { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.puan, uyum: true }); uyumTop += k.puan; }
     });
-    if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: "kadro kimyası", d: k.d, uyum: true }); uyumTop += k.d; });
+    if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.d, uyum: true }); uyumTop += k.d; });
     if (Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop, uyum: true, sinir: true });
     const ROL_AD = { rb: ["Ribaund alan yok", "beşin ribaundu"], as: ["Top paylaşımı zayıf", "beşin toplam asisti"] };
     Object.keys(V.denge).forEach((k) => {
@@ -593,7 +600,7 @@
   }
   function enIyiSecimK(h) { const e = h.satirlar.slice().sort((a, b) => b.guc - a.guc)[0]; return e.p.o.ad + " · " + e.p.t.ad + " " + e.p.t.sezon + " (güç " + e.guc.toFixed(1) + ")"; }
   function enZayifK(h) {
-    const adaylar = h.etkiler.filter((e) => e.d < 0 && !e.sinir).map((e) => ({ metin: e.uyum ? "Takım uyumu: " + e.ad : e.ad + " (" + e.aciklama + ")", d: e.d }));
+    const adaylar = h.etkiler.filter((e) => e.d < 0 && !e.sinir).map((e) => ({ metin: e.ad + " (" + e.aciklama + ")", d: e.d }));
     h.satirlar.forEach((s) => { if (s.uyum < 1) adaylar.push({ metin: s.p.o.ad + " mevkisi dışında (" + mevkiYaz(s.p.o) + " → " + yerAdi(s.yer) + ")", d: -s.kayip }); });
     if (adaylar.length) { adaylar.sort((a, b) => a.d - b.d); return adaylar[0].metin + " · " + adaylar[0].d.toFixed(1); }
     const z = h.satirlar.slice().sort((a, b) => a.guc - b.guc)[0];
@@ -792,12 +799,12 @@
       (s.uyum < 1 ? " → " + yerAdi(s.yer) + " ×" + s.uyum : "") + " · " + sayi1(s.p.o.sy) + " sy · " + sayi1(s.p.o.rb) + " rb · " + sayi1(s.p.o.as) + " as</div></div>" +
       (klasik() ? '<div class="guc" title="Güç">' + s.guc.toFixed(1) : '<div class="guc" title="Katkı: yerine aynı dakikada lig ortalaması bir oyuncu konsa beşin beklenen farkı bu kadar değişirdi (sayı/maç)">' + isaretli(s.guc)) + "</div></div>").join("") + "</div>";
     const ozet = (r) => '<div class="ozet"><div><b>En iyi seçim</b>' + kac(enIyiSecim(r.h)) + "</div><div><b>En büyük zayıflık</b>" + kac(enZayif(r.h)) + "</div></div>" + (klasik()
-      ? uyumSatir(r) + '<div class="etkiler rol-satir"><b>Karakter ve baremler</b>' + r.h.etkiler.filter((e) => !e.uyum).map((e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + (e.d > 0 ? "+" : "") + e.d.toFixed(1) + "</span>").join("") + "</div>"
+      ? ETKI_BASLIK.map((b) => etkiSatir(r, b)).join("")
       : rolSatir(r));
-    // Takım uyumu (2026-11-20, kullanıcı): hangi uyumun artı/eksi verdiği yazar, neye baktığı yazmaz
-    const uyumCip = (e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '">' + kac(e.ad) + " " + (e.d >= 0 ? "+" : "−") + "</span>";
-    const uyumSatir = (r) => { const u = r.h.etkiler.filter((e) => e.uyum && !e.sinir);
-      return '<div class="etkiler rol-satir"><b>Takım uyumu</b>' + (u.length ? u.map(uyumCip).join("") : '<span class="ipucu" style="margin:0">ne artı ne eksi</span>') + "</div>"; };
+    // Artı/eksiler üç başlıkta, hepsi puanıyla (2026-11-20, kullanıcı); efektif şut görünmez
+    const etkiCip = (e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + (e.d > 0 ? "+" : "") + e.d.toFixed(1) + "</span>";
+    const etkiSatir = (r, b) => { const l = r.h.etkiler.filter((e) => etkiBasligi(e) === b);
+      return '<div class="etkiler rol-satir"><b>' + b + "</b>" + (l.length ? l.map(etkiCip).join("") : '<span class="ipucu" style="margin:0">ne artı ne eksi</span>') + "</div>"; };
     const rolSatir = (r) => { // beşin rolleri ve sinerjinin sayı katkısı
       const sin = r.h.etkiler.filter((e) => /sinerjisi$/.test(e.ad)), top = sin.reduce((x, e) => x + e.d, 0);
       return '<div class="etkiler rol-satir"><b>Roller</b>' + rolCipleri(r.taraf) + "</div>" +
@@ -826,9 +833,8 @@
         hucreler(s.p.o, ALANLAR) + "<td><b>" + (klasik() ? s.guc.toFixed(1) : isaretli(s.guc)) + "</b></td></tr>").join("");
       const top = {}; ALANLAR.forEach((k) => { top[k] = r.taraf.bes.reduce((x, p) => x + (p.o[k] || 0), 0); });
       const etkSat = (ad, ack, d) => "<tr><td colspan=" + ALANLAR.length + ">" + ad + ' <span class="ipucu">' + ack + '</span></td><td class="' + (d >= 0 ? "arti" : "eksi") + '">' + isaretli(d) + "</td></tr>";
-      const uy = r.h.etkiler.filter((e) => e.uyum), uyT = uy.reduce((x, e) => x + e.d, 0);
-      const etk = (uy.length ? etkSat("Takım uyumu", uy.filter((e) => !e.sinir).map((e) => kac(e.ad) + " " + (e.d >= 0 ? "+" : "−")).join(", "), uyT) : "") +
-        r.h.etkiler.filter((e) => !e.uyum).map((e) => etkSat(kac(e.ad), kac(e.aciklama), e.d)).join("");
+      const etk = (klasik() ? ETKI_BASLIK.map((b) => r.h.etkiler.filter((e) => etkiBasligi(e) === b).map((e) => etkSat(b + ": " + kac(e.ad), kac(e.aciklama), e.d)).join("")).join("")
+        : r.h.etkiler.map((e) => etkSat(kac(e.ad), kac(e.aciklama), e.d)).join(""));
       return '<details class="dokum-kap"><summary>' + (S.cift ? kac(r.taraf.ad) + ": " : "") + 'ayrıntılı döküm</summary><div class="yatay"><table><thead><tr><th>Oyuncu</th>' + basliklar(ALANLAR) + (klasik() ? "<th>Güç</th>" : '<th title="Katkı (sayı/maç)">Katkı</th>') + "</tr></thead><tbody>" + satir +
         '<tr class="toplam"><td>Beşin toplamı</td>' + hucreler(top, ALANLAR) + "<td></td></tr>" +
         (klasik() ? "" : '<tr class="toplam"><td colspan=' + (ALANLAR.length + 1) + ">Etkenler: istatistik lig ortalamasına çekilse fark ne kadar değişir (sayı/maç)</td></tr>") + etk +
@@ -865,8 +871,8 @@
         : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Hücum ve savunma eksenleri gerçek ilk beşlerin ortancasına göre (en çok ±" + S.veri.eksenSinir + "); top kullanımı " + S.veri.kullanimAlt + "–" + S.veri.kullanimUst + " dışında kalan her birim −" + S.veri.kullanimKatsayi +
-      "; takım uyumu gizli kurallarla, neye baktığı yazmaz (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için ~%6-7 kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
+      ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimAlt + "–" + S.veri.kullanimUst + " dışında kalan her birim −" + S.veri.kullanimKatsayi +
+      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için biraz kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
       "iki ya da üç sayılık şut (isabeti rakibin bloğu düşürür, asistli oyun artırır), kaçan şutta hücum ribaundu ile savunma ribaundunun çekişmesi. " +

@@ -228,12 +228,10 @@ def mevki(boy, rib, ast, bl, u3, dk, wd_mevkiler=None):
 # - Hücum ve savunma eksenleri: beş, gerçek ilk beşlerin ortancasından ne kadar iyi/kötüyse (çeyrekler arası açıklık
 #   birimiyle) EKSEN_KATSAYI kadar artı/eksi alır, en çok ±EKSEN_SINIR. Bir eksende çok iyi olan, diğerindeki eksiyi kapatabilir.
 # - Rol eksikliği: asist ya da ribaund gerçek ilk beşlerin en alt %10'unun altındaysa eksik birim başına ceza.
-EKSENLER = {
-    # 2026-11-19 (kullanıcı: uyum kuralları tekil kurallarla çakışmasın): üçlük ve blok eksenlerden çıktı, yalnız uyum
-    # kurallarında sayılır.
-    "hucum": {"ad": "Hücum", "formul": {"sy": 1.0, "as": 1.5, "tk": -1.0}},
-    "savunma": {"ad": "Savunma", "formul": {"st": 2.0, "rb": 0.5}},
-}
+# 2026-11-20 (kullanıcı: her barem bir kez hesaplansın): eksenler kaldırıldı. Bileşenleri (top çalma, ribaund, asist,
+# top kaybı) zaten kendi baremlerinde, sayı da VP'de sayılıyordu; üçlük ve blok 2026-11-19'dan beri yalnız uyum
+# kurallarında. Önceki tanım: Hücum = sy + 1,5×as − tk, Savunma = 2×st + 0,5×rb.
+EKSENLER = {}
 EKSEN_KATSAYI, EKSEN_SINIR = 3.0, 4.0
 # Rol eksikliği: beşin TOPLAMI gerçek ilk beşlerin alt %10'unun altındaysa eksik birim başına ceza. Asist toplamdan bakılır:
 # topu birden çok oyuncu paylaşabilir (2026-11-18, kullanıcı önerisi; eski "kimse ≥3 asist yapmıyor −3" kuralının yerine).

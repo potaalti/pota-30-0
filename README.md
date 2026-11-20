@@ -20,9 +20,10 @@ Yayındaki adresi aç ya da yerelde `site/` klasörünü bir HTTP sunucusuyla su
 veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB) depoda yok, `veri/cek.py` ile yeniden çekilir.
 
 - Her turda rastgele bir takım-sezon çıkar (ör. FENERBAHÇE 2016-17). Kadrodan bir oyuncu seç, beşte bir yere koy.
-- Mevki sistemi lige göre: **BSL** beş mevki, **TBL** yalnız Arka (1-2) / Ön (3-5) — TBL'de mevki verisi zayıf
-  (Wikidata kapsamı %31). TBL'de iki tarafa da uyan (mevkileri 2 ve 3'ü kapsayan) oyuncu cezasız her yere konur, mevki
-  dışı ×0,88. TBL oyuncu-sezonları: 937 Arka, 1.242 Ön, 512 ikisi birden.
+- Mevki sistemi lige göre: **BSL** beş mevki, **TBL** yalnız Arka (1-2-3) / Ön (4-5) — TBL'de mevki verisi zayıf
+  (Wikidata kapsamı %31). TBL'de iki tarafa da uyan (mevkileri 3 ve 4'ü kapsayan) oyuncu cezasız her yere konur, mevki
+  dışı ×0,88. TBL oyuncu-sezonları: 1.501 Arka, 623 Ön, 432 ikisi birden. (2026-11-20, kullanıcı: önce Arka 1-2 / Ön 3-5
+  idi; kısa forvetler yanlışlıkla öndeydi.)
 - BSL'de beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot. Diziliş 2 Arka 3 Ön (1-2-3-4-5) ya da
   3 Arka 2 Ön (1-2-gard-4-5); sezon oynanana kadar değiştirilebilir. Komşu mevki ×0,92, daha uzağı ×0,80.
 - En az 1 Türk (BSL) / 3 Türk (TBL), aynı oyuncu bir kez, her takım-sezondan bir oyuncu.
@@ -140,25 +141,22 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   Yalnız VP ile ilk beş gücü gerçek galibiyet oranını zayıf açıklıyordu (korelasyon 0,20: kötü takımlarda VP şişiyor);
   averaj payıyla 0,84 (BSL) / 0,84 (TBL).
 - Mevki dışı yerleşim ×0,88.
-- Beşin karakteri (oyun tasarımı tercihi): iki eksen, gerçek ilk beşlerin (en çok süre alan 5) ortancasına göre.
-  - Hücum = sayı + 1,5×asist − top kaybı; Savunma = 2×top çalma + 0,5×ribaund (beşin toplamları). Üçlük ve blok 2026-11-20'den
-    beri eksenlerde sayılmaz, yalnız uyum kurallarında (aynı şey iki kez puanlanmasın).
-  - Ortancadan iyiyse artı, kötüyse eksi: `3 × (değer − ortanca) / çeyrekler arası açıklık`, en çok ±6.
-    Bir eksende çok iyi olan beş, diğerindeki eksiyi kapatabilir.
+- Hücum/savunma eksenleri 2026-11-20'de kaldırıldı (kullanıcı: her barem bir kez hesaplansın). Hücum = sayı + 1,5×asist −
+  top kaybı, Savunma = 2×top çalma + 0,5×ribaund idi; bileşenlerinin hepsi kendi bareminde, sayı da VP'de sayılıyordu.
+  Kaldırınca ilk beş gücü ~ galibiyet korelasyonu BSL 0,69 → 0,80, TBL 0,68 → 0,75 oldu (eksenler gürültü katıyordu).
   - Rol eksikliği: beşin toplam asisti ya da toplam ribaundu gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1;
     TBL 10,3 / 18,4) eksik her asist −1, her ribaund −0,6 güç ("Top paylaşımı zayıf", "Ribaund alan yok"). Asiste toplamdan
     bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
-  - Veriyle sınandığında bu eksenler galibiyeti güce ek olarak açıklamadı (katsayılar sıfıra yakın); oyun hissi için var.
-    Eklenince ilk beş gücü ~ galibiyet korelasyonu BSL 0,85 → 0,76, TBL 0,84 → 0,79.
 - Uyum kuralları (oyun hissi için; toplam ±5): pota koruyucu var (biri ≥1,2 blok) +2, pota boş (kimse ≥0,6 blok yapmıyor) −2,
   dış şut bol (en az 3 kişi ≥1,2 üçlük) +2, şutör yok (kimse ≥1,2 üçlük atmıyor) −3, boyalı alan kalabalık (en az 3 uzun —
   mevki 4-5 — üçlük atmıyor, <0,3) −3. 2026-11-20 (kullanıcı: uyum kuralları tekil kurallarla çakışmasın): yalnız tek tek
   oyunculara bakan, başka hiçbir kuralın ölçmediği şeyler kaldı. "Oyun kurucu var" (asist baremi ve "Top paylaşımı zayıf"
   zaten ölçüyor) ve "Yıldız ikilisi" (VP zaten güçte) çıktı; "boyalı alan kalabalık" ribaund yerine mevkiye bakıyor (ribaund
   "Ribaund alan yok"ta). Zorluk değişmedi (güçle kurulan beş BSL 21,5/30, TBL 22,1/32).
-  Sonuç ekranında ayrı "Takım uyumu" başlığı altında yalnız tutan kuralın adı ve artı/eksi işareti görünür; neye baktığı
-  ve puanı yazmaz (2026-11-20, kullanıcı). Ayrıntılı dökümde uyumun toplamı tek satırdır. Eksenler ve baremler
-  "Karakter ve baremler" satırında, açıklamalarıyla.
+  Sonuçta bütün artı/eksiler puanı ve açıklamasıyla üç başlıkta görünür (2026-11-20, kullanıcı; efektif şut hariç, o gizli):
+  **Hücum** (asist baremi, top paylaşımı zayıf, top kaybı baremi, top yetmiyor, şut yaratan yok, dış şut bol, şutör yok,
+  boyalı alan kalabalık), **Savunma** (top çalma baremi, ribaund alan yok, pota koruyucu var, pota boş), **Takım uyumu**
+  (yerli omurga, kulüp ruhu, eski takım arkadaşları, uyum sınırı).
 - Kadro kimyası (2026-11-20, kullanıcı; takım uyumunun içinde, gizli, eksisi yok, her biri +1):
   yerli omurga (BSL en az 3, TBL en az 4 Türk), kulüp ruhu (aynı kulübün farklı sezonlarından üç seçim),
   eski takım arkadaşları (üç oyuncu kariyerlerinin bir sezonunda aynı kadroda oynamış; hangi takımdan seçildikleri fark
