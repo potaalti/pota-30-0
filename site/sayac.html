@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>30-0 Sayaç</title>
+<link rel="icon" href="simge-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Oyunun açılış / "Sezonu oyna" sayacı. Oyundan bağlantı yok; yalnız kurallarda (firebase-kurallar.json → sayac/.read)
+     kimliği yazılı Google hesabı okuyabilir. ?ornek ile Firebase'e bağlanmadan örnek veriyle açılır. -->
+<style>
+:root{
+  --zemin:#0a1214; --kart:#111d20; --kart2:#0d181b; --yazi:#eef6f7; --soluk:#91a8ac; --sonuk:#5f7478; --cizgi:#1d2e32; --izgara:#16252a;
+  --vurgu:#4cc8d0; --vurgu-uzeri:#062126; --turuncu:#fb923c; --kirmizi:#f87171;
+  --s-acilis:#2fa4ab; --s-oyna:#df7128; /* koyu zemin için doğrulanmış seri renkleri (açıklık 0,48–0,67) */
+  --baslik:"Barlow Condensed",sans-serif; --govde:Barlow,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--zemin);color:var(--yazi);font:15px/1.4 var(--govde);min-height:100vh}
+.sayfa{max-width:980px;margin:0 auto;padding:20px 16px 60px}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font:800 26px/1 var(--baslik);letter-spacing:.5px;text-transform:uppercase}
+.logo b{color:var(--vurgu)}
+.logo small{display:block;font:600 12px var(--govde);color:var(--soluk);letter-spacing:.4px;text-transform:none;margin-top:3px}
+.kim{margin-left:auto;display:flex;align-items:center;gap:10px;color:var(--soluk);font-size:13px}
+button{font:inherit;color:inherit;cursor:pointer}
+.dugme{background:var(--vurgu);color:var(--vurgu-uzeri);border:0;border-radius:999px;padding:9px 18px;font:700 15px var(--govde)}
+.dugme.ikincil{background:transparent;color:var(--soluk);border:1px solid var(--cizgi);padding:6px 14px;font-size:13px}
+.secici{display:inline-flex;background:var(--kart);border:1px solid var(--cizgi);border-radius:999px;padding:3px;margin:22px 0 16px}
+.secici button{background:none;border:0;border-radius:999px;padding:6px 14px;color:var(--soluk);font-weight:600;font-size:14px}
+.secici button.aktif{background:var(--vurgu);color:var(--vurgu-uzeri)}
+.kutucuklar{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kutu{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:14px 16px}
+.kutu .ad{font:600 12px var(--govde);color:var(--soluk);letter-spacing:.3px;text-transform:uppercase}
+.kutu .sayi{font:800 40px/1.05 var(--baslik);margin-top:6px;font-variant-numeric:tabular-nums}
+.kutu .alt{font-size:12px;color:var(--soluk);margin-top:2px}
+.kart{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:16px;margin-top:12px}
+.kart h2{font:800 22px var(--baslik);letter-spacing:.3px;text-transform:uppercase}
+.kart h2 small{font:500 13px var(--govde);color:var(--soluk);text-transform:none;letter-spacing:0;margin-left:8px}
+.lejant{display:flex;gap:16px;margin:8px 0 4px;font-size:13px;color:var(--soluk)}
+.lejant span{display:inline-flex;align-items:center;gap:6px}
+.lejant i{display:inline-block;width:16px;height:2px;border-radius:2px}
+.grafik{position:relative;margin-top:6px}
+.grafik svg{display:block;width:100%;overflow:visible}
+.ipucu{position:absolute;pointer-events:none;background:#06100f;border:1px solid var(--cizgi);border-radius:10px;padding:8px 10px;font-size:13px;min-width:130px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .1s}
+.ipucu .t{color:var(--soluk);font-size:12px;margin-bottom:4px}
+.ipucu .s{display:flex;align-items:center;gap:8px}
+.ipucu .s i{display:inline-block;width:12px;height:2px;border-radius:2px}
+.ipucu .s b{font-variant-numeric:tabular-nums;min-width:28px}
+.ipucu .s em{font-style:normal;color:var(--soluk)}
+.iki{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.cubuklar{margin-top:10px;display:grid;gap:9px}
+.cubuk .ust{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.cubuk .ust span{color:var(--soluk)}
+.cubuk .ust b{font-variant-numeric:tabular-nums}
+.cubuk .yol{height:10px;background:var(--kart2);border-radius:4px;overflow:hidden}
+.cubuk .dolu{height:100%;background:var(--s-oyna);border-radius:0 4px 4px 0}
+table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;font-variant-numeric:tabular-nums}
+th{font:600 12px var(--govde);color:var(--soluk);text-align:left;text-transform:uppercase;letter-spacing:.3px;padding:6px 8px;border-bottom:1px solid var(--cizgi)}
+td{padding:7px 8px;border-bottom:1px solid var(--izgara);white-space:nowrap}
+.tablo{overflow-x:auto}
+td.s,th.s{text-align:right}
+details summary{cursor:pointer;font:800 22px var(--baslik);text-transform:uppercase;letter-spacing:.3px;list-style:none}
+details summary::before{content:"▸ ";color:var(--soluk)}
+details[open] summary::before{content:"▾ "}
+.bos{color:var(--soluk);font-size:14px;padding:6px 0}
+.uyari{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:18px;margin-top:22px;line-height:1.55}
+.uyari h2{font:800 22px var(--baslik);text-transform:uppercase;margin-bottom:6px}
+.uyari code{display:inline-block;background:var(--kart2);border:1px solid var(--cizgi);border-radius:8px;padding:6px 10px;font:600 14px ui-monospace,Consolas,monospace;margin:8px 8px 8px 0;word-break:break-all}
+.uyari p+p{margin-top:8px}
+.not{color:var(--sonuk);font-size:12px;margin-top:14px}
+.yukleniyor{opacity:.5;transition:opacity .2s}
+@media (max-width:760px){
+  .kutucuklar{grid-template-columns:repeat(2,1fr)}
+  .iki{grid-template-columns:1fr}
+  .kutu .sayi{font-size:34px}
+  td,th{padding:6px 5px}
+}
+</style>
+</head>
+<body>
+<div class="sayfa">
+  <header>
+    <div class="logo">Pota Altı <b>30-0</b><small>Sayaç · açılış ve "Sezonu oyna"</small></div>
+    <div class="kim" id="kim"></div>
+  </header>
+  <div id="icerik"></div>
+</div>
+<div class="ipucu" id="ipucu"></div>
+<script src="firebase-ayar.js"></script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const SURUM = "10.12.2";
+  const ORNEK = /[?&]ornek/.test(location.search);
+  const MOD_AD = { serbest: "Tek başına", yz: "vs AI", iki: "2 kişi · tek cihaz", oda: "2 kişi · link" };
+  const TUR_AD = { sezon: "Sezon", lig: "Lig + play-off" };
+  const LIG_AD = { bsl: "BSL", tbl: "TBL" };
+  let veri = null, aralik = 30;
+  try { aralik = +localStorage.getItem("p300:sayacAralik") || 30; } catch (e) { /* yok */ }
+
+  const bicim = (n) => Math.round(n).toLocaleString("tr-TR");
+  const yuzde = (a, b) => (b ? Math.round((a / b) * 100) + "%" : "–");
+  const gunAnahtar = (d) => d.toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" });
+  const gunEtiket = (k, uzun) => { const [y, a, g] = k.split("-").map(Number); const d = new Date(Date.UTC(y, a - 1, g, 12));
+    return d.toLocaleDateString("tr-TR", uzun ? { day: "numeric", month: "long", weekday: "short", timeZone: "UTC" } : { day: "numeric", month: "short", timeZone: "UTC" }); };
+  function el(etiket, ozellik, ...cocuk) {
+    const e = document.createElement(etiket);
+    Object.entries(ozellik || {}).forEach(([k, v]) => { if (k === "class") e.className = v; else if (k === "style") e.style.cssText = v; else e.setAttribute(k, v); });
+    cocuk.flat().forEach((c) => e.append(c && c.nodeType ? c : document.createTextNode(c == null ? "" : String(c))));
+    return e;
+  }
+
+  // ---- günlük seri: aralıktaki her gün (veri yoksa 0), bugün dahil ----
+  function gunler() {
+    const g = (veri && veri.gun) || {};
+    const bugun = gunAnahtar(new Date());
+    let bas;
+    if (aralik) { const d = new Date(); d.setUTCDate(d.getUTCDate() - (aralik - 1)); bas = gunAnahtar(d); }
+    else bas = Object.keys(g).sort()[0] || bugun;
+    const l = []; const d = new Date(bas + "T12:00:00Z");
+    for (let i = 0; i < 4000; i++) {
+      const k = d.toISOString().slice(0, 10); if (k > bugun) break;
+      l.push({ k: k, acilis: (g[k] && g[k].acilis) || 0, oyna: (g[k] && g[k].oyna) || 0 });
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return l;
+  }
+
+  function ciz() {
+    const ic = $("icerik"); ic.textContent = ""; ic.classList.remove("yukleniyor");
+    const sec = el("div", { class: "secici", role: "group", "aria-label": "Tarih aralığı" });
+    [[7, "Son 7 gün"], [30, "Son 30 gün"], [90, "Son 90 gün"], [0, "Hepsi"]].forEach(([n, ad]) => {
+      const b = el("button", { class: n === aralik ? "aktif" : "" }, ad);
+      b.onclick = () => { aralik = n; try { localStorage.setItem("p300:sayacAralik", String(n)); } catch (e) { /* yok */ } ciz(); };
+      sec.append(b);
+    });
+    ic.append(sec);
+
+    const l = gunler();
+    const top = l.reduce((a, x) => ({ acilis: a.acilis + x.acilis, oyna: a.oyna + x.oyna }), { acilis: 0, oyna: 0 });
+    const bugun = l[l.length - 1] || { acilis: 0, oyna: 0 };
+    const hep = (veri && veri.toplam) || {};
+    const aralikAd = aralik ? "son " + aralik + " gün" : "tüm zamanlar";
+    const kutu = (ad, sayi, alt) => el("div", { class: "kutu" }, el("div", { class: "ad" }, ad), el("div", { class: "sayi" }, sayi), el("div", { class: "alt" }, alt));
+    ic.append(el("div", { class: "kutucuklar" },
+      kutu("Açılış", bicim(top.acilis), aralikAd),
+      kutu("Sezonu oyna", bicim(top.oyna), aralikAd),
+      kutu("Açılış başına oyun", top.acilis ? (top.oyna / top.acilis).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "–", "oyna ÷ açılış"),
+      kutu("Bugün", bicim(bugun.acilis) + " · " + bicim(bugun.oyna), "açılış · oyna")));
+
+    // ---- günlük çizgi grafik ----
+    const kart = el("div", { class: "kart" }, el("h2", {}, "Gün gün", el("small", {}, aralikAd + " · İstanbul saatiyle")));
+    kart.append(el("div", { class: "lejant" },
+      el("span", {}, el("i", { style: "background:var(--s-acilis)" }), "Açılış"),
+      el("span", {}, el("i", { style: "background:var(--s-oyna)" }), "Sezonu oyna")));
+    const kutuG = el("div", { class: "grafik" }); kart.append(kutuG); ic.append(kart);
+    cizgiGrafik(kutuG, l);
+
+    // ---- kırılım (tüm zamanlar; yalnız "Sezonu oyna") ----
+    const kir = (veri && veri.kirilim) || {};
+    const grup = (f) => { const t = {}; Object.entries(kir).forEach(([k, v]) => { const p = k.split("_"); const a = f(p); t[a] = (t[a] || 0) + v; }); return t; };
+    const liste = (baslik, t, adlar) => {
+      const k = el("div", { class: "kart" }, el("h2", {}, baslik));
+      const toplam = Object.values(t).reduce((a, b) => a + b, 0);
+      const en = Math.max(1, ...Object.values(t));
+      const c = el("div", { class: "cubuklar" });
+      Object.keys(adlar).map((a) => [a, t[a] || 0]).sort((x, y) => y[1] - x[1]).forEach(([a, v]) => {
+        c.append(el("div", { class: "cubuk", title: adlar[a] + ": " + bicim(v) },
+          el("div", { class: "ust" }, el("span", {}, adlar[a]), el("b", {}, bicim(v) + "  ·  " + yuzde(v, toplam))),
+          el("div", { class: "yol" }, el("div", { class: "dolu", style: "width:" + (v / en) * 100 + "%" }))));
+      });
+      k.append(c); return k;
+    };
+    const ust = el("div", { class: "kart" }, el("h2", {}, "Ne oynanıyor", el("small", {}, "“Sezonu oyna” basışları · tüm zamanlar")));
+    ic.append(ust);
+    if (!Object.keys(kir).length) ust.append(el("div", { class: "bos" }, "Henüz kayıt yok."));
+    else {
+      ust.append(el("div", { class: "iki" },
+        liste("Lig", grup((p) => p[0]), LIG_AD),
+        liste("Mod", grup((p) => p[1]), MOD_AD),
+        liste("Tür", grup((p) => p[2]), TUR_AD)));
+      const tb = el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Lig"), el("th", {}, "Mod"), el("th", {}, "Tür"), el("th", { class: "s" }, "Oyun"), el("th", { class: "s" }, "Pay"))));
+      const gov = el("tbody");
+      const top2 = Object.values(kir).reduce((a, b) => a + b, 0);
+      Object.entries(kir).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => { const p = k.split("_");
+        gov.append(el("tr", {}, el("td", {}, LIG_AD[p[0]] || p[0]), el("td", {}, MOD_AD[p[1]] || p[1]), el("td", {}, TUR_AD[p[2]] || p[2]), el("td", { class: "s" }, bicim(v)), el("td", { class: "s" }, yuzde(v, top2)))); });
+      tb.append(gov); ust.append(el("div", { class: "tablo" }, tb));
+    }
+
+    // ---- tablo görünümü ----
+    const det = el("details", { class: "kart" }, el("summary", {}, "Günlük tablo"));
+    const t = el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Gün"), el("th", { class: "s" }, "Açılış"), el("th", { class: "s" }, "Sezonu oyna"), el("th", { class: "s" }, "Oyna ÷ açılış"))));
+    const g = el("tbody");
+    l.slice().reverse().forEach((x) => g.append(el("tr", {}, el("td", {}, gunEtiket(x.k, true)), el("td", { class: "s" }, bicim(x.acilis)), el("td", { class: "s" }, bicim(x.oyna)),
+      el("td", { class: "s" }, x.acilis ? (x.oyna / x.acilis).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "–"))));
+    t.append(g); det.append(el("div", { class: "tablo" }, t)); ic.append(det);
+    ic.append(el("div", { class: "not" }, "Tüm zamanlar: " + bicim(hep.acilis || 0) + " açılış · " + bicim(hep.oyna || 0) + " Sezonu oyna. " +
+      "Açılış her tarayıcı oturumunda bir kez sayılır; localhost sayılmaz." + (ORNEK ? " (Örnek veri.)" : "")));
+  }
+
+  // ---- SVG çizgi grafik: 2 seri, tek eksen, çarpı çizgisi + ipucu ----
+  function cizgiGrafik(kap, l) {
+    const NS = "http://www.w3.org/2000/svg";
+    const s = (ad, oz) => { const e = document.createElementNS(NS, ad); Object.entries(oz || {}).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
+    const W = Math.max(300, kap.clientWidth || 600), H = W < 500 ? 220 : 280, sol = 40, sag = 64, ust = 12, alt = 28;
+    const gw = W - sol - sag, gh = H - ust - alt;
+    const en = Math.max(4, ...l.map((x) => Math.max(x.acilis, x.oyna)));
+    const adim = Math.pow(10, Math.floor(Math.log10(en / 4))), kat = [1, 2, 2.5, 5, 10].find((k) => (en / (adim * k)) <= 4) || 10, aralikY = adim * kat;
+    const ymax = Math.ceil(en / aralikY) * aralikY;
+    const X = (i) => sol + (l.length > 1 ? (i / (l.length - 1)) * gw : gw / 2), Y = (v) => ust + gh - (v / ymax) * gh;
+    const svg = s("svg", { viewBox: "0 0 " + W + " " + H, height: H, role: "img", "aria-label": "Günlük açılış ve Sezonu oyna sayıları" });
+    for (let v = 0; v <= ymax + 1e-9; v += aralikY) {
+      svg.append(s("line", { x1: sol, x2: sol + gw, y1: Y(v), y2: Y(v), stroke: v === 0 ? "#2b4045" : "#16252a", "stroke-width": 1 }));
+      const t = s("text", { x: sol - 8, y: Y(v) + 4, "text-anchor": "end", fill: "#5f7478", "font-size": 11, "font-family": "Barlow" }); t.textContent = bicim(v); svg.append(t);
+    }
+    const etiketSay = W < 500 ? 4 : 6, adimX = Math.max(1, Math.ceil(l.length / etiketSay));
+    l.forEach((x, i) => { if (i % adimX && i !== l.length - 1) return; if (i !== l.length - 1 && X(l.length - 1) - X(i) < 70) return;
+      const t = s("text", { x: X(i), y: H - 8, "text-anchor": i === l.length - 1 ? "end" : i === 0 ? "start" : "middle", fill: "#5f7478", "font-size": 11, "font-family": "Barlow" });
+      t.textContent = gunEtiket(x.k); svg.append(t); });
+    const seriler = [["acilis", "#2fa4ab", "Açılış"], ["oyna", "#df7128", "Sezonu oyna"]];
+    seriler.forEach(([k, renk]) => {
+      const d = l.map((x, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(x[k]).toFixed(1)).join(" ");
+      svg.append(s("path", { d: d, fill: "none", stroke: renk, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+    });
+    // son değer etiketleri (çizgi sonunda), çakışırsa ayrık
+    const son = l[l.length - 1] || { acilis: 0, oyna: 0 };
+    let ya = Y(son.acilis), yo = Y(son.oyna); if (Math.abs(ya - yo) < 14) { if (ya <= yo) { ya -= 7; yo += 7; } else { ya += 7; yo -= 7; } }
+    [[son.acilis, ya], [son.oyna, yo]].forEach(([v, y]) => { const t = s("text", { x: sol + gw + 8, y: y + 4, fill: "#eef6f7", "font-size": 12, "font-weight": 600, "font-family": "Barlow" }); t.textContent = bicim(v); svg.append(t); });
+    const capraz = s("line", { y1: ust, y2: ust + gh, stroke: "#91a8ac", "stroke-width": 1, opacity: 0 });
+    const noktalar = seriler.map(([, renk]) => s("circle", { r: 4.5, fill: renk, stroke: "#111d20", "stroke-width": 2, opacity: 0 }));
+    svg.append(capraz, ...noktalar);
+    const alan = s("rect", { x: sol - 6, y: 0, width: gw + 12, height: H, fill: "transparent", tabindex: 0 });
+    svg.append(alan);
+    const ip = $("ipucu");
+    const goster = (i) => {
+      i = Math.max(0, Math.min(l.length - 1, i)); const x = l[i];
+      capraz.setAttribute("x1", X(i)); capraz.setAttribute("x2", X(i)); capraz.setAttribute("opacity", 0.5);
+      noktalar.forEach((n, j) => { n.setAttribute("cx", X(i)); n.setAttribute("cy", Y(x[seriler[j][0]])); n.setAttribute("opacity", 1); });
+      ip.textContent = "";
+      ip.append(el("div", { class: "t" }, gunEtiket(x.k, true)));
+      seriler.forEach(([k, renk, ad]) => ip.append(el("div", { class: "s" }, el("i", { style: "background:" + renk }), el("b", {}, bicim(x[k])), el("em", {}, ad))));
+      const r = kap.getBoundingClientRect(), olcek = r.width / W;
+      let px = r.left + window.scrollX + X(i) * olcek + 14; const py = r.top + window.scrollY + 10;
+      ip.style.opacity = 1;
+      if (px + ip.offsetWidth > window.scrollX + document.documentElement.clientWidth - 8) px = r.left + window.scrollX + X(i) * olcek - ip.offsetWidth - 14;
+      ip.style.left = px + "px"; ip.style.top = py + "px";
+      alan.dataset.i = i;
+    };
+    const gizle = () => { ip.style.opacity = 0; capraz.setAttribute("opacity", 0); noktalar.forEach((n) => n.setAttribute("opacity", 0)); };
+    const enYakin = (e) => { const r = svg.getBoundingClientRect(); const x = (e.clientX - r.left) * (W / r.width); return Math.round(((x - sol) / gw) * (l.length - 1)); };
+    alan.addEventListener("pointermove", (e) => goster(enYakin(e)));
+    alan.addEventListener("pointerdown", (e) => goster(enYakin(e)));
+    alan.addEventListener("pointerleave", gizle);
+    alan.addEventListener("blur", gizle);
+    alan.addEventListener("focus", () => goster(l.length - 1));
+    alan.addEventListener("keydown", (e) => { const i = +(alan.dataset.i || l.length - 1);
+      if (e.key === "ArrowLeft") { goster(i - 1); e.preventDefault(); } if (e.key === "ArrowRight") { goster(i + 1); e.preventDefault(); } });
+    kap.append(svg);
+  }
+  let boyutZaman = 0;
+  window.addEventListener("resize", () => { clearTimeout(boyutZaman); boyutZaman = setTimeout(() => { if (veri) ciz(); }, 150); });
+
+  // ---- izin yok: kimliği göster ----
+  function izinYok(kullanici) {
+    const ic = $("icerik"); ic.textContent = "";
+    const kod = el("code", {}, kullanici.uid);
+    const kopya = el("button", { class: "dugme ikincil" }, "Kopyala");
+    kopya.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(kullanici.uid).then(() => { kopya.textContent = "Kopyalandı"; }); };
+    ic.append(el("div", { class: "uyari" }, el("h2", {}, "Bu hesabın okuma izni yok"),
+      el("p", {}, "Sayaçları yalnız veritabanı kuralında kimliği yazılı hesap okuyabilir. Bu hesabın kimliği:"),
+      el("div", {}, kod, kopya),
+      el("p", {}, "Bu kimlik firebase-kurallar.json'da sayac → .read satırına yazılıp kurallar Firebase konsoluna yapıştırılınca sayılar burada görünür.")));
+  }
+
+  function girisEkrani() {
+    $("kim").textContent = "";
+    const ic = $("icerik"); ic.textContent = "";
+    const b = el("button", { class: "dugme" }, "Google ile giriş");
+    b.onclick = async () => {
+      const saglayici = new firebase.auth.GoogleAuthProvider();
+      try { await firebase.auth().signInWithPopup(saglayici); }
+      catch (e) { if (e && /popup/.test(e.code || "")) firebase.auth().signInWithRedirect(saglayici); else hata(e); }
+    };
+    ic.append(el("div", { class: "uyari" }, el("h2", {}, "Giriş"), el("p", {}, "Sayaçlar yalnız yetkili hesaba açık."), el("p", {}, b)));
+  }
+  function hata(e) { $("icerik").append(el("div", { class: "uyari" }, el("h2", {}, "Hata"), el("p", {}, (e && (e.code || e.message)) || String(e)))); }
+
+  function yukle(src) { return new Promise((ok, h) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => h(new Error("Yüklenemedi: " + src)); document.head.append(s); }); }
+
+  function ornekVeri() {
+    const gun = {}, d = new Date(); let a = 40;
+    for (let i = 120; i >= 0; i--) { const x = new Date(d); x.setUTCDate(x.getUTCDate() - i); a = Math.max(5, a + (Math.random() - 0.45) * 12);
+      const ac = Math.round(a * (x.getUTCDay() % 6 === 0 ? 1.4 : 1)); gun[gunAnahtar(x)] = { acilis: ac, oyna: Math.round(ac * (1.2 + Math.random())) }; }
+    const toplam = Object.values(gun).reduce((t, x) => ({ acilis: t.acilis + x.acilis, oyna: t.oyna + x.oyna }), { acilis: 0, oyna: 0 });
+    const kirilim = {}; const ag = { bsl: 0.7, tbl: 0.3 }, am = { serbest: 0.55, yz: 0.25, iki: 0.08, oda: 0.12 }, at = { sezon: 0.6, lig: 0.4 };
+    Object.keys(ag).forEach((l) => Object.keys(am).forEach((m) => Object.keys(at).forEach((t) => { kirilim[l + "_" + m + "_" + t] = Math.round(toplam.oyna * ag[l] * am[m] * at[t]); })));
+    return { toplam: toplam, gun: gun, kirilim: kirilim };
+  }
+
+  async function basla() {
+    if (ORNEK) { veri = ornekVeri(); ciz(); return; }
+    const A = window.FIREBASE_AYAR;
+    if (!A || !A.apiKey) { hata("firebase-ayar.js boş"); return; }
+    $("icerik").append(el("div", { class: "bos", style: "margin-top:22px" }, "Yükleniyor…"));
+    const kok = "https://www.gstatic.com/firebasejs/" + SURUM + "/";
+    await yukle(kok + "firebase-app-compat.js");
+    await Promise.all([yukle(kok + "firebase-auth-compat.js"), yukle(kok + "firebase-database-compat.js")]);
+    if (!firebase.apps.length) firebase.initializeApp(A);
+    let ref = null;
+    firebase.auth().onAuthStateChanged((k) => {
+      if (ref) { ref.off(); ref = null; }
+      if (!k || k.isAnonymous) { girisEkrani(); return; }
+      const cik = el("button", { class: "dugme ikincil" }, "Çıkış"); cik.onclick = () => firebase.auth().signOut();
+      $("kim").textContent = ""; $("kim").append(el("span", {}, k.displayName || "Giriş yapıldı"), cik);
+      $("icerik").classList.add("yukleniyor");
+      ref = firebase.database().ref("sayac");
+      ref.on("value", (s) => { veri = s.val() || {}; ciz(); }, (e) => { if (e && /permission/i.test(e.code || e.message || "")) izinYok(k); else hata(e); });
+    });
+  }
+  basla().catch(hata);
+})();
+</script>
+</body>
+</html>

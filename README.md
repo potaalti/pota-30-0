@@ -314,6 +314,13 @@ altında "Değiştirme hakkı N" çipi.
 Oyun kaç kez açıldı ve "Sezonu oyna"ya kaç kez basıldı, Firebase Realtime Database'de `sayac/` altında tutulur:
 `toplam/{oyna,acilis}`, `gun/YYYY-MM-DD/{oyna,acilis}` (İstanbul saati), `kirilim/<lig>_<mod>_<tür>` (mod: serbest, yz, iki = aynı cihaz,
 oda = ayrı telefonlar; tür: sezon, lig). Yalnız sayılar yazılır; kim olduğu, IP ya da cihaz bilgisi yok. Açılış oturum başına bir kez.
-Okuma herkese kapalı: sayılar yalnız Firebase konsolunda (Realtime Database → Veri) görülür. Kural yalnız eski değerin 1 fazlasının
+Okuma herkese kapalı: sayılar Firebase konsolunda (Realtime Database → Veri) ya da `sayac.html` sayfasında görülür. Kural yalnız eski değerin 1 fazlasının
 yazılmasına izin verir (`firebase-kurallar.json`). Yerel deneme (localhost / 127.0.0.1) sayılmaz. Kurallar yayın akışıyla gitmez:
 değişince Firebase konsolunda Realtime Database → Kurallar'a elle yapıştırılır.
+
+**Sayaç sayfası** (`site/sayac.html`, oyundan bağlantı yok, arama motorlarına kapalı): Google ile giriş; günlük açılış ve
+"Sezonu oyna" çizgi grafiği (7 / 30 / 90 gün / hepsi), kutucuklar (açılış, oyna, açılış başına oyun, bugün), lig / mod / tür
+kırılımı ve günlük tablo. Canlı güncellenir. `?ornek` ile Firebase'e bağlanmadan örnek veriyle açılır. Okuyabilmek için:
+Firebase konsolunda Authentication → Sign-in method → Google açılır; sayfada giriş yapınca hesabın kimliği (uid) gösterilir;
+o kimlik `firebase-kurallar.json`'da `sayac/.read` satırına (`auth != null && auth.uid === '<uid>'`) yazılıp kurallar konsola
+yapıştırılır. Çizgi renkleri sitenin turkuaz/turuncusunun koyu zemin için doğrulanmış tonları (#2fa4ab, #df7128).
