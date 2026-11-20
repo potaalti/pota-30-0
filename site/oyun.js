@@ -141,7 +141,7 @@
       : "Her turda " + S.veri.lig.toUpperCase() + " " + sz[0] + " … " + sz[sz.length - 1] + " arasından rastgele bir kulüp ve sezon çıkar; kadrodan <b>bir</b> oyuncu seç, sahada bir yere koy. ") +
       (S.sistem === "ao" ? "Mevki: Arka (oyun kurucu, şutör, kısa forvet) ya da Ön (uzun forvet, pivot); ikisine uyan iki tarafa da konabilir, mevki dışı ×" + AO_DISI + ". "
         : "Beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot; komşu mevki ×" + UYUM_CARPAN[1] + ", daha uzağı ×" + UYUM_CARPAN[2] + ". ") +
-      "En az <b>" + minTr() + " Türk</b>, aynı oyuncu bir kez" + (S.cift ? (S.kaynak === "sabit" ? "" : ", herkesin oyun başına 1 <b>atlama</b> hakkı (başka takım ya da sezon; yalnız turun ilk seçimini yaparken)") : ", bir <b>başka takım</b> ve bir <b>başka sezon</b> hakkı") + ". Hedef: <b>" + S.veri.mac + "-0</b>.";
+      "En az <b>" + minTr() + " Türk</b>, aynı oyuncu bir kez" + (S.cift ? (S.kaynak === "sabit" ? "" : ", herkesin oyun başına 1 <b>atlama</b> hakkı (başka takım ya da sezon; yalnız turun ilk seçimini yaparken)") : ", oyun başına 1 <b>değiştirme</b> hakkı (başka takım ya da başka sezon)") + ". Hedef: <b>" + S.veri.mac + "-0</b>.";
   }
 
   function minTr() { return S.minTrOzel !== null ? S.minTrOzel : (MIN_TR_LIG[S.veri.lig] || 2); }
@@ -190,7 +190,7 @@
     if (S.cift) { // iki taraflı: turun ilk seçimini yapacak insan (turda henüz kimse seçmediyse), oyun başına 1 hak
       const a = aktif();
       if (a === null || S.tut || S.kaynak === "sabit" || S.taraflar[a].atlaHak < 1 || S.turdaSecen.length > 0) return false;
-    } else if (S.taraflar[0].atla[tur] < 1) return false;
+    } else if (S.taraflar[0].atlaHak < 1) return false; // 2026-11-20 kullanıcı: başka takım / başka sezon toplam 1 hak (önce ayrı ayrı 1'er)
     return tur === "takim" || baskaSezonVar();
   }
 
@@ -207,7 +207,7 @@
   function cevir(atlama) {
     if (S.cevriliyor || S.bitti) return;
     if (S.cevrim) { cevrimCevir(atlama || false); return; }
-    if (atlama) { if (!atlamaSerbest(atlama)) return; if (S.cift) S.taraflar[aktif()].atlaHak--; else S.taraflar[0].atla[atlama]--; }
+    if (atlama) { if (!atlamaSerbest(atlama)) return; S.taraflar[S.cift ? aktif() : 0].atlaHak--; }
     cevirYap(atlama);
   }
   function cevirYap(atlama) { // izinler denetlendikten sonra çark
@@ -969,6 +969,8 @@
     const tr = trSayisi(taraf), sira = siradaki();
     $("durum").innerHTML = '<span class="cip ' + (tr >= minTr() ? "tamam" : "eksik") + '">Türk ' + tr + "/" + minTr() + "</span>" + rolCipleri(taraf) +
       '<span class="cip">' + DZ()[taraf.dizilis].ad + "</span>" +
+      // değiştirme hakkı (başka takım / başka sezon, toplam): 2026-11-20 kullanıcı
+      (S.cift && S.kaynak === "sabit" ? "" : '<span class="cip ' + (taraf.atlaHak > 0 ? "" : "eksik") + '" title="Başka takım ya da başka sezon, oyun başına toplam 1">Değiştirme hakkı ' + taraf.atlaHak + "</span>") +
       (S.cift && !S.bitti && S.takim && !S.cevriliyor && sira !== null ? '<span class="cip sira">Sıra: ' + kac(S.taraflar[sira].ad) + "</span>" : "") +
       (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" + '<button class="cip birak" data-birak="1">✕ Vazgeç</button>' : "") +
       (S.cevrim && S.rakipBakiyor && sira === 1 - S.cevrim.ben && S.takim && S.takim.oyuncular.some((x) => x.k === S.rakipBakiyor)
@@ -987,10 +989,10 @@
     $("atlaTakim").disabled = !atlamaSerbest("takim");
     $("atlaSezon").disabled = !atlamaSerbest("sezon");
     const hakSahibi = S.cift ? S.taraflar[aktif() !== null ? aktif() : (S.cevrim ? S.cevrim.ben : g)] : null;
-    $("atlaTakim").textContent = "Başka takım (" + (S.cift ? hakSahibi.atlaHak : S.taraflar[0].atla.takim) + ")";
-    $("atlaSezon").textContent = "Başka sezon (" + (S.cift ? hakSahibi.atlaHak : S.taraflar[0].atla.sezon) + ")";
-    $("atlaSezon").title = S.takim && !baskaSezonVar() ? "Bu kulübün başka sezonu yok" : S.cift ? "Oyun başına 1 atlama (kulüp ya da sezon), yalnız turun ilk seçimini yapan" : "Bir kez: aynı kulübün başka bir sezonu";
-    $("atlaTakim").title = S.cift ? "Oyun başına 1 atlama (kulüp ya da sezon), yalnız turun ilk seçimini yapan" : "Bir kez: başka bir takım-sezon";
+    $("atlaTakim").textContent = "Başka takım";
+    $("atlaSezon").textContent = "Başka sezon";
+    $("atlaSezon").title = S.takim && !baskaSezonVar() ? "Bu kulübün başka sezonu yok" : "Oyun başına 1 değiştirme hakkı (takım ya da sezon)" + (S.cift ? ", yalnız turun ilk seçimini yapan" : "");
+    $("atlaTakim").title = "Oyun başına 1 değiştirme hakkı (takım ya da sezon)" + (S.cift ? ", yalnız turun ilk seçimini yapan" : "");
     $("atlaTakim").classList.toggle("gizli", S.cift && S.kaynak === "sabit"); $("atlaSezon").classList.toggle("gizli", S.cift && S.kaynak === "sabit");
     if (S.cift) { // sahada görünmeyen öbür beş: dokununca sahaya gelir
       const o = 1 - g, ot = S.taraflar[o], yerler = yerlerOf(ot);

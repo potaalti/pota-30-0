@@ -300,9 +300,11 @@ Asist baremi +1'den başlar, fazla her asist +0,5, en çok +2,5 (önce +3). Riba
 beşlerin alt %10'u: BSL 17,1 / TBL 18,4; oyunda kurulan beşlerde hiç tutmuyordu).
 "Şut yaratan yok" (top kullanımı alt sınırı) kaldırıldı (2026-11-20, kullanıcı): oyunda neredeyse hiç tutmuyordu, gerçek takımların
 yarısını cezalandırıp ters çalışıyordu. Kaldırınca ilk beş gücü ~ galibiyet korelasyonu BSL 0,77 → 0,84, TBL 0,72 → 0,77.
-Top yetmiyor basamaklı (2026-11-20, kullanıcı): iki lig için aynı, 70'ten başlar (önce 67,5), her 1,5 birimlik basamak −1 (önce −0,75)
+Top yetmiyor basamaklı (2026-11-20, kullanıcı): iki lig için aynı, 71'den başlar (önce 67,5, sonra 70), her 1,5 birimlik basamak −1 (önce −0,75)
 (67,5–69 −0,75, 69–70,5 −1,5, 70,5–72 −2,25 …). En çok −5. Oyunda kurulan beşlerin ~%58'inde çıkar, çıkınca ortalama −3,2.
 Ayrı bir kolaylık kaydırması yok (2026-11-20, kullanıcı): kolaylık yalnız kuralların değerlerinden gelir.
 
 Maç motoru seçeneği kaldırıldı (2026-11-20, kullanıcı): oyun yalnız Klasik oynanır; kayıtlı eski "motor" ayarı ve motorla
 kurulmuş eski odalar da Klasik'e döner. `site/motor.js` kodda duruyor ama hiçbir yerden açılmıyor.
+Değiştirme hakkı (2026-11-20, kullanıcı): tek oyuncuda da başka takım / başka sezon toplam 1 hak (önce ayrı ayrı 1'er); beşin
+altında "Değiştirme hakkı N" çipi.
