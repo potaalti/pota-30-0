@@ -64,9 +64,11 @@ button{font:inherit;color:inherit;cursor:pointer}
 .cubuk .yol{height:10px;background:var(--kart2);border-radius:4px;overflow:hidden}
 .cubuk .dolu{height:100%;background:var(--s-oyna);border-radius:0 4px 4px 0}
 .cubuk .dolu.acilis{background:var(--s-acilis)}
-.ozetler{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:10px}
-.ozetler div{font-size:13px;color:var(--soluk)}
-.ozetler b{display:block;font:800 28px/1.1 var(--baslik);color:var(--yazi);font-variant-numeric:tabular-nums}
+.ozetler{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.ozet{background:var(--kart2);border:1px solid var(--cizgi);border-radius:12px;padding:10px 12px}
+.ozet .ad{font:600 11px var(--govde);color:var(--soluk);letter-spacing:.3px;text-transform:uppercase}
+.ozet b{display:block;font:800 28px/1.1 var(--baslik);color:var(--yazi);font-variant-numeric:tabular-nums;margin-top:4px}
+.ozet .alt{font-size:12px;color:var(--soluk);margin-top:2px}
 table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;font-variant-numeric:tabular-nums}
 th{font:600 12px var(--govde);color:var(--soluk);text-align:left;text-transform:uppercase;letter-spacing:.3px;padding:6px 8px;border-bottom:1px solid var(--cizgi);white-space:nowrap}
 td{padding:7px 8px;border-bottom:1px solid var(--izgara);white-space:nowrap}
@@ -90,6 +92,7 @@ details[open]>summary::before{content:"▾ "}
   .kutucuklar{grid-template-columns:repeat(2,1fr)}
   .dortlu{grid-template-columns:1fr 1fr}
   .ikili{grid-template-columns:1fr}
+  .ozetler{grid-template-columns:1fr 1fr}
   .kutu .sayi{font-size:34px}
   td,th{padding:6px 5px}
 }
@@ -242,17 +245,16 @@ details[open]>summary::before{content:"▾ "}
     Object.keys(hist).forEach((lg) => { const n = hist[lg].reduce((a, b) => a + b, 0); ort[lg] = n ? hist[lg].reduce((a, b, i) => a + b * i, 0) / n : null; ort[lg + "n"] = n; });
     if (!ort.bsln && !ort.tbln) so.append(el("div", { class: "bos" }, "Bu aralıkta sonuç kaydı yok."));
     else {
-      // şampiyonluk: toplam her zaman; lig ayrımı 20 Kasım akşamından beri (sp). Aralıkta ligsiz kayıt varsa lig oranı
-      // yanlış çıkacağı için yalnız sayı gösterilir.
-      const ligToplam = ligOyun.bsl + ligOyun.tbl, ligsiz = t.sampiyon - (t.sp.bsl || 0) - (t.sp.tbl || 0);
-      const ligDetay = ["bsl", "tbl"].map((lg) => LIG_AD[lg] + " " + bicim(t.sp[lg] || 0) + (ligsiz > 0 || !ligOyun[lg] ? "" : " (" + yuzde(t.sp[lg] || 0, ligOyun[lg]) + ")")).join(" · ");
+      // şampiyonluk: toplam her zaman; lig ayrımı (sp) 20 Kasım akşamından beri, varsa altta sayı olarak
+      const ligToplam = ligOyun.bsl + ligOyun.tbl, ligli = (t.sp.bsl || 0) + (t.sp.tbl || 0), ligsiz = t.sampiyon - ligli;
+      const ozet = (ad, deger, alt) => el("div", { class: "ozet" }, el("div", { class: "ad" }, ad), el("b", {}, deger), el("div", { class: "alt" }, alt));
+      const ligOran = (lg) => LIG_AD[lg] + " " + bicim(t.sp[lg] || 0) + (ligsiz === 0 && ligOyun[lg] ? " (" + yuzde(t.sp[lg] || 0, ligOyun[lg]) + ")" : "");
       so.append(el("div", { class: "ozetler" },
-        el("div", {}, el("b", {}, bicim(t.otuz)), "30-0 (TBL'de 32-0)"),
-        el("div", {}, el("b", {}, bicim(t.sampiyon) + (ligToplam ? " · " + yuzde(t.sampiyon, ligToplam) : "")),
-          "şampiyonluk · " + bicim(ligToplam) + " lig + play-off oyunundan", el("br"), ligDetay + (ligsiz > 0 ? " · " + bicim(ligsiz) + " lig bilgisi olmadan" : "")),
-        el("div", {}, el("b", {}, ort.bsl == null ? "–" : ondalik(ort.bsl) + " / 30"), "BSL ortalama galibiyet"),
-        el("div", {}, el("b", {}, ort.tbl == null ? "–" : ondalik(ort.tbl) + " / 32"), "TBL ortalama galibiyet")));
-      if (ligsiz > 0) so.append(el("div", { class: "not", style: "margin-top:6px" }, "Şampiyonluğun hangi ligde geldiği 20 Kasım akşamından beri tutuluyor; o günden önceki kayıtlar aralıkta kaldıkça lig lig oran gösterilmez."));
+        ozet("30-0", bicim(t.otuz), "TBL'de 32-0"),
+        ozet("Şampiyonluk", bicim(t.sampiyon) + (ligToplam ? " · " + yuzde(t.sampiyon, ligToplam) : ""),
+          bicim(ligToplam) + " lig + play-off oyununda" + (ligli ? " · " + ligOran("bsl") + " · " + ligOran("tbl") : "")),
+        ozet("BSL ortalama", ort.bsl == null ? "–" : ondalik(ort.bsl) + " / 30", "galibiyet · " + bicim(ort.bsln) + " sezon"),
+        ozet("TBL ortalama", ort.tbl == null ? "–" : ondalik(ort.tbl) + " / 32", "galibiyet · " + bicim(ort.tbln) + " sezon")));
       const ikili = el("div", { class: "ikili" });
       ["bsl", "tbl"].forEach((lg) => {
         const k = el("div", { class: "grafik" });
