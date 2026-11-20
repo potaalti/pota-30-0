@@ -45,7 +45,7 @@
   // ---- küçük kalıcı tercihler (tarayıcıda) ----
   function oku(k, v) { try { const x = localStorage.getItem("p300:" + k); return x === null ? v : JSON.parse(x); } catch (e) { return v; } }
   function yaz(k, v) { try { localStorage.setItem("p300:" + k, JSON.stringify(v)); } catch (e) { /* yok */ } }
-  const ayar = { lig: oku("lig", "bsl"), mod: oku("mod", "serbest"), zor: +oku("zor", 0), sim: oku("sim", "klasik"), format: oku("format", "sezon"), yzZorluk: oku("yzZorluk", "orta"), yzKaynak: oku("yzKaynak", "cark") };
+  const ayar = { lig: oku("lig", "bsl"), mod: oku("mod", "serbest"), zor: +oku("zor", 0), sim: "klasik" /* Maç motoru 2026-11-20'de kaldırıldı (kullanıcı); eski kayıtlı ayar yok sayılır */, format: oku("format", "sezon"), yzZorluk: oku("yzZorluk", "orta"), yzKaynak: oku("yzKaynak", "cark") };
   if (!window.VERI || !window.VERI[ayar.lig]) ayar.lig = window.VERI && window.VERI.bsl ? "bsl" : "tbl";
   if (MODLAR.indexOf(ayar.mod) < 0) ayar.mod = "serbest";
 
@@ -879,7 +879,7 @@
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
       ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimUst + "'i aşınca her " + (S.veri.kullanimBasamak || 1) + " birimde −" + (S.veri.kullanimUstKatsayi || S.veri.kullanimKatsayi) + " (en çok −" + (S.veri.kullanimSinir || 99) + ")" +
-      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
+      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
       "iki ya da üç sayılık şut (isabeti rakibin bloğu düşürür, asistli oyun artırır), kaçan şutta hücum ribaundu ile savunma ribaundunun çekişmesi. " +
@@ -1236,7 +1236,7 @@
     const oda = await Baglanti.odaOku(kod);
     const o = oda.oyuncular || {};
     const ben = o[0] && o[0].uid === b.uid ? 0 : 1;
-    if (oda.ayar.sim && oda.ayar.sim !== ayar.sim) { ayar.sim = oda.ayar.sim; yaz("sim", ayar.sim); S.sim = ayar.sim; secicileriBoya(); }
+    // Maç motoru kaldırıldı: eski bir oda motorla kurulmuş olsa da Klasik oynanır
     const odaFormat = oda.ayar.format || "sezon"; // eski odalarda yok: sezon
     if (odaFormat !== ayar.format) { ayar.format = odaFormat; yaz("format", ayar.format); S.format = ayar.format; secicileriBoya(); }
     if (oda.ayar.lig !== ayar.lig && window.VERI[oda.ayar.lig]) {
@@ -1419,7 +1419,7 @@
 
   // ---- ayar düğmeleri ----
   function secicileriBoya() {
-    ["ligSec", "modSec", "zorSec", "simSec", "formatSec"].forEach((id) => {
+    ["ligSec", "modSec", "zorSec", "formatSec"].forEach((id) => {
       Array.prototype.forEach.call($(id).children, (b) => { const a = Object.keys(b.dataset)[0]; b.classList.toggle("aktif", String(ayar[a]) === b.dataset[a]); });
     });
   }
@@ -1432,7 +1432,7 @@
     if (k === "sim" || k === "format") { S[k] = v; if (S.bitti) sezonuOyna(true); else { if (S.takim) listeCiz(); ustCiz(); } return; }
     yeniOyun();
   }
-  ["ligSec", "modSec", "zorSec", "simSec", "formatSec"].forEach((id) => {
+  ["ligSec", "modSec", "zorSec", "formatSec"].forEach((id) => {
     Array.prototype.forEach.call($(id).children, (b) => { b.onclick = () => { const a = Object.keys(b.dataset)[0]; ayarla(a, a === "zor" ? +b.dataset[a] : b.dataset[a]); }; });
   });
   secicileriBoya();

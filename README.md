@@ -303,3 +303,6 @@ yarısını cezalandırıp ters çalışıyordu. Kaldırınca ilk beş gücü ~ 
 Top yetmiyor basamaklı (2026-11-20, kullanıcı): iki lig için aynı, 70'ten başlar (önce 67,5), her 1,5 birimlik basamak −0,75
 (67,5–69 −0,75, 69–70,5 −1,5, 70,5–72 −2,25 …). En çok −5. Oyunda kurulan beşlerin ~%58'inde çıkar, çıkınca ortalama −3,2.
 Ayrı bir kolaylık kaydırması yok (2026-11-20, kullanıcı): kolaylık yalnız kuralların değerlerinden gelir.
+
+Maç motoru seçeneği kaldırıldı (2026-11-20, kullanıcı): oyun yalnız Klasik oynanır; kayıtlı eski "motor" ayarı ve motorla
+kurulmuş eski odalar da Klasik'e döner. `site/motor.js` kodda duruyor ama hiçbir yerden açılmıyor.
