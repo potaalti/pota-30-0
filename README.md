@@ -22,10 +22,10 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
 - Her turda rastgele bir takım-sezon çıkar (ör. FENERBAHÇE 2016-17). Kadrodan bir oyuncu seç, beşte bir yere koy.
 - Mevki sistemi lige göre: **BSL** beş mevki, **TBL** yalnız Arka (1-2-3) / Ön (4-5) — TBL'de mevki verisi zayıf
   (Wikidata kapsamı %31). TBL'de iki tarafa da uyan (mevkileri 3 ve 4'ü kapsayan) oyuncu cezasız her yere konur, mevki
-  dışı ×0,88. TBL oyuncu-sezonları: 1.501 Arka, 623 Ön, 432 ikisi birden. (2026-11-20, kullanıcı: önce Arka 1-2 / Ön 3-5
+  dışı ×0,7 (2026-11-20'ye kadar ×0,88). TBL oyuncu-sezonları: 1.501 Arka, 623 Ön, 432 ikisi birden. (2026-11-20, kullanıcı: önce Arka 1-2 / Ön 3-5
   idi; kısa forvetler yanlışlıkla öndeydi.)
 - BSL'de beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot. Diziliş 2 Arka 3 Ön (1-2-3-4-5) ya da
-  3 Arka 2 Ön (1-2-gard-4-5); sezon oynanana kadar değiştirilebilir. Komşu mevki ×0,92, daha uzağı ×0,80.
+  3 Arka 2 Ön (1-2-gard-4-5); sezon oynanana kadar değiştirilebilir. Komşu mevki ×0,92, daha uzağı ×0,7 (2026-11-20'ye kadar ×0,80).
 - En az 1 Türk (BSL) / 3 Türk (TBL), aynı oyuncu bir kez, her takım-sezondan bir oyuncu.
 - Bir "başka takım" (yeni takım-sezon) ve bir "başka sezon" (aynı kulübün başka sezonu; kulüp kimliği TBF teamId) hakkı.
 - Sonuç: kayıt, harf notu (A+ … F), en iyi seçim, en büyük zayıflık, döküm.
@@ -140,7 +140,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   kaydırma BSL −1,25, TBL −0,5 (güçle kurulan beş BSL ~22,5 / 30, TBL ~23,1 / 32; Lig modu da aynı seviyede).
   Yalnız VP ile ilk beş gücü gerçek galibiyet oranını zayıf açıklıyordu (korelasyon 0,20: kötü takımlarda VP şişiyor);
   averaj payıyla 0,84 (BSL) / 0,84 (TBL).
-- Mevki dışı yerleşim ×0,88.
+- Mevki dışı yerleşim ×0,7 (2026-11-20'ye kadar ×0,88).
 - Hücum/savunma eksenleri 2026-11-20'de kaldırıldı (kullanıcı: her barem bir kez hesaplansın). Hücum = sayı + 1,5×asist −
   top kaybı, Savunma = 2×top çalma + 0,5×ribaund idi; bileşenlerinin hepsi kendi bareminde, sayı da VP'de sayılıyordu.
   Kaldırınca ilk beş gücü ~ galibiyet korelasyonu BSL 0,69 → 0,80, TBL 0,68 → 0,75 oldu (eksenler gürültü katıyordu).

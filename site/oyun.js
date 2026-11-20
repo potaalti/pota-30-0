@@ -18,7 +18,7 @@
     "2-3": { ad: "2 Arka 3 Ön", yerler: [["A"], ["A"], ["O"], ["O"], ["O"]] },
     "3-2": { ad: "3 Arka 2 Ön", yerler: [["A"], ["A"], ["A"], ["O"], ["O"]] },
   };
-  const AO_DISI = 0.88; // Arka/Ön sisteminde mevki dışı
+  const AO_DISI = 0.7; // Arka/Ön sisteminde mevki dışı (2026-11-20 kullanıcı: 0,88 → 0,7)
   const DZ = () => (S && S.sistem === "ao" ? DIZILISLER_AO : DIZILISLER);
   // 3 Arka 2 Ön'de arkaya dönen ön yeri esnek (2026-11-19, kullanıcı: hep soldaki forvetti, dolunca değiştirilemiyordu):
   // taraf.esnek = 2, 3 ya da 4 (dizilişteki sıra). Yerler dizisi buna göre kurulur.
@@ -28,7 +28,7 @@
     return y;
   }
   const KONUM = [[50, 80], [83, 58], [17, 58], [68, 33], [32, 33]]; // sahada yerlerin konumu (% x, % y), dizilişteki sırayla
-  const UYUM_CARPAN = [1, 0.92, 0.8]; // mevki uzaklığı 0 / 1 / 2+
+  const UYUM_CARPAN = [1, 0.92, 0.7]; // mevki uzaklığı 0 / 1 / 2+ (2026-11-20 kullanıcı: mevki dışı 0,8 → 0,7)
   const MIN_TR_LIG = { bsl: 1, tbl: 3 };
   const YZ_AD = { kolay: "Kolay", orta: "Orta", zor: "Zor" };
   const AI_GOSTER_MS = 2600; // AI seçince onun beşi sahada bu kadar görünür
