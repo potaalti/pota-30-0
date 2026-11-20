@@ -547,7 +547,7 @@
       }
     });
     if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.d, uyum: true }); uyumTop += k.d; });
-    if (Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop, uyum: true, sinir: true });
+    if (V.uyumSinir && Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop, uyum: true, sinir: true });
     const ROL_AD = { rb: ["Ribaund alan yok", "beşin ribaundu"], as: ["Top paylaşımı zayıf", "beşin toplam asisti"] };
     Object.keys(V.denge).forEach((k) => {
       const v = top(k);
@@ -880,7 +880,7 @@
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
       ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimUst + "'i aşınca her " + (S.veri.kullanimBasamak || 1) + " birimde −" + (S.veri.kullanimUstKatsayi || S.veri.kullanimKatsayi) + " (en çok −" + (S.veri.kullanimSinir || 99) + ")" +
-      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu.</p>"
+      "; uyum kuralları oyun hissi için" + (S.veri.uyumSinir ? " (toplam en çok ±" + S.veri.uyumSinir + ")" : "") + ". Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
       "iki ya da üç sayılık şut (isabeti rakibin bloğu düşürür, asistli oyun artırır), kaçan şutta hücum ribaundu ile savunma ribaundunun çekişmesi. " +

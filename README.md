@@ -147,7 +147,9 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   - Rol eksikliği: beşin toplam asisti ya da toplam ribaundu gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1;
     TBL 10,3 / 18,4) eksik her asist −1, her ribaund −0,6 güç ("Top paylaşımı zayıf", "Ribaund alan yok"). Asiste toplamdan
     bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
-- Uyum kuralları (oyun hissi için; toplam ±5): pota koruyucu var (biri ≥1,3 blok; 2026-11-20'ye kadar 1,2) +2, pota boş (kimse ≥0,5 blok yapmıyor; 2026-11-20'ye kadar 0,6) −2,
+- Uyum kuralları (oyun hissi için; toplam sınırı yok — 2026-11-20'ye kadar ±5, kullanıcı kaldırttı: tavan Hücum/Savunma
+  satırındaki uyum kurallarını da sayıp kesintiyi Takım uyumu satırında kırmızı "Uyum sınırı" çipi olarak gösteriyordu;
+  galibiyet eğrisi değişmedi, hiçbir gerçek ilk beş sınıra takılmıyordu): pota koruyucu var (biri ≥1,3 blok; 2026-11-20'ye kadar 1,2) +2, pota boş (kimse ≥0,5 blok yapmıyor; 2026-11-20'ye kadar 0,6) −2,
   dış şut bol (≥1,35 üçlük atan 3 kişi +2, 4 kişi +3, 5 kişi +4; 2026-11-20'ye kadar 3 kişi ≥1,2 üçlük, sabit +2), şutör yok (kimse ≥1,2 üçlük atmıyor) −3, boyalı alan kalabalık (en az 3 uzun —
   mevki 4-5 — üçlük atmıyor, <0,3) −3. 2026-11-20 (kullanıcı: uyum kuralları tekil kurallarla çakışmasın): yalnız tek tek
   oyunculara bakan, başka hiçbir kuralın ölçmediği şeyler kaldı. "Oyun kurucu var" (asist baremi ve "Top paylaşımı zayıf"
@@ -156,7 +158,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   Sonuçta bütün artı/eksiler puanı ve açıklamasıyla üç başlıkta görünür (2026-11-20, kullanıcı; efektif şut hariç, o gizli):
   **Hücum** (asist baremi, top paylaşımı zayıf, top kaybı baremi, top yetmiyor, şut yaratan yok, dış şut bol, şutör yok,
   boyalı alan kalabalık), **Savunma** (top çalma baremi, ribaund alan yok, pota koruyucu var, pota boş), **Takım uyumu**
-  (yerli omurga, kulüp ruhu, eski takım arkadaşları, uyum sınırı).
+  (yerli omurga, kulüp ruhu, eski takım arkadaşları).
 - Kadro kimyası (2026-11-20, kullanıcı; takım uyumunun içinde, eksisi yok): yerli omurga +2 (BSL en az 3, TBL en az 4
   Türk; önce +1), kulüp ruhu +1, eski takım arkadaşları +1; kulüp ruhu (aynı kulübün farklı sezonlarından üç seçim),
   eski takım arkadaşları (üç oyuncu kariyerlerinin bir sezonunda aynı kadroda oynamış; hangi takımdan seçildikleri fark

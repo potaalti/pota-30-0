@@ -257,7 +257,8 @@ ROL_ESIK_SABIT = {"rb": 23.0}
 
 # Uyum kuralları (oyun tasarımı; 2026-11-17'de gerçek ilk beşlerle sınandı: güç sabitken hiçbiri galibiyeti artırmadı,
 # bazıları ters yönde çıktı; NBA'deki benzer oyunlar gibi oyun hissi için). Her kural: oyuncu koşulları (hepsi sağlanmalı),
-# bunu sağlayan oyuncu sayısı en_az / en_cok sınırına uyarsa puan. Toplam etki ±UYUM_SINIR.
+# bunu sağlayan oyuncu sayısı en_az / en_cok sınırına uyarsa puan. Toplam sınırı yok (2026-11-20 kullanıcı: "sınırı kaldır";
+# ±5 tavanı Hücum/Savunma satırındaki uyum kurallarını da sayıp Takım uyumu satırında kırmızı çip gösteriyordu).
 # 2026-11-19 (kullanıcı): uyum kuralları başka kuralın baktığı istatistiğe bakmaz. Asist (asist baremi), top çalma, top
 # kaybı, ribaund, top kullanımı, şut verimi ve VP (oyuncu gücü) kendi kurallarında; uyum yalnız blok, üçlük ve mevkiye bakar.
 # Çıkanlar: "Oyun kurucu var" (asist), "Yıldız ikilisi" (VP). "Boyalı alan kalabalık" ribaund yerine mevkiye bakar.
@@ -270,18 +271,18 @@ UYUM = [
     {"ad": "Şutör yok", "aciklama": "kimse ≥1,2 üçlük atmıyor", "kosul": [["u3", ">=", 1.2]], "en_cok": 0, "puan": -3},
     {"ad": "Boyalı alan kalabalık", "aciklama": "en az 3 uzun (mevki 4-5) üçlük atmıyor (<0,3)", "kosul": [["uz", ">=", 1], ["u3", "<", 0.3]], "en_az": 3, "puan": -3},
 ]
-UYUM_SINIR = 5.0
+UYUM_SINIR = None  # eskiden 5.0
 
 
 def uyum_kurallari(oyuncular):
-    """Sağlanan uyum kuralları ve toplam etkisi (±UYUM_SINIR)."""
+    """Sağlanan uyum kuralları ve toplam etkisi (UYUM_SINIR verilirse ±sınır)."""
     tutan, toplam_ = [], 0
     for k in UYUM:
         n = sum(1 for o in oyuncular if all((o.get(a) or 0) >= e if op == ">=" else (o.get(a) or 0) < e for a, op, e in k["kosul"]))
         if ("en_az" in k and n >= k["en_az"]) or ("en_cok" in k and n <= k["en_cok"]):
             tutan.append(k)
             toplam_ += kademe_puani(k, n)
-    return tutan, max(-UYUM_SINIR, min(UYUM_SINIR, toplam_))
+    return tutan, (toplam_ if UYUM_SINIR is None else max(-UYUM_SINIR, min(UYUM_SINIR, toplam_)))
 
 
 def kademe_puani(k, n):
