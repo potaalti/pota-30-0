@@ -508,7 +508,7 @@
   function kimyaUyumu(os, takimlar) {
     const c = [];
     const enAzTr = S.veri.lig === "tbl" ? 4 : 3;
-    if (os.filter((o) => o.tr).length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 1 });
+    if (os.filter((o) => o.tr).length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2 }); // 2026-11-20 kullanıcı: +1 → +2
     if (S.kaynak !== "sabit") { // tek takım-sezon havuzunda herkes zaten aynı kadrodan
       const kulup = {};
       takimlar.forEach((t) => { if (t && t.kulup) (kulup[t.kulup] = kulup[t.kulup] || []).push(t.id); });

@@ -245,7 +245,7 @@ DENGE = {"rb": 0.6, "as": 1.0}
 # Çıkanlar: "Oyun kurucu var" (asist), "Yıldız ikilisi" (VP). "Boyalı alan kalabalık" ribaund yerine mevkiye bakar.
 UYUM = [
     {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,2 blok", "kosul": [["bl", ">=", 1.2]], "en_az": 1, "puan": 2},
-    {"ad": "Pota boş", "aciklama": "kimse ≥0,6 blok yapmıyor", "kosul": [["bl", ">=", 0.6]], "en_cok": 0, "puan": -2},
+    {"ad": "Pota boş", "aciklama": "kimse ≥0,5 blok yapmıyor", "kosul": [["bl", ">=", 0.5]], "en_cok": 0, "puan": -2},  # 2026-11-20 kullanıcı: 0,6 → 0,5
     {"ad": "Dış şut bol", "aciklama": "en az 3 kişi ≥1,2 üçlük", "kosul": [["u3", ">=", 1.2]], "en_az": 3, "puan": 2},
     {"ad": "Şutör yok", "aciklama": "kimse ≥1,2 üçlük atmıyor", "kosul": [["u3", ">=", 1.2]], "en_cok": 0, "puan": -3},
     {"ad": "Boyalı alan kalabalık", "aciklama": "en az 3 uzun (mevki 4-5) üçlük atmıyor (<0,3)", "kosul": [["uz", ">=", 1], ["u3", "<", 0.3]], "en_az": 3, "puan": -3},
