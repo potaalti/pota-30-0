@@ -24,7 +24,7 @@
       }
     },
     "sayac": {
-      ".read": false,
+      ".read": "auth != null && auth.uid === 'q60vBQaucqgWAc2pxdaVnkQpQoC2'",
       "toplam": {
         "$olay": {
           ".write": "newData.exists() && $olay.matches(/^(oyna|acilis)$/)",
