@@ -572,7 +572,10 @@
     // "Şut yaratan yok" (alt bant) 2026-11-20'de kaldırıldı (kullanıcı): oyunda neredeyse hiç tutmuyor, gerçek takımlarda ters çalışıyordu
     const ust = V.kullanimUst || V.esik.kullanim;
     if (V.esik.kullanim && kul > ust) {
-      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + ust.toFixed(1), d: -(kul - ust) * (V.kullanimUstKatsayi || V.kullanimKatsayi) });
+      // basamaklı (2026-11-20 kullanıcı): her kullanimBasamak (1,5) birimde −kullanimUstKatsayi (0,75)
+      const bas = V.kullanimBasamak, kat = V.kullanimUstKatsayi || V.kullanimKatsayi;
+      const n = bas ? Math.ceil((kul - ust) / bas - 1e-9) : kul - ust;
+      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + ust.toFixed(1) + (bas ? " · " + n + ". basamak (her " + bas + " birimde −" + kat + ")" : ""), d: -n * kat });
     }
     const R = os.reduce((a, o, i) => a + o.g * uyumlar[i], 0) + etkiler.reduce((a, e) => a + e.d, 0) + gizli;
     return { etkiler: etkiler, R: R };
