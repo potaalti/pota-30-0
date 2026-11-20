@@ -776,6 +776,7 @@
     const hesaplar = S.taraflar.map((t) => hesap(t)), lig = ligModu() ? ligSezonu(hesaplar) : null;
     const sonuclar = S.taraflar.map((t, j) => { const m = lig ? lig.maclar[j] : simule(t, hesaplar[j]); return { taraf: t, h: hesaplar[j], maclar: m, g: m.filter((x) => x.g).length }; });
     if (lig) sonuclar.forEach((r, j) => { r.lig = ligDurumu(lig.takimlar[j], lig.tablo); });
+    if (!hemen) oyunSay(sonuclar); // yeniden çizimler (ayar değişimi, kayıttan dönüş, odaya yeniden bağlanma) sayılmaz
     if (ayar.mod === "gunluk") { const b = S.taraflar[0]; yaz("gunluk:" + S.tohum, { bes: b.bes, atla: b.atla, dizilis: b.dizilis }); }
     const sr = S.cift && !lig ? seri(sonuclar[0].h, sonuclar[1].h) : null;
     const ligTablo = !lig ? "" : '<details class="dokum-kap" open><summary>tarihî ' + S.veri.lig.toUpperCase() + " lig tablosu (her sırada o sırayı gerçekten almış bir takım-sezon; " + lig.tablo.length + " takım)</summary><div class=\"yatay\"><table class=\"lig-tablo\"><thead><tr><th>#</th><th>Takım</th><th>G</th><th>M</th><th>Av.</th></tr></thead><tbody>" +
@@ -1484,21 +1485,50 @@
   $("cevir").onclick = () => cevir(false);
   $("atlaTakim").onclick = () => cevir("takim");
   $("atlaSezon").onclick = () => cevir("sezon");
-  // ---- sayaç (2026-11-20, kullanıcı): kaç kez açıldı / "Sezonu oyna"ya basıldı. Yalnız sayılar yazılır (kim olduğu yok);
-  // veritabanında okuma herkese kapalı, sayılar yalnız Firebase konsolunda görülür. Kural yalnız +1 yazmaya izin verir.
-  // Yerel deneme (localhost / 127.0.0.1) sayılmaz.
-  function say(olay) {
+  // ---- sayaç (2026-11-20, kullanıcı): yalnız sayılar yazılır, kim olduğu yok (kimlik, IP, cihaz kimliği tutulmaz).
+  // Okuma yalnız sahibin hesabına açık (sayac.html); kural her yola yalnız +1 yazmaya izin verir. localhost sayılmaz.
+  //  açılış (oturumda bir kez): toplam/acilis, gun/<gün>/acilis, gun/<gün>/c/<tel|pc>_<uygulama|tarayici>
+  //   tekil kişi kimliksiz: bu tarayıcı ilk kez açtıysa yeni (toplam + gün), bugün ilk kez açtıysa gun/<gün>/tekil
+  //  oyun (sezonuOyna, yeniden çizimler hariç): toplam/oyna, gun/<gün>/oyna, kirilim/<lig_mod_tür>, gun/<gün>/k/<lig_mod_tür>
+  //   sonuç (insan tarafı başına): gun/<gün>/s/<lig_tür_galibiyet>, 30-0 ise otuz, play-off'u kazandıysa sampiyon (toplam + gün)
+  function sayacYaz(yollar) {
     try {
       const a = window.FIREBASE_AYAR, h = location.hostname;
-      if (!a || !a.databaseURL || h === "localhost" || h === "127.0.0.1" || !window.fetch) return;
-      const gun = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" }), art = { ".sv": { increment: 1 } };
-      const yol = {}; yol["toplam/" + olay] = art; yol["gun/" + gun + "/" + olay] = art;
-      if (olay === "oyna") yol["kirilim/" + ayar.lig + "_" + (S.cevrim ? "oda" : ayar.mod) + "_" + (S.format === "lig" ? "lig" : "sezon")] = art;
+      if (!a || !a.databaseURL || h === "localhost" || h === "127.0.0.1" || !window.fetch || !yollar.length) return;
+      const yol = {}; yollar.forEach((y) => { yol[y] = { ".sv": { increment: 1 } }; });
       fetch(a.databaseURL + "/sayac.json", { method: "PATCH", body: JSON.stringify(yol), keepalive: true }).catch(() => {});
     } catch (e) { /* sayaç oyunu asla bozmasın */ }
   }
-  try { if (!sessionStorage.getItem("p300:acildi")) { sessionStorage.setItem("p300:acildi", "1"); say("acilis"); } } catch (e) { say("acilis"); }
-  $("oyna").onclick = () => { say("oyna"); sezonuOyna(false); };
+  function sayacGun() { return new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" }); }
+  function acilisSay() {
+    const gun = sayacGun(), g = "gun/" + gun + "/", y = ["toplam/acilis", g + "acilis"];
+    try { if (sessionStorage.getItem("p300:acildi")) return; sessionStorage.setItem("p300:acildi", "1"); } catch (e) { /* yok */ }
+    try {
+      if (!localStorage.getItem("p300:ilk")) { localStorage.setItem("p300:ilk", gun); y.push("toplam/yeni", g + "yeni"); }
+      if (localStorage.getItem("p300:songun") !== gun) { localStorage.setItem("p300:songun", gun); y.push(g + "tekil"); }
+    } catch (e) { /* yok */ }
+    let tel = false, uyg = false;
+    try { tel = matchMedia("(pointer: coarse)").matches || innerWidth < 900; uyg = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; } catch (e) { /* yok */ }
+    y.push(g + "c/" + (tel ? "tel" : "pc") + "_" + (uyg ? "uygulama" : "tarayici"));
+    sayacYaz(y);
+  }
+  function oyunSay(sonuclar) {
+    try {
+      const g = "gun/" + sayacGun() + "/", tur = S.format === "lig" ? "lig" : "sezon", mod = S.cevrim ? "oda" : ayar.mod;
+      // odada iki telefon da oynatır: oyun bir kez (odayı kuran), sonuç her telefonda kendi tarafı
+      if (!S.cevrim || S.cevrim.ben === 0) { const k = ayar.lig + "_" + mod + "_" + tur; sayacYaz(["toplam/oyna", g + "oyna", "kirilim/" + k, g + "k/" + k]); }
+      const insan = S.cevrim ? [S.cevrim.ben] : S.iki ? [0, 1] : [0];
+      insan.forEach((j) => {
+        const r = sonuclar[j]; if (!r) return;
+        const y = [g + "s/" + ayar.lig + "_" + tur + "_" + r.g];
+        if (r.g === S.veri.mac) y.push("toplam/otuz", g + "otuz");
+        if (r.lig && r.lig.deger === 100) y.push("toplam/sampiyon", g + "sampiyon");
+        sayacYaz(y);
+      });
+    } catch (e) { /* yok */ }
+  }
+  acilisSay();
+  $("oyna").onclick = () => sezonuOyna(false);
   // ---- uygulama (PWA): kendi servis çalışanı (kapsam yalnız bu klasör) ve yükle düğmesi ----
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(() => {});
   const kurulu = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;

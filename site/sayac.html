@@ -9,13 +9,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Oyunun açılış / "Sezonu oyna" sayacı. Oyundan bağlantı yok; yalnız kurallarda (firebase-kurallar.json → sayac/.read)
-     kimliği yazılı Google hesabı okuyabilir. ?ornek ile Firebase'e bağlanmadan örnek veriyle açılır. -->
+<!-- Oyunun sayacı: kişi, açılış, oyun, sonuçlar, mod ve cihaz. Oyundan bağlantı yok; yalnız kurallarda (firebase-kurallar.json →
+     sayac/.read) kimliği yazılı Google hesabı okuyabilir. ?ornek ile Firebase'e bağlanmadan örnek veriyle açılır.
+     Her şey seçilen tarih aralığına göre (gun/<gün>/… toplamları). -->
 <style>
 :root{
   --zemin:#0a1214; --kart:#111d20; --kart2:#0d181b; --yazi:#eef6f7; --soluk:#91a8ac; --sonuk:#5f7478; --cizgi:#1d2e32; --izgara:#16252a;
-  --vurgu:#4cc8d0; --vurgu-uzeri:#062126; --turuncu:#fb923c; --kirmizi:#f87171;
-  --s-acilis:#2fa4ab; --s-oyna:#df7128; /* koyu zemin için doğrulanmış seri renkleri (açıklık 0,48–0,67) */
+  --vurgu:#4cc8d0; --vurgu-uzeri:#062126;
+  /* koyu zemin için doğrulanmış seri renkleri (açıklık 0,48–0,67, renk körlüğünde ayrışır) */
+  --s-kisi:#8f7ae8; --s-acilis:#2fa4ab; --s-oyna:#df7128;
   --baslik:"Barlow Condensed",sans-serif; --govde:Barlow,system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -40,51 +42,64 @@ button{font:inherit;color:inherit;cursor:pointer}
 .kart{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:16px;margin-top:12px}
 .kart h2{font:800 22px var(--baslik);letter-spacing:.3px;text-transform:uppercase}
 .kart h2 small{font:500 13px var(--govde);color:var(--soluk);text-transform:none;letter-spacing:0;margin-left:8px}
-.lejant{display:flex;gap:16px;margin:8px 0 4px;font-size:13px;color:var(--soluk)}
+.kart h3{font:800 17px var(--baslik);letter-spacing:.3px;text-transform:uppercase}
+.kart h3 small{font:500 12px var(--govde);color:var(--soluk);text-transform:none;letter-spacing:0;margin-left:6px}
+.lejant{display:flex;gap:16px;margin:8px 0 4px;font-size:13px;color:var(--soluk);flex-wrap:wrap}
 .lejant span{display:inline-flex;align-items:center;gap:6px}
 .lejant i{display:inline-block;width:16px;height:2px;border-radius:2px}
 .grafik{position:relative;margin-top:6px}
 .grafik svg{display:block;width:100%;overflow:visible}
-.ipucu{position:absolute;pointer-events:none;background:#06100f;border:1px solid var(--cizgi);border-radius:10px;padding:8px 10px;font-size:13px;min-width:130px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .1s}
+.ipucu{position:absolute;pointer-events:none;background:#06100f;border:1px solid var(--cizgi);border-radius:10px;padding:8px 10px;font-size:13px;min-width:130px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .1s;z-index:5}
 .ipucu .t{color:var(--soluk);font-size:12px;margin-bottom:4px}
 .ipucu .s{display:flex;align-items:center;gap:8px}
 .ipucu .s i{display:inline-block;width:12px;height:2px;border-radius:2px}
 .ipucu .s b{font-variant-numeric:tabular-nums;min-width:28px}
 .ipucu .s em{font-style:normal;color:var(--soluk)}
-.iki{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.cubuklar{margin-top:10px;display:grid;gap:9px}
-.cubuk .ust{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.dortlu{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:12px}
+.ikili{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:12px}
+.cubuklar{margin-top:8px;display:grid;gap:9px}
+.cubuk .ust{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:4px}
 .cubuk .ust span{color:var(--soluk)}
-.cubuk .ust b{font-variant-numeric:tabular-nums}
+.cubuk .ust b{font-variant-numeric:tabular-nums;white-space:nowrap}
 .cubuk .yol{height:10px;background:var(--kart2);border-radius:4px;overflow:hidden}
 .cubuk .dolu{height:100%;background:var(--s-oyna);border-radius:0 4px 4px 0}
+.cubuk .dolu.acilis{background:var(--s-acilis)}
+.ozetler{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:10px}
+.ozetler div{font-size:13px;color:var(--soluk)}
+.ozetler b{display:block;font:800 28px/1.1 var(--baslik);color:var(--yazi);font-variant-numeric:tabular-nums}
 table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;font-variant-numeric:tabular-nums}
-th{font:600 12px var(--govde);color:var(--soluk);text-align:left;text-transform:uppercase;letter-spacing:.3px;padding:6px 8px;border-bottom:1px solid var(--cizgi)}
+th{font:600 12px var(--govde);color:var(--soluk);text-align:left;text-transform:uppercase;letter-spacing:.3px;padding:6px 8px;border-bottom:1px solid var(--cizgi);white-space:nowrap}
 td{padding:7px 8px;border-bottom:1px solid var(--izgara);white-space:nowrap}
 .tablo{overflow-x:auto}
 td.s,th.s{text-align:right}
-details summary{cursor:pointer;font:800 22px var(--baslik);text-transform:uppercase;letter-spacing:.3px;list-style:none}
-details summary::before{content:"▸ ";color:var(--soluk)}
-details[open] summary::before{content:"▾ "}
+details>summary{cursor:pointer;list-style:none}
+details>summary::-webkit-details-marker{display:none}
+details.kart>summary{font:800 22px var(--baslik);text-transform:uppercase;letter-spacing:.3px}
+details.ic{margin-top:14px}
+details.ic>summary{font:600 13px var(--govde);color:var(--soluk)}
+details>summary::before{content:"▸ ";color:var(--soluk)}
+details[open]>summary::before{content:"▾ "}
 .bos{color:var(--soluk);font-size:14px;padding:6px 0}
 .uyari{background:var(--kart);border:1px solid var(--cizgi);border-radius:16px;padding:18px;margin-top:22px;line-height:1.55}
 .uyari h2{font:800 22px var(--baslik);text-transform:uppercase;margin-bottom:6px}
 .uyari code{display:inline-block;background:var(--kart2);border:1px solid var(--cizgi);border-radius:8px;padding:6px 10px;font:600 14px ui-monospace,Consolas,monospace;margin:8px 8px 8px 0;word-break:break-all}
 .uyari p+p{margin-top:8px}
-.not{color:var(--sonuk);font-size:12px;margin-top:14px}
+.not{color:var(--sonuk);font-size:12px;margin-top:14px;line-height:1.5}
 .yukleniyor{opacity:.5;transition:opacity .2s}
 @media (max-width:760px){
   .kutucuklar{grid-template-columns:repeat(2,1fr)}
-  .iki{grid-template-columns:1fr}
+  .dortlu{grid-template-columns:1fr 1fr}
+  .ikili{grid-template-columns:1fr}
   .kutu .sayi{font-size:34px}
   td,th{padding:6px 5px}
 }
+@media (max-width:480px){ .dortlu{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
 <div class="sayfa">
   <header>
-    <div class="logo">Pota Altı <b>30-0</b><small>Sayaç · açılış ve "Sezonu oyna"</small></div>
+    <div class="logo">Pota Altı <b>30-0</b><small>Sayaç</small></div>
     <div class="kim" id="kim"></div>
   </header>
   <div id="icerik"></div>
@@ -97,13 +112,17 @@ details[open] summary::before{content:"▾ "}
   const $ = (id) => document.getElementById(id);
   const SURUM = "10.12.2";
   const ORNEK = /[?&]ornek/.test(location.search);
-  const MOD_AD = { serbest: "Tek başına", yz: "vs AI", iki: "2 kişi · tek cihaz", oda: "2 kişi · link" };
+  const RENK = { kisi: "#8f7ae8", acilis: "#2fa4ab", oyna: "#df7128" };
+  const MOD_AD = { serbest: "Tek başına", yz: "vs AI", iki: "2 kişi · tek cihaz", oda: "2 kişi · link", gunluk: "Günlük" };
   const TUR_AD = { sezon: "Sezon", lig: "Lig + play-off" };
   const LIG_AD = { bsl: "BSL", tbl: "TBL" };
+  const MAC = { bsl: 30, tbl: 32 };
+  const CIHAZ_AD = { tel_tarayici: "Telefon · tarayıcı", tel_uygulama: "Telefon · yüklü uygulama", pc_tarayici: "Bilgisayar · tarayıcı", pc_uygulama: "Bilgisayar · yüklü uygulama" };
   let veri = null, aralik = 30;
-  try { aralik = +localStorage.getItem("p300:sayacAralik") || 30; } catch (e) { /* yok */ }
+  try { aralik = +(localStorage.getItem("p300:sayacAralik") ?? 30); } catch (e) { /* yok */ }
 
   const bicim = (n) => Math.round(n).toLocaleString("tr-TR");
+  const ondalik = (n) => n.toLocaleString("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const yuzde = (a, b) => (b ? Math.round((a / b) * 100) + "%" : "–");
   const gunAnahtar = (d) => d.toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" });
   const gunEtiket = (k, uzun) => { const [y, a, g] = k.split("-").map(Number); const d = new Date(Date.UTC(y, a - 1, g, 12));
@@ -114,22 +133,41 @@ details[open] summary::before{content:"▾ "}
     cocuk.flat().forEach((c) => e.append(c && c.nodeType ? c : document.createTextNode(c == null ? "" : String(c))));
     return e;
   }
+  const ekle = (hedef, kaynak) => Object.entries(kaynak || {}).forEach(([k, v]) => { hedef[k] = (hedef[k] || 0) + v; });
 
-  // ---- günlük seri: aralıktaki her gün (veri yoksa 0), bugün dahil ----
+  // ---- aralıktaki günler (veri yoksa 0), bugün dahil ----
   function gunler() {
-    const g = (veri && veri.gun) || {};
-    const bugun = gunAnahtar(new Date());
+    const g = (veri && veri.gun) || {}, bugun = gunAnahtar(new Date());
     let bas;
     if (aralik) { const d = new Date(); d.setUTCDate(d.getUTCDate() - (aralik - 1)); bas = gunAnahtar(d); }
     else bas = Object.keys(g).sort()[0] || bugun;
-    const l = []; const d = new Date(bas + "T12:00:00Z");
+    const l = [], d = new Date(bas + "T12:00:00Z");
     for (let i = 0; i < 4000; i++) {
       const k = d.toISOString().slice(0, 10); if (k > bugun) break;
-      l.push({ k: k, acilis: (g[k] && g[k].acilis) || 0, oyna: (g[k] && g[k].oyna) || 0 });
+      const x = g[k] || {};
+      l.push({ k: k, kisi: x.tekil || 0, yeni: x.yeni || 0, acilis: x.acilis || 0, oyna: x.oyna || 0, otuz: x.otuz || 0, sampiyon: x.sampiyon || 0, ham: x });
       d.setUTCDate(d.getUTCDate() + 1);
     }
     return l;
   }
+  function topla(l) {
+    const t = { yeni: 0, acilis: 0, oyna: 0, otuz: 0, sampiyon: 0, k: {}, s: {}, c: {} };
+    l.forEach((x) => { ["yeni", "acilis", "oyna", "otuz", "sampiyon"].forEach((a) => { t[a] += x[a]; }); ekle(t.k, x.ham.k); ekle(t.s, x.ham.s); ekle(t.c, x.ham.c); });
+    return t;
+  }
+
+  // ---- ipucu ----
+  const ip = $("ipucu");
+  function ipucu(kap, xYerel, baslik, satirlar, olcekX) {
+    ip.textContent = "";
+    ip.append(el("div", { class: "t" }, baslik));
+    satirlar.forEach(([renk, deger, ad]) => ip.append(el("div", { class: "s" }, el("i", { style: "background:" + renk }), el("b", {}, deger), el("em", {}, ad))));
+    const r = kap.getBoundingClientRect(); ip.style.opacity = 1;
+    let px = r.left + window.scrollX + xYerel * olcekX + 14;
+    if (px + ip.offsetWidth > window.scrollX + document.documentElement.clientWidth - 8) px = r.left + window.scrollX + xYerel * olcekX - ip.offsetWidth - 14;
+    ip.style.left = px + "px"; ip.style.top = r.top + window.scrollY + 8 + "px";
+  }
+  const ipucuGizle = () => { ip.style.opacity = 0; };
 
   function ciz() {
     const ic = $("icerik"); ic.textContent = ""; ic.classList.remove("yukleniyor");
@@ -141,125 +179,173 @@ details[open] summary::before{content:"▾ "}
     });
     ic.append(sec);
 
-    const l = gunler();
-    const top = l.reduce((a, x) => ({ acilis: a.acilis + x.acilis, oyna: a.oyna + x.oyna }), { acilis: 0, oyna: 0 });
-    const bugun = l[l.length - 1] || { acilis: 0, oyna: 0 };
-    const hep = (veri && veri.toplam) || {};
+    const l = gunler(), t = topla(l), bugun = l[l.length - 1] || { kisi: 0, acilis: 0, oyna: 0 };
     const aralikAd = aralik ? "son " + aralik + " gün" : "tüm zamanlar";
+
+    // ---- kutucuklar ----
     const kutu = (ad, sayi, alt) => el("div", { class: "kutu" }, el("div", { class: "ad" }, ad), el("div", { class: "sayi" }, sayi), el("div", { class: "alt" }, alt));
     ic.append(el("div", { class: "kutucuklar" },
-      kutu("Açılış", bicim(top.acilis), aralikAd),
-      kutu("Sezonu oyna", bicim(top.oyna), aralikAd),
-      kutu("Açılış başına oyun", top.acilis ? (top.oyna / top.acilis).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "–", "oyna ÷ açılış"),
-      kutu("Bugün", bicim(bugun.acilis) + " · " + bicim(bugun.oyna), "açılış · oyna")));
+      kutu("Yeni kişi", bicim(t.yeni), "ilk kez açan · bugün " + bicim(bugun.kisi) + " kişi"),
+      kutu("Açılış", bicim(t.acilis), "bugün " + bicim(bugun.acilis)),
+      kutu("Oyun", bicim(t.oyna), (t.acilis ? "açılış başına " + ondalik(t.oyna / t.acilis) + " · " : "") + "bugün " + bicim(bugun.oyna)),
+      kutu("30-0", bicim(t.otuz), bicim(t.sampiyon) + " şampiyonluk")));
 
-    // ---- günlük çizgi grafik ----
+    // ---- gün gün ----
     const kart = el("div", { class: "kart" }, el("h2", {}, "Gün gün", el("small", {}, aralikAd + " · İstanbul saatiyle")));
-    kart.append(el("div", { class: "lejant" },
-      el("span", {}, el("i", { style: "background:var(--s-acilis)" }), "Açılış"),
-      el("span", {}, el("i", { style: "background:var(--s-oyna)" }), "Sezonu oyna")));
+    const seriler = [["kisi", RENK.kisi, "Kişi"], ["acilis", RENK.acilis, "Açılış"], ["oyna", RENK.oyna, "Oyun"]];
+    kart.append(el("div", { class: "lejant" }, seriler.map(([, r, ad]) => el("span", {}, el("i", { style: "background:" + r }), ad))));
     const kutuG = el("div", { class: "grafik" }); kart.append(kutuG); ic.append(kart);
-    cizgiGrafik(kutuG, l);
+    cizgiGrafik(kutuG, l, seriler);
 
-    // ---- kırılım (tüm zamanlar; yalnız "Sezonu oyna") ----
-    const kir = (veri && veri.kirilim) || {};
-    const grup = (f) => { const t = {}; Object.entries(kir).forEach(([k, v]) => { const p = k.split("_"); const a = f(p); t[a] = (t[a] || 0) + v; }); return t; };
-    const liste = (baslik, t, adlar) => {
-      const k = el("div", { class: "kart" }, el("h2", {}, baslik));
-      const toplam = Object.values(t).reduce((a, b) => a + b, 0);
-      const en = Math.max(1, ...Object.values(t));
+    // ---- ne oynanıyor + cihaz ----
+    const grup = (kay, f) => { const g = {}; Object.entries(kay).forEach(([k, v]) => { const a = f(k.split("_")); g[a] = (g[a] || 0) + v; }); return g; };
+    const liste = (baslik, alt, g, adlar, sinif) => {
+      const toplam = Object.values(g).reduce((a, b) => a + b, 0), en = Math.max(1, ...Object.values(g));
       const c = el("div", { class: "cubuklar" });
-      Object.keys(adlar).map((a) => [a, t[a] || 0]).sort((x, y) => y[1] - x[1]).forEach(([a, v]) => {
-        c.append(el("div", { class: "cubuk", title: adlar[a] + ": " + bicim(v) },
-          el("div", { class: "ust" }, el("span", {}, adlar[a]), el("b", {}, bicim(v) + "  ·  " + yuzde(v, toplam))),
-          el("div", { class: "yol" }, el("div", { class: "dolu", style: "width:" + (v / en) * 100 + "%" }))));
+      Object.keys(adlar).map((a) => [a, g[a] || 0]).filter(([a, v]) => v || a !== "gunluk").sort((x, y) => y[1] - x[1]).forEach(([a, v]) => {
+        c.append(el("div", { class: "cubuk" },
+          el("div", { class: "ust" }, el("span", {}, adlar[a]), el("b", {}, bicim(v) + " · " + yuzde(v, toplam))),
+          el("div", { class: "yol" }, el("div", { class: "dolu" + (sinif ? " " + sinif : ""), style: "width:" + (v / en) * 100 + "%" }))));
       });
-      k.append(c); return k;
+      return el("div", {}, el("h3", {}, baslik, alt ? el("small", {}, alt) : ""), c);
     };
-    const ust = el("div", { class: "kart" }, el("h2", {}, "Ne oynanıyor", el("small", {}, "“Sezonu oyna” basışları · tüm zamanlar")));
-    ic.append(ust);
-    if (!Object.keys(kir).length) ust.append(el("div", { class: "bos" }, "Henüz kayıt yok."));
+    const ne = el("div", { class: "kart" }, el("h2", {}, "Ne, nerede oynanıyor", el("small", {}, aralikAd)));
+    ic.append(ne);
+    if (!Object.keys(t.k).length && !Object.keys(t.c).length) ne.append(el("div", { class: "bos" }, "Bu aralıkta kayıt yok."));
     else {
-      ust.append(el("div", { class: "iki" },
-        liste("Lig", grup((p) => p[0]), LIG_AD),
-        liste("Mod", grup((p) => p[1]), MOD_AD),
-        liste("Tür", grup((p) => p[2]), TUR_AD)));
-      const tb = el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Lig"), el("th", {}, "Mod"), el("th", {}, "Tür"), el("th", { class: "s" }, "Oyun"), el("th", { class: "s" }, "Pay"))));
-      const gov = el("tbody");
-      const top2 = Object.values(kir).reduce((a, b) => a + b, 0);
-      Object.entries(kir).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => { const p = k.split("_");
-        gov.append(el("tr", {}, el("td", {}, LIG_AD[p[0]] || p[0]), el("td", {}, MOD_AD[p[1]] || p[1]), el("td", {}, TUR_AD[p[2]] || p[2]), el("td", { class: "s" }, bicim(v)), el("td", { class: "s" }, yuzde(v, top2)))); });
-      tb.append(gov); ust.append(el("div", { class: "tablo" }, tb));
+      ne.append(el("div", { class: "dortlu" },
+        liste("Lig", "oyun", grup(t.k, (p) => p[0]), LIG_AD),
+        liste("Mod", "oyun", grup(t.k, (p) => p[1]), MOD_AD),
+        liste("Tür", "oyun", grup(t.k, (p) => p[2]), TUR_AD),
+        liste("Cihaz", "açılış", t.c, CIHAZ_AD, "acilis")));
+      if (Object.keys(t.k).length) {
+        const tb = el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Lig"), el("th", {}, "Mod"), el("th", {}, "Tür"), el("th", { class: "s" }, "Oyun"), el("th", { class: "s" }, "Pay"))));
+        const gov = el("tbody"), top2 = Object.values(t.k).reduce((a, b) => a + b, 0);
+        Object.entries(t.k).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => { const p = k.split("_");
+          gov.append(el("tr", {}, el("td", {}, LIG_AD[p[0]] || p[0]), el("td", {}, MOD_AD[p[1]] || p[1]), el("td", {}, TUR_AD[p[2]] || p[2]), el("td", { class: "s" }, bicim(v)), el("td", { class: "s" }, yuzde(v, top2)))); });
+        tb.append(gov);
+        ne.append(el("details", { class: "ic" }, el("summary", {}, "Tüm birleşimler (lig · mod · tür)"), el("div", { class: "tablo" }, tb)));
+      }
     }
 
-    // ---- tablo görünümü ----
+    // ---- sonuçlar ----
+    const so = el("div", { class: "kart" }, el("h2", {}, "Sonuçlar", el("small", {}, aralikAd + " · oyuncu başına (2 kişide ikisi de)")));
+    ic.append(so);
+    const hist = { bsl: [], tbl: [] }, ligOyun = { n: 0 }, ort = {};
+    Object.keys(hist).forEach((lg) => { for (let i = 0; i <= MAC[lg]; i++) hist[lg].push(0); });
+    Object.entries(t.s).forEach(([k, v]) => { const [lg, tur, g] = k.split("_"); if (hist[lg] && +g <= MAC[lg]) hist[lg][+g] += v; if (tur === "lig") ligOyun.n += v; });
+    Object.keys(hist).forEach((lg) => { const n = hist[lg].reduce((a, b) => a + b, 0); ort[lg] = n ? hist[lg].reduce((a, b, i) => a + b * i, 0) / n : null; ort[lg + "n"] = n; });
+    if (!ort.bsln && !ort.tbln) so.append(el("div", { class: "bos" }, "Bu aralıkta sonuç kaydı yok."));
+    else {
+      so.append(el("div", { class: "ozetler" },
+        el("div", {}, el("b", {}, bicim(t.otuz)), "30-0 (TBL'de 32-0)"),
+        el("div", {}, el("b", {}, bicim(t.sampiyon) + (ligOyun.n ? " · " + yuzde(t.sampiyon, ligOyun.n) : "")), "şampiyonluk · " + bicim(ligOyun.n) + " lig + play-off oyunundan"),
+        el("div", {}, el("b", {}, ort.bsl == null ? "–" : ondalik(ort.bsl) + " / 30"), "BSL ortalama galibiyet"),
+        el("div", {}, el("b", {}, ort.tbl == null ? "–" : ondalik(ort.tbl) + " / 32"), "TBL ortalama galibiyet")));
+      const ikili = el("div", { class: "ikili" });
+      ["bsl", "tbl"].forEach((lg) => {
+        const k = el("div", { class: "grafik" });
+        ikili.append(el("div", {}, el("h3", {}, LIG_AD[lg] + " galibiyet dağılımı", el("small", {}, bicim(ort[lg + "n"]) + " sezon")), k));
+        setTimeout(() => sutunGrafik(k, hist[lg]), 0);
+      });
+      so.append(ikili);
+    }
+
+    // ---- günlük tablo ----
     const det = el("details", { class: "kart" }, el("summary", {}, "Günlük tablo"));
-    const t = el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, "Gün"), el("th", { class: "s" }, "Açılış"), el("th", { class: "s" }, "Sezonu oyna"), el("th", { class: "s" }, "Oyna ÷ açılış"))));
+    const tb = el("table", {}, el("thead", {}, el("tr", {}, ["Gün", "Kişi", "Yeni", "Açılış", "Oyun", "30-0"].map((x, i) => el("th", { class: i ? "s" : "" }, x)))));
     const g = el("tbody");
-    l.slice().reverse().forEach((x) => g.append(el("tr", {}, el("td", {}, gunEtiket(x.k, true)), el("td", { class: "s" }, bicim(x.acilis)), el("td", { class: "s" }, bicim(x.oyna)),
-      el("td", { class: "s" }, x.acilis ? (x.oyna / x.acilis).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) : "–"))));
-    t.append(g); det.append(el("div", { class: "tablo" }, t)); ic.append(det);
-    ic.append(el("div", { class: "not" }, "Tüm zamanlar: " + bicim(hep.acilis || 0) + " açılış · " + bicim(hep.oyna || 0) + " Sezonu oyna. " +
-      "Açılış her tarayıcı oturumunda bir kez sayılır; localhost sayılmaz." + (ORNEK ? " (Örnek veri.)" : "")));
+    l.slice().reverse().forEach((x) => g.append(el("tr", {}, el("td", {}, gunEtiket(x.k, true)),
+      [x.kisi, x.yeni, x.acilis, x.oyna, x.otuz].map((v) => el("td", { class: "s" }, bicim(v))))));
+    tb.append(g); det.append(el("div", { class: "tablo" }, tb)); ic.append(det);
+
+    const hep = (veri && veri.toplam) || {};
+    ic.append(el("div", { class: "not" },
+      "Tüm zamanlar: " + bicim(hep.yeni || 0) + " kişi · " + bicim(hep.acilis || 0) + " açılış · " + bicim(hep.oyna || 0) + " oyun · " + bicim(hep.otuz || 0) + " kez 30-0. " +
+      "Kişi: o gün oyunu açan farklı tarayıcı (kimlik tutulmaz; aynı kişinin telefonu ve bilgisayarı iki sayılır). Yeni kişi: ilk kez açan. " +
+      "Açılış her tarayıcı oturumunda bir kez sayılır; oyun her \"Sezonu oyna\"da bir. Kişi, cihaz, mod ve sonuçlar 20 Kasım 2026 akşamından beri tutuluyor." +
+      (ORNEK ? " (Örnek veri.)" : "")));
   }
 
-  // ---- SVG çizgi grafik: 2 seri, tek eksen, çarpı çizgisi + ipucu ----
-  function cizgiGrafik(kap, l) {
-    const NS = "http://www.w3.org/2000/svg";
-    const s = (ad, oz) => { const e = document.createElementNS(NS, ad); Object.entries(oz || {}).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
-    const W = Math.max(300, kap.clientWidth || 600), H = W < 500 ? 220 : 280, sol = 40, sag = 64, ust = 12, alt = 28;
+  // ---- SVG çizgi grafik: tek eksen, çarpı çizgisi + ipucu ----
+  const NS = "http://www.w3.org/2000/svg";
+  const s = (ad, oz) => { const e = document.createElementNS(NS, ad); Object.entries(oz || {}).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
+  function eksen(en) { // 4 civarı düzgün çentik
+    const ham = Math.max(4, en) / 4, adim = Math.pow(10, Math.floor(Math.log10(ham))), k = [1, 2, 2.5, 5, 10].find((x) => adim * x >= ham) || 10, a = Math.max(1, adim * k);
+    return { a: a, ust: Math.ceil(Math.max(4, en) / a) * a };
+  }
+  function cizgiGrafik(kap, l, seriler) {
+    const W = Math.max(300, kap.clientWidth || 600), H = W < 500 ? 220 : 280, sol = 40, sag = 56, ust = 12, alt = 28;
     const gw = W - sol - sag, gh = H - ust - alt;
-    const en = Math.max(4, ...l.map((x) => Math.max(x.acilis, x.oyna)));
-    const adim = Math.pow(10, Math.floor(Math.log10(en / 4))), kat = [1, 2, 2.5, 5, 10].find((k) => (en / (adim * k)) <= 4) || 10, aralikY = adim * kat;
-    const ymax = Math.ceil(en / aralikY) * aralikY;
-    const X = (i) => sol + (l.length > 1 ? (i / (l.length - 1)) * gw : gw / 2), Y = (v) => ust + gh - (v / ymax) * gh;
-    const svg = s("svg", { viewBox: "0 0 " + W + " " + H, height: H, role: "img", "aria-label": "Günlük açılış ve Sezonu oyna sayıları" });
-    for (let v = 0; v <= ymax + 1e-9; v += aralikY) {
+    const e = eksen(Math.max(0, ...l.flatMap((x) => seriler.map(([k]) => x[k]))));
+    const X = (i) => sol + (l.length > 1 ? (i / (l.length - 1)) * gw : gw / 2), Y = (v) => ust + gh - (v / e.ust) * gh;
+    const svg = s("svg", { viewBox: "0 0 " + W + " " + H, height: H, role: "img", "aria-label": "Günlük kişi, açılış ve oyun sayıları" });
+    for (let v = 0; v <= e.ust + 1e-9; v += e.a) {
       svg.append(s("line", { x1: sol, x2: sol + gw, y1: Y(v), y2: Y(v), stroke: v === 0 ? "#2b4045" : "#16252a", "stroke-width": 1 }));
-      const t = s("text", { x: sol - 8, y: Y(v) + 4, "text-anchor": "end", fill: "#5f7478", "font-size": 11, "font-family": "Barlow" }); t.textContent = bicim(v); svg.append(t);
+      const tx = s("text", { x: sol - 8, y: Y(v) + 4, "text-anchor": "end", fill: "#5f7478", "font-size": 11, "font-family": "Barlow" }); tx.textContent = bicim(v); svg.append(tx);
     }
-    const etiketSay = W < 500 ? 4 : 6, adimX = Math.max(1, Math.ceil(l.length / etiketSay));
+    const adimX = Math.max(1, Math.ceil(l.length / (W < 500 ? 4 : 6)));
     l.forEach((x, i) => { if (i % adimX && i !== l.length - 1) return; if (i !== l.length - 1 && X(l.length - 1) - X(i) < 70) return;
-      const t = s("text", { x: X(i), y: H - 8, "text-anchor": i === l.length - 1 ? "end" : i === 0 ? "start" : "middle", fill: "#5f7478", "font-size": 11, "font-family": "Barlow" });
-      t.textContent = gunEtiket(x.k); svg.append(t); });
-    const seriler = [["acilis", "#2fa4ab", "Açılış"], ["oyna", "#df7128", "Sezonu oyna"]];
+      const tx = s("text", { x: X(i), y: H - 8, "text-anchor": i === l.length - 1 ? "end" : i === 0 ? "start" : "middle", fill: "#5f7478", "font-size": 11, "font-family": "Barlow" });
+      tx.textContent = gunEtiket(x.k); svg.append(tx); });
     seriler.forEach(([k, renk]) => {
       const d = l.map((x, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(x[k]).toFixed(1)).join(" ");
       svg.append(s("path", { d: d, fill: "none", stroke: renk, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
     });
-    // son değer etiketleri (çizgi sonunda), çakışırsa ayrık
-    const son = l[l.length - 1] || { acilis: 0, oyna: 0 };
-    let ya = Y(son.acilis), yo = Y(son.oyna); if (Math.abs(ya - yo) < 14) { if (ya <= yo) { ya -= 7; yo += 7; } else { ya += 7; yo -= 7; } }
-    [[son.acilis, ya], [son.oyna, yo]].forEach(([v, y]) => { const t = s("text", { x: sol + gw + 8, y: y + 4, fill: "#eef6f7", "font-size": 12, "font-weight": 600, "font-family": "Barlow" }); t.textContent = bicim(v); svg.append(t); });
+    // son değerler çizgi sonunda; birbirine 13 pikselden yakınsa aralanır
+    const son = l[l.length - 1] || {}, et = seriler.map(([k]) => ({ v: son[k] || 0, y: Y(son[k] || 0) })).sort((a, b) => a.y - b.y);
+    for (let i = 1; i < et.length; i++) if (et[i].y - et[i - 1].y < 13) et[i].y = et[i - 1].y + 13;
+    et.forEach((x) => { const tx = s("text", { x: sol + gw + 8, y: x.y + 4, fill: "#eef6f7", "font-size": 12, "font-weight": 600, "font-family": "Barlow" }); tx.textContent = bicim(x.v); svg.append(tx); });
     const capraz = s("line", { y1: ust, y2: ust + gh, stroke: "#91a8ac", "stroke-width": 1, opacity: 0 });
     const noktalar = seriler.map(([, renk]) => s("circle", { r: 4.5, fill: renk, stroke: "#111d20", "stroke-width": 2, opacity: 0 }));
     svg.append(capraz, ...noktalar);
     const alan = s("rect", { x: sol - 6, y: 0, width: gw + 12, height: H, fill: "transparent", tabindex: 0 });
     svg.append(alan);
-    const ip = $("ipucu");
     const goster = (i) => {
       i = Math.max(0, Math.min(l.length - 1, i)); const x = l[i];
       capraz.setAttribute("x1", X(i)); capraz.setAttribute("x2", X(i)); capraz.setAttribute("opacity", 0.5);
       noktalar.forEach((n, j) => { n.setAttribute("cx", X(i)); n.setAttribute("cy", Y(x[seriler[j][0]])); n.setAttribute("opacity", 1); });
-      ip.textContent = "";
-      ip.append(el("div", { class: "t" }, gunEtiket(x.k, true)));
-      seriler.forEach(([k, renk, ad]) => ip.append(el("div", { class: "s" }, el("i", { style: "background:" + renk }), el("b", {}, bicim(x[k])), el("em", {}, ad))));
-      const r = kap.getBoundingClientRect(), olcek = r.width / W;
-      let px = r.left + window.scrollX + X(i) * olcek + 14; const py = r.top + window.scrollY + 10;
-      ip.style.opacity = 1;
-      if (px + ip.offsetWidth > window.scrollX + document.documentElement.clientWidth - 8) px = r.left + window.scrollX + X(i) * olcek - ip.offsetWidth - 14;
-      ip.style.left = px + "px"; ip.style.top = py + "px";
+      ipucu(kap, X(i), gunEtiket(x.k, true), seriler.map(([k, renk, ad]) => [renk, bicim(x[k]), ad]), kap.getBoundingClientRect().width / W);
       alan.dataset.i = i;
     };
-    const gizle = () => { ip.style.opacity = 0; capraz.setAttribute("opacity", 0); noktalar.forEach((n) => n.setAttribute("opacity", 0)); };
-    const enYakin = (e) => { const r = svg.getBoundingClientRect(); const x = (e.clientX - r.left) * (W / r.width); return Math.round(((x - sol) / gw) * (l.length - 1)); };
-    alan.addEventListener("pointermove", (e) => goster(enYakin(e)));
-    alan.addEventListener("pointerdown", (e) => goster(enYakin(e)));
+    const gizle = () => { ipucuGizle(); capraz.setAttribute("opacity", 0); noktalar.forEach((n) => n.setAttribute("opacity", 0)); };
+    const enYakin = (ev) => { const r = svg.getBoundingClientRect(); return Math.round(((((ev.clientX - r.left) * W) / r.width - sol) / gw) * (l.length - 1)); };
+    alan.addEventListener("pointermove", (ev) => goster(enYakin(ev)));
+    alan.addEventListener("pointerdown", (ev) => goster(enYakin(ev)));
     alan.addEventListener("pointerleave", gizle);
     alan.addEventListener("blur", gizle);
     alan.addEventListener("focus", () => goster(l.length - 1));
-    alan.addEventListener("keydown", (e) => { const i = +(alan.dataset.i || l.length - 1);
-      if (e.key === "ArrowLeft") { goster(i - 1); e.preventDefault(); } if (e.key === "ArrowRight") { goster(i + 1); e.preventDefault(); } });
+    alan.addEventListener("keydown", (ev) => { const i = +(alan.dataset.i || l.length - 1);
+      if (ev.key === "ArrowLeft") { goster(i - 1); ev.preventDefault(); } if (ev.key === "ArrowRight") { goster(i + 1); ev.preventDefault(); } });
+    kap.append(svg);
+  }
+
+  // ---- galibiyet dağılımı: sütun başına sezon sayısı ----
+  function sutunGrafik(kap, h) {
+    const W = Math.max(260, kap.clientWidth || 400), H = 170, sol = 30, sag = 6, ust = 10, alt = 24;
+    const gw = W - sol - sag, gh = H - ust - alt, n = h.length, bant = gw / n, gen = Math.min(24, Math.max(3, bant - 2));
+    const e = eksen(Math.max(0, ...h));
+    const X = (i) => sol + i * bant + (bant - gen) / 2, Y = (v) => ust + gh - (v / e.ust) * gh;
+    const svg = s("svg", { viewBox: "0 0 " + W + " " + H, height: H, role: "img", "aria-label": "Galibiyet sayısına göre sezon dağılımı" });
+    for (let v = 0; v <= e.ust + 1e-9; v += e.a) {
+      svg.append(s("line", { x1: sol, x2: sol + gw, y1: Y(v), y2: Y(v), stroke: v === 0 ? "#2b4045" : "#16252a", "stroke-width": 1 }));
+      const tx = s("text", { x: sol - 6, y: Y(v) + 4, "text-anchor": "end", fill: "#5f7478", "font-size": 10, "font-family": "Barlow" }); tx.textContent = bicim(v); svg.append(tx);
+    }
+    [0, 10, 20, n - 1].forEach((i) => { const tx = s("text", { x: X(i) + gen / 2, y: H - 6, "text-anchor": "middle", fill: "#5f7478", "font-size": 10, "font-family": "Barlow" }); tx.textContent = i; svg.append(tx); });
+    const sutunlar = h.map((v, i) => {
+      if (!v) return null;
+      const y = Y(v), yuk = Math.max(1, ust + gh - y), r = Math.min(4, gen / 2, yuk);
+      const d = "M" + X(i) + " " + (ust + gh) + "V" + (y + r) + "Q" + X(i) + " " + y + " " + (X(i) + r) + " " + y + "H" + (X(i) + gen - r) + "Q" + (X(i) + gen) + " " + y + " " + (X(i) + gen) + " " + (y + r) + "V" + (ust + gh) + "Z";
+      const p = s("path", { d: d, fill: RENK.oyna }); svg.append(p); return p;
+    });
+    const alan = s("rect", { x: sol, y: 0, width: gw, height: H, fill: "transparent" }); svg.append(alan);
+    const goster = (ev) => {
+      const r = svg.getBoundingClientRect(), i = Math.max(0, Math.min(n - 1, Math.floor((((ev.clientX - r.left) * W) / r.width - sol) / bant)));
+      sutunlar.forEach((p, j) => { if (p) p.setAttribute("fill-opacity", j === i ? 1 : 0.55); });
+      ipucu(kap, X(i) + gen / 2, i + "-" + (n - 1 - i) + " biten sezon", [[RENK.oyna, bicim(h[i]), "sezon"]], r.width / W);
+    };
+    alan.addEventListener("pointermove", goster); alan.addEventListener("pointerdown", goster);
+    alan.addEventListener("pointerleave", () => { ipucuGizle(); sutunlar.forEach((p) => p && p.setAttribute("fill-opacity", 1)); });
     kap.append(svg);
   }
   let boyutZaman = 0;
@@ -268,15 +354,13 @@ details[open] summary::before{content:"▾ "}
   // ---- izin yok: kimliği göster ----
   function izinYok(kullanici) {
     const ic = $("icerik"); ic.textContent = "";
-    const kod = el("code", {}, kullanici.uid);
     const kopya = el("button", { class: "dugme ikincil" }, "Kopyala");
     kopya.onclick = () => { navigator.clipboard && navigator.clipboard.writeText(kullanici.uid).then(() => { kopya.textContent = "Kopyalandı"; }); };
     ic.append(el("div", { class: "uyari" }, el("h2", {}, "Bu hesabın okuma izni yok"),
       el("p", {}, "Sayaçları yalnız veritabanı kuralında kimliği yazılı hesap okuyabilir. Bu hesabın kimliği:"),
-      el("div", {}, kod, kopya),
+      el("div", {}, el("code", {}, kullanici.uid), kopya),
       el("p", {}, "Bu kimlik firebase-kurallar.json'da sayac → .read satırına yazılıp kurallar Firebase konsoluna yapıştırılınca sayılar burada görünür.")));
   }
-
   function girisEkrani() {
     $("kim").textContent = "";
     const ic = $("icerik"); ic.textContent = "";
@@ -289,17 +373,24 @@ details[open] summary::before{content:"▾ "}
     ic.append(el("div", { class: "uyari" }, el("h2", {}, "Giriş"), el("p", {}, "Sayaçlar yalnız yetkili hesaba açık."), el("p", {}, b)));
   }
   function hata(e) { $("icerik").append(el("div", { class: "uyari" }, el("h2", {}, "Hata"), el("p", {}, (e && (e.code || e.message)) || String(e)))); }
-
-  function yukle(src) { return new Promise((ok, h) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = () => h(new Error("Yüklenemedi: " + src)); document.head.append(s); }); }
+  function yukle(src) { return new Promise((ok, h) => { const sc = document.createElement("script"); sc.src = src; sc.onload = ok; sc.onerror = () => h(new Error("Yüklenemedi: " + src)); document.head.append(sc); }); }
 
   function ornekVeri() {
     const gun = {}, d = new Date(); let a = 40;
-    for (let i = 120; i >= 0; i--) { const x = new Date(d); x.setUTCDate(x.getUTCDate() - i); a = Math.max(5, a + (Math.random() - 0.45) * 12);
-      const ac = Math.round(a * (x.getUTCDay() % 6 === 0 ? 1.4 : 1)); gun[gunAnahtar(x)] = { acilis: ac, oyna: Math.round(ac * (1.2 + Math.random())) }; }
-    const toplam = Object.values(gun).reduce((t, x) => ({ acilis: t.acilis + x.acilis, oyna: t.oyna + x.oyna }), { acilis: 0, oyna: 0 });
-    const kirilim = {}; const ag = { bsl: 0.7, tbl: 0.3 }, am = { serbest: 0.55, yz: 0.25, iki: 0.08, oda: 0.12 }, at = { sezon: 0.6, lig: 0.4 };
-    Object.keys(ag).forEach((l) => Object.keys(am).forEach((m) => Object.keys(at).forEach((t) => { kirilim[l + "_" + m + "_" + t] = Math.round(toplam.oyna * ag[l] * am[m] * at[t]); })));
-    return { toplam: toplam, gun: gun, kirilim: kirilim };
+    const ag = { bsl: 0.7, tbl: 0.3 }, am = { serbest: 0.55, yz: 0.25, iki: 0.08, oda: 0.12 }, at = { sezon: 0.6, lig: 0.4 };
+    for (let i = 120; i >= 0; i--) {
+      const x = new Date(d); x.setUTCDate(x.getUTCDate() - i); a = Math.max(5, a + (Math.random() - 0.45) * 12);
+      const ac = Math.round(a * (x.getUTCDay() % 6 === 0 ? 1.4 : 1)), oy = Math.round(ac * (1.2 + Math.random())), kisi = Math.round(ac * 0.8);
+      const k = {}, sn = {}; let otuz = 0, samp = 0;
+      Object.keys(ag).forEach((l) => Object.keys(am).forEach((m) => Object.keys(at).forEach((t) => { const v = Math.round(oy * ag[l] * am[m] * at[t]); if (v) k[l + "_" + m + "_" + t] = v; })));
+      for (let j = 0; j < oy; j++) { const l = Math.random() < 0.7 ? "bsl" : "tbl", t = Math.random() < 0.6 ? "sezon" : "lig", n = MAC[l];
+        const g = Math.max(0, Math.min(n, Math.round(n * (0.62 + (Math.random() + Math.random() + Math.random() - 1.5) * 0.25))));
+        sn[l + "_" + t + "_" + g] = (sn[l + "_" + t + "_" + g] || 0) + 1; if (g === n) otuz++; if (t === "lig" && g >= n * 0.75 && Math.random() < 0.5) samp++; }
+      gun[gunAnahtar(x)] = { acilis: ac, oyna: oy, tekil: kisi, yeni: Math.round(kisi * 0.35), otuz: otuz, sampiyon: samp, k: k, s: sn,
+        c: { tel_tarayici: Math.round(ac * 0.55), tel_uygulama: Math.round(ac * 0.2), pc_tarayici: Math.round(ac * 0.22), pc_uygulama: Math.round(ac * 0.03) } };
+    }
+    const toplam = {}; Object.values(gun).forEach((x) => ["acilis", "oyna", "yeni", "otuz", "sampiyon"].forEach((a2) => { toplam[a2] = (toplam[a2] || 0) + x[a2]; }));
+    return { toplam: toplam, gun: gun };
   }
 
   async function basla() {
@@ -319,7 +410,7 @@ details[open] summary::before{content:"▾ "}
       $("kim").textContent = ""; $("kim").append(el("span", {}, k.displayName || "Giriş yapıldı"), cik);
       $("icerik").classList.add("yukleniyor");
       ref = firebase.database().ref("sayac");
-      ref.on("value", (s) => { veri = s.val() || {}; ciz(); }, (e) => { if (e && /permission/i.test(e.code || e.message || "")) izinYok(k); else hata(e); });
+      ref.on("value", (sn) => { veri = sn.val() || {}; ciz(); }, (e) => { if (e && /permission/i.test(e.code || e.message || "")) izinYok(k); else hata(e); });
     });
   }
   basla().catch(hata);
