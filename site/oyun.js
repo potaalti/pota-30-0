@@ -1491,6 +1491,7 @@
   //   tekil kişi kimliksiz: bu tarayıcı ilk kez açtıysa yeni (toplam + gün), bugün ilk kez açtıysa gun/<gün>/tekil
   //  oyun (sezonuOyna, yeniden çizimler hariç): toplam/oyna, gun/<gün>/oyna, kirilim/<lig_mod_tür>, gun/<gün>/k/<lig_mod_tür>
   //   sonuç (insan tarafı başına): gun/<gün>/s/<lig_tür_galibiyet>, 30-0 ise otuz, play-off'u kazandıysa sampiyon (toplam + gün)
+  //   ve gun/<gün>/sp/<lig>
   function sayacYaz(yollar) {
     try {
       const a = window.FIREBASE_AYAR, h = location.hostname;
@@ -1522,7 +1523,7 @@
         const r = sonuclar[j]; if (!r) return;
         const y = [g + "s/" + ayar.lig + "_" + tur + "_" + r.g];
         if (r.g === S.veri.mac) y.push("toplam/otuz", g + "otuz");
-        if (r.lig && r.lig.deger === 100) y.push("toplam/sampiyon", g + "sampiyon");
+        if (r.lig && r.lig.deger === 100) y.push("toplam/sampiyon", g + "sampiyon", g + "sp/" + ayar.lig); // sp: şampiyonluk lig lig (2026-11-20)
         sayacYaz(y);
       });
     } catch (e) { /* yok */ }

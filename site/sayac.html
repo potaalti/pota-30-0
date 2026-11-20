@@ -153,8 +153,8 @@ details[open]>summary::before{content:"▾ "}
     return l;
   }
   function topla(l) {
-    const t = { yeni: 0, acilis: 0, oyna: 0, otuz: 0, sampiyon: 0, k: {}, s: {}, c: {} };
-    l.forEach((x) => { ["yeni", "acilis", "oyna", "otuz", "sampiyon"].forEach((a) => { t[a] += x[a]; }); ekle(t.k, x.ham.k); ekle(t.s, x.ham.s); ekle(t.c, x.ham.c); });
+    const t = { yeni: 0, acilis: 0, oyna: 0, otuz: 0, sampiyon: 0, k: {}, s: {}, c: {}, sp: {} };
+    l.forEach((x) => { ["yeni", "acilis", "oyna", "otuz", "sampiyon"].forEach((a) => { t[a] += x[a]; }); ekle(t.k, x.ham.k); ekle(t.s, x.ham.s); ekle(t.c, x.ham.c); ekle(t.sp, x.ham.sp); });
     return t;
   }
 
@@ -233,17 +233,22 @@ details[open]>summary::before{content:"▾ "}
     // ---- sonuçlar ----
     const so = el("div", { class: "kart" }, el("h2", {}, "Sonuçlar", el("small", {}, aralikAd + " · oyuncu başına (2 kişide ikisi de)")));
     ic.append(so);
-    const hist = { bsl: [], tbl: [] }, ligOyun = { n: 0 }, ort = {};
+    const hist = { bsl: [], tbl: [] }, ligOyun = { bsl: 0, tbl: 0 }, ort = {};
     Object.keys(hist).forEach((lg) => { for (let i = 0; i <= MAC[lg]; i++) hist[lg].push(0); });
-    Object.entries(t.s).forEach(([k, v]) => { const [lg, tur, g] = k.split("_"); if (hist[lg] && +g <= MAC[lg]) hist[lg][+g] += v; if (tur === "lig") ligOyun.n += v; });
+    Object.entries(t.s).forEach(([k, v]) => { const [lg, tur, g] = k.split("_"); if (hist[lg] && +g <= MAC[lg]) hist[lg][+g] += v; if (tur === "lig" && lg in ligOyun) ligOyun[lg] += v; });
     Object.keys(hist).forEach((lg) => { const n = hist[lg].reduce((a, b) => a + b, 0); ort[lg] = n ? hist[lg].reduce((a, b, i) => a + b * i, 0) / n : null; ort[lg + "n"] = n; });
     if (!ort.bsln && !ort.tbln) so.append(el("div", { class: "bos" }, "Bu aralıkta sonuç kaydı yok."));
     else {
+      const sampiyon = (lg) => { const n = t.sp[lg] || 0;
+        return el("div", {}, el("b", {}, bicim(n) + (ligOyun[lg] ? " · " + yuzde(n, ligOyun[lg]) : "")), LIG_AD[lg] + " şampiyonluk · " + bicim(ligOyun[lg]) + " lig + play-off oyunundan"); };
       so.append(el("div", { class: "ozetler" },
         el("div", {}, el("b", {}, bicim(t.otuz)), "30-0 (TBL'de 32-0)"),
-        el("div", {}, el("b", {}, bicim(t.sampiyon) + (ligOyun.n ? " · " + yuzde(t.sampiyon, ligOyun.n) : "")), "şampiyonluk · " + bicim(ligOyun.n) + " lig + play-off oyunundan"),
+        sampiyon("bsl"), sampiyon("tbl"),
         el("div", {}, el("b", {}, ort.bsl == null ? "–" : ondalik(ort.bsl) + " / 30"), "BSL ortalama galibiyet"),
         el("div", {}, el("b", {}, ort.tbl == null ? "–" : ondalik(ort.tbl) + " / 32"), "TBL ortalama galibiyet")));
+      // lig ayrımı eklenmeden önceki şampiyonluklar (yalnız toplamda var)
+      const ligsiz = t.sampiyon - (t.sp.bsl || 0) - (t.sp.tbl || 0);
+      if (ligsiz > 0) so.append(el("div", { class: "not", style: "margin-top:6px" }, "+" + bicim(ligsiz) + " şampiyonluk lig bilgisi olmadan (lig ayrımı 20 Kasım akşamı eklendi; oranlar o güne kadar biraz düşük görünür)."));
       const ikili = el("div", { class: "ikili" });
       ["bsl", "tbl"].forEach((lg) => {
         const k = el("div", { class: "grafik" });
@@ -384,12 +389,12 @@ details[open]>summary::before{content:"▾ "}
     for (let i = 120; i >= 0; i--) {
       const x = new Date(d); x.setUTCDate(x.getUTCDate() - i); a = Math.max(5, a + (Math.random() - 0.45) * 12);
       const ac = Math.round(a * (x.getUTCDay() % 6 === 0 ? 1.4 : 1)), oy = Math.round(ac * (1.2 + Math.random())), kisi = Math.round(ac * 0.8);
-      const k = {}, sn = {}; let otuz = 0, samp = 0;
+      const k = {}, sn = {}, sp = {}; let otuz = 0, samp = 0;
       Object.keys(ag).forEach((l) => Object.keys(am).forEach((m) => Object.keys(at).forEach((t) => { const v = Math.round(oy * ag[l] * am[m] * at[t]); if (v) k[l + "_" + m + "_" + t] = v; })));
       for (let j = 0; j < oy; j++) { const l = Math.random() < 0.7 ? "bsl" : "tbl", t = Math.random() < 0.6 ? "sezon" : "lig", n = MAC[l];
         const g = Math.max(0, Math.min(n, Math.round(n * (0.62 + (Math.random() + Math.random() + Math.random() - 1.5) * 0.25))));
-        sn[l + "_" + t + "_" + g] = (sn[l + "_" + t + "_" + g] || 0) + 1; if (g === n) otuz++; if (t === "lig" && g >= n * 0.75 && Math.random() < 0.5) samp++; }
-      gun[gunAnahtar(x)] = { acilis: ac, oyna: oy, tekil: kisi, yeni: Math.round(kisi * 0.35), otuz: otuz, sampiyon: samp, k: k, s: sn,
+        sn[l + "_" + t + "_" + g] = (sn[l + "_" + t + "_" + g] || 0) + 1; if (g === n) otuz++; if (t === "lig" && g >= n * 0.75 && Math.random() < 0.5) { samp++; sp[l] = (sp[l] || 0) + 1; } }
+      gun[gunAnahtar(x)] = { acilis: ac, oyna: oy, tekil: kisi, yeni: Math.round(kisi * 0.35), otuz: otuz, sampiyon: samp, k: k, s: sn, sp: sp,
         c: { tel_tarayici: Math.round(ac * 0.55), tel_uygulama: Math.round(ac * 0.2), pc_tarayici: Math.round(ac * 0.22), pc_uygulama: Math.round(ac * 0.03) } };
     }
     const toplam = {}; Object.values(gun).forEach((x) => ["acilis", "oyna", "yeni", "otuz", "sampiyon"].forEach((a2) => { toplam[a2] = (toplam[a2] || 0) + x[a2]; }));

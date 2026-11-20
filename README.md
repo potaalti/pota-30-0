@@ -325,6 +325,7 @@ elle yapıştırılır (önce kurallar, sonra kod: yeni yollar eski kurala takı
   odayı kuran telefondan): `toplam/oyna`, `gun/<gün>/oyna`, `kirilim/<lig_mod_tür>`, `gun/<gün>/k/<lig_mod_tür>`.
 - **Sonuç** (insan tarafı başına; 2 kişide ikisi, odada her telefon kendi tarafı): `gun/<gün>/s/<lig_tür_galibiyet>`;
   30-0 (TBL 32-0) ise `toplam/otuz` + `gun/<gün>/otuz`, play-off'u kazandıysa `toplam/sampiyon` + `gun/<gün>/sampiyon`.
+  Şampiyonluk lig lig `gun/<gün>/sp/<bsl|tbl>` (20 Kasım akşamından beri; sayfada BSL ve TBL oranları ayrı).
 
 **Sayaç sayfası** (`site/sayac.html`, oyundan bağlantı yok, arama motorlarına kapalı): Google ile giriş; tarih aralığı
 (7 / 30 / 90 gün / hepsi) bütün sayfayı süzer. Kutucuklar (yeni kişi, açılış, oyun, 30-0), gün gün çizgi grafik (kişi, açılış,
