@@ -311,7 +311,7 @@ def denge(oyuncular, esik):
     d -= sum(max(0.0, esik["rol"][k] - toplam(oyuncular, k)) * c for k, c in DENGE.items())
     kul = toplam(oyuncular, "kul")
     d -= min(KULLANIM_SINIR, max(0.0, kul - esik["kullanim"] * KULLANIM_UST_ORAN) * KULLANIM_UST_KATSAYI)
-    d -= min(KULLANIM_SINIR, max(0.0, esik["kullanim"] * KULLANIM_ALT_ORAN - kul) * KULLANIM_KATSAYI)
+    # alt bant ("Şut yaratan yok") 2026-11-20'de kaldırıldı (kullanıcı)
     return d + uyum_kurallari(oyuncular)[1]
 
 

@@ -298,3 +298,5 @@ Top paylaşımı zayıf eksik her asist −1 → −1,5; Top yetmiyor her birim 
 efektif şut en çok ±2 → ±1,5; Pota koruyucu var ≥1,3 blok; Dış şut bol 3 kişi ≥1,35 üçlük; Yerli omurga +2; Pota boş ≥0,5 blok.
 Asist baremi +1'den başlar, fazla her asist +0,5, en çok +2,5 (önce +3). Ribaund alan yok eşiği sabit 23 ribaund (önce gerçek ilk
 beşlerin alt %10'u: BSL 17,1 / TBL 18,4; oyunda kurulan beşlerde hiç tutmuyordu).
+"Şut yaratan yok" (top kullanımı alt sınırı) kaldırıldı (2026-11-20, kullanıcı): oyunda neredeyse hiç tutmuyordu, gerçek takımların
+yarısını cezalandırıp ters çalışıyordu. Kaldırınca ilk beş gücü ~ galibiyet korelasyonu BSL 0,77 → 0,84, TBL 0,72 → 0,77.

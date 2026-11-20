@@ -569,11 +569,10 @@
     const asT = top("as"), asB = calmaBaremi().as;
     if (asT >= asB) etkiler.push({ ad: "Asist baremi", aciklama: "beşin asisti " + asT.toFixed(1) + " ≥ " + asB.toFixed(1) + " (gerçek ilk beşlerin en iyi %15'i)", d: asistArtisi(asT, asB).guc });
     const kul = top("kul");
-    const ust = V.kullanimUst || V.esik.kullanim, alt = V.kullanimAlt || 0;
+    // "Şut yaratan yok" (alt bant) 2026-11-20'de kaldırıldı (kullanıcı): oyunda neredeyse hiç tutmuyor, gerçek takımlarda ters çalışıyordu
+    const ust = V.kullanimUst || V.esik.kullanim;
     if (V.esik.kullanim && kul > ust) {
-      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + ust.toFixed(1) + " (cezasız aralık " + alt.toFixed(1) + "–" + ust.toFixed(1) + ")", d: -(kul - ust) * (V.kullanimUstKatsayi || V.kullanimKatsayi) });
-    } else if (alt && kul < alt) {
-      etkiler.push({ ad: "Şut yaratan yok", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " < " + alt.toFixed(1) + " (cezasız aralık " + alt.toFixed(1) + "–" + ust.toFixed(1) + ")", d: -(alt - kul) * V.kullanimKatsayi });
+      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + ust.toFixed(1), d: -(kul - ust) * (V.kullanimUstKatsayi || V.kullanimKatsayi) });
     }
     const R = os.reduce((a, o, i) => a + o.g * uyumlar[i], 0) + etkiler.reduce((a, e) => a + e.d, 0) + gizli;
     return { etkiler: etkiler, R: R };
@@ -876,7 +875,7 @@
         : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimAlt + "–" + S.veri.kullanimUst + " dışında kalan her birim −" + (S.veri.kullanimUstKatsayi || S.veri.kullanimKatsayi) + " (üstte) / −" + S.veri.kullanimKatsayi + " (altta)" +
+      ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimUst + "'ün üstündeki her birim −" + (S.veri.kullanimUstKatsayi || S.veri.kullanimKatsayi) +
       "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için biraz kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
