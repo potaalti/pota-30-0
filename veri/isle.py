@@ -40,7 +40,7 @@ def averaj_sayilan(lig, net):
 # (2026-11-18: üst çeyrekten yükseltildi). Ceza en çok KULLANIM_SINIR: veride ~79'un üstünde neredeyse takım yok
 # (eşik + ~11 birim ≈ −5,5), ötesi kanıtsız; beş skorer yan yana tek başına takımı çökertmesin.
 KULLANIM_KATSAYI = 0.5   # alt taraf ("Şut yaratan yok") birim başına
-KULLANIM_UST_KATSAYI = 0.75  # "Top yetmiyor": basamak başına ceza
+KULLANIM_UST_KATSAYI = 1.0  # "Top yetmiyor": basamak başına ceza (2026-11-20 kullanıcı: 0,75 → 1)
 # 2026-11-20 kullanıcı: "Top yetmiyor" iki lig için aynı 67,5'ten başlar, basamaklı: her 1,5 birimlik basamak −0,75
 # (67,5–69 −0,75, 69–70,5 −1,5, 70,5–72 −2,25 …). Önce lige göre (BSL 67,5 / TBL 67,8) birim başına −0,5, sonra −0,75.
 KULLANIM_UST_SABIT = 70.0  # 2026-11-20 kullanıcı: 67,5 → 70 (basamaklar 70–71,5 −0,75, 71,5–73 −1,5 …)
