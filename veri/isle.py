@@ -51,7 +51,7 @@ def kullanim_cezasi(kul):
     if kul <= KULLANIM_UST_SABIT:
         return 0.0
     return math.ceil((kul - KULLANIM_UST_SABIT) / KULLANIM_BASAMAK - 1e-9) * KULLANIM_UST_KATSAYI
-KULLANIM_SINIR = 99.0  # klasik sistem dünkü hâliyle: eşik üst çeyrek, tavan yok (2026-11-18, kullanıcı)
+KULLANIM_SINIR = 5.0  # Top yetmiyor en çok −5 (2026-11-20 kullanıcı; önce tavan yoktu)
 # Cezasız bant (2026-11-19, kullanıcı: BSL 58–67): eşiğin (gerçek ilk beşlerin üst çeyreği, BSL 63,7) 0,9105 ile 1,0518
 # katı arası; üstünü aşan her birim "Top yetmiyor", altında kalan her birim "Şut yaratan yok" −0,5 güç.
 # BSL 58,5–67,5, TBL 58,8–67,8 (kullanıcı; önce ±%7: 59,2–68,2, sonra 58–67).
