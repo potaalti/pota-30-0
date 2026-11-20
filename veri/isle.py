@@ -65,7 +65,9 @@ OYUN_DIKLIK = 1.0  # klasik sistemde eğri dikleştirilmez; kolaylık KLASIK_KOL
 # ~%6-7'de tutar: BSL → ~21,45 / 30 (+%6,7), TBL → ~21,9 / 32 (+%6,5).
 # 2026-11-20: averaj eğrisinden (AVERAJ_EGRI) sonra oyun düne göre ~%17 kolaylaştı; kullanıcı ~%12 istedi: güçle kurulan
 # beş BSL 20,1 → ~22,5 / 30, TBL 20,6 → ~23,1 / 32 (Lig modu da ~22,7 / ~23,1).
-KLASIK_KOLAY = {"bsl": -1.25, "tbl": -0.5}
+# 2026-11-20 (sonra): eksenler kalkıp baremler değişince BSL %3, TBL %7'ye indi; kullanıcı BSL %7,5, TBL %10 istedi:
+# güçle kurulan beş BSL 20,1 → ~21,6 / 30, TBL 20,6 → ~22,7 / 32 (Lig modu da aynı seviyede).
+KLASIK_KOLAY = {"bsl": 0.75, "tbl": 1.25}
 # Tek lig (2026-11-19): sezon gerçek takımlara karşı ikili oynanınca rakiplerin güç dağılımı yüzünden güçle kurulan beş
 # BSL 21,5 → 20,7, TBL 22,0 → 21,5 oluyordu; kurulan beşe bu kadar güç eklenince kolaylık yine ~%6-7.
 KLASIK_LIG_EK = {"bsl": 2.8, "tbl": 1.8}

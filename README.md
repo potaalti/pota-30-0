@@ -302,3 +302,5 @@ beşlerin alt %10'u: BSL 17,1 / TBL 18,4; oyunda kurulan beşlerde hiç tutmuyor
 yarısını cezalandırıp ters çalışıyordu. Kaldırınca ilk beş gücü ~ galibiyet korelasyonu BSL 0,77 → 0,84, TBL 0,72 → 0,77.
 Top yetmiyor basamaklı (2026-11-20, kullanıcı): iki lig için aynı, 67,5'ten başlar, her 1,5 birimlik basamak −0,75
 (67,5–69 −0,75, 69–70,5 −1,5, 70,5–72 −2,25 …). En çok −5. Oyunda kurulan beşlerin ~%58'inde çıkar, çıkınca ortalama −3,2.
+Genel kolaylık (2026-11-20, kullanıcı): düne göre BSL %7,5, TBL %10 (güçle kurulan beş BSL ~21,6 / 30, TBL ~22,7 / 32);
+yalnız galibiyet eğrisinin kaydırmasıyla (BSL 0,75, TBL 1,25), oyuncu güçlerine ve baremlere dokunmadan.
