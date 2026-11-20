@@ -466,7 +466,8 @@
   function besTS(os) { let sy = 0, h = 0; os.forEach((o) => { if (o && o.ts > 0) { sy += o.sy; h += o.sy / o.ts; } }); return h ? 100 * sy / h : 0; }
   // Efektif şut baremi (ekranda "Efektif şut"; 2026-11-19, kullanıcı: "diğer baremler kadar etki etmesin"): üst çeyreğin üstü artı, altı sıfır.
   // Gerçek ilk beşlerde güç sabitken 1 TS puanı ~1,2 güce denk; oyunda daha küçük tutuldu: +0,5 + 0,5 × fark, en çok +2.
-  function isabetArtisi(ts, barem) { const f = Math.max(0, ts - barem); return { guc: Math.min(2, 0.5 + 0.5 * f), oran: Math.min(0.012, 0.003 + 0.003 * f) }; }
+  // Efektif şut: en çok ±1,5 (2026-11-20 kullanıcı; önce ±2)
+  function isabetArtisi(ts, barem) { const f = Math.max(0, ts - barem); return { guc: Math.min(1.5, 0.5 + 0.5 * f), oran: Math.min(0.012, 0.003 + 0.003 * f) }; }
   function asistArtisi(as, barem) { const f = Math.max(0, as - barem); return { guc: Math.min(3, 1 + 0.5 * f), oran: Math.min(0.01, 0.003 + 0.0015 * f) }; }
   function calmaArtisi(st, barem) { // baremin üstündeki beşe artı (Klasik güç, motor: rakibin top kaybı oranı)
     const f = Math.max(0, st - barem);
@@ -566,7 +567,7 @@
     const kul = top("kul");
     const ust = V.kullanimUst || V.esik.kullanim, alt = V.kullanimAlt || 0;
     if (V.esik.kullanim && kul > ust) {
-      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + ust.toFixed(1) + " (cezasız aralık " + alt.toFixed(1) + "–" + ust.toFixed(1) + ")", d: -(kul - ust) * V.kullanimKatsayi });
+      etkiler.push({ ad: "Top yetmiyor", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " > " + ust.toFixed(1) + " (cezasız aralık " + alt.toFixed(1) + "–" + ust.toFixed(1) + ")", d: -(kul - ust) * (V.kullanimUstKatsayi || V.kullanimKatsayi) });
     } else if (alt && kul < alt) {
       etkiler.push({ ad: "Şut yaratan yok", aciklama: "beşin top kullanımı " + kul.toFixed(1) + " < " + alt.toFixed(1) + " (cezasız aralık " + alt.toFixed(1) + "–" + ust.toFixed(1) + ")", d: -(alt - kul) * V.kullanimKatsayi });
     }
@@ -871,7 +872,7 @@
         : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimAlt + "–" + S.veri.kullanimUst + " dışında kalan her birim −" + S.veri.kullanimKatsayi +
+      ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimAlt + "–" + S.veri.kullanimUst + " dışında kalan her birim −" + (S.veri.kullanimUstKatsayi || S.veri.kullanimKatsayi) + " (üstte) / −" + S.veri.kullanimKatsayi + " (altta)" +
       "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için biraz kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +

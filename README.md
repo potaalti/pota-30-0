@@ -147,8 +147,8 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   - Rol eksikliği: beşin toplam asisti ya da toplam ribaundu gerçek ilk beşlerin en alt %10'unun altındaysa (BSL 9,0 / 17,1;
     TBL 10,3 / 18,4) eksik her asist −1, her ribaund −0,6 güç ("Top paylaşımı zayıf", "Ribaund alan yok"). Asiste toplamdan
     bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
-- Uyum kuralları (oyun hissi için; toplam ±5): pota koruyucu var (biri ≥1,2 blok) +2, pota boş (kimse ≥0,5 blok yapmıyor; 2026-11-20'ye kadar 0,6) −2,
-  dış şut bol (en az 3 kişi ≥1,2 üçlük) +2, şutör yok (kimse ≥1,2 üçlük atmıyor) −3, boyalı alan kalabalık (en az 3 uzun —
+- Uyum kuralları (oyun hissi için; toplam ±5): pota koruyucu var (biri ≥1,3 blok; 2026-11-20'ye kadar 1,2) +2, pota boş (kimse ≥0,5 blok yapmıyor; 2026-11-20'ye kadar 0,6) −2,
+  dış şut bol (en az 3 kişi ≥1,35 üçlük; 2026-11-20'ye kadar 1,2) +2, şutör yok (kimse ≥1,2 üçlük atmıyor) −3, boyalı alan kalabalık (en az 3 uzun —
   mevki 4-5 — üçlük atmıyor, <0,3) −3. 2026-11-20 (kullanıcı: uyum kuralları tekil kurallarla çakışmasın): yalnız tek tek
   oyunculara bakan, başka hiçbir kuralın ölçmediği şeyler kaldı. "Oyun kurucu var" (asist baremi ve "Top paylaşımı zayıf"
   zaten ölçüyor) ve "Yıldız ikilisi" (VP zaten güçte) çıktı; "boyalı alan kalabalık" ribaund yerine mevkiye bakıyor (ribaund
@@ -290,3 +290,9 @@ python veri/isle.py    # site/veri/bsl.js ve tbl.js
 
 `veri/ham/` 2026-11-17'de çekilmiş ham TBF yanıtlarını tutar (44 MB, 3.746 dosya). Ağa çıkmadan yeniden üretmek için
 `CEVRIMDISI=1 python veri/isle.py`.
+
+## Barem değerleri (2026-11-20, kullanıcıyla)
+
+546 gerçek ilk beşte güç sabitken her kuralın etkisi ölçüldü (`veri/` dışında, betik oturum notlarında). Kullanıcının kararıyla:
+Top paylaşımı zayıf eksik her asist −1 → −1,5; Top yetmiyor her birim −0,5 → −0,75 (Şut yaratan yok −0,5 kaldı);
+efektif şut en çok ±2 → ±1,5; Pota koruyucu var ≥1,3 blok; Dış şut bol 3 kişi ≥1,35 üçlük; Yerli omurga +2; Pota boş ≥0,5 blok.

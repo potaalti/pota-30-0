@@ -39,7 +39,8 @@ def averaj_sayilan(lig, net):
 # düşüyor (birim başına ~0,5 güç; BSL ve TBL'de aynı yönde). Gerçek ilk beşlerin üst %10'unu aşan her birim cezalı
 # (2026-11-18: üst çeyrekten yükseltildi). Ceza en çok KULLANIM_SINIR: veride ~79'un üstünde neredeyse takım yok
 # (eşik + ~11 birim ≈ −5,5), ötesi kanıtsız; beş skorer yan yana tek başına takımı çökertmesin.
-KULLANIM_KATSAYI = 0.5
+KULLANIM_KATSAYI = 0.5   # alt taraf ("Şut yaratan yok") birim başına
+KULLANIM_UST_KATSAYI = 0.75  # üst taraf ("Top yetmiyor") birim başına (2026-11-20 kullanıcı: 0,5 → 0,75; veri 1,3-2,5 kat destekliyor)
 KULLANIM_SINIR = 99.0  # klasik sistem dünkü hâliyle: eşik üst çeyrek, tavan yok (2026-11-18, kullanıcı)
 # Cezasız bant (2026-11-19, kullanıcı: BSL 58–67): eşiğin (gerçek ilk beşlerin üst çeyreği, BSL 63,7) 0,9105 ile 1,0518
 # katı arası; üstünü aşan her birim "Top yetmiyor", altında kalan her birim "Şut yaratan yok" −0,5 güç.
@@ -235,7 +236,7 @@ EKSENLER = {}
 EKSEN_KATSAYI, EKSEN_SINIR = 3.0, 4.0
 # Rol eksikliği: beşin TOPLAMI gerçek ilk beşlerin alt %10'unun altındaysa eksik birim başına ceza. Asist toplamdan bakılır:
 # topu birden çok oyuncu paylaşabilir (2026-11-18, kullanıcı önerisi; eski "kimse ≥3 asist yapmıyor −3" kuralının yerine).
-DENGE = {"rb": 0.6, "as": 1.0}
+DENGE = {"rb": 0.6, "as": 1.5}  # 2026-11-20 kullanıcı: Top paylaşımı zayıf 1,0 → 1,5
 
 # Uyum kuralları (oyun tasarımı; 2026-11-17'de gerçek ilk beşlerle sınandı: güç sabitken hiçbiri galibiyeti artırmadı,
 # bazıları ters yönde çıktı; NBA'deki benzer oyunlar gibi oyun hissi için). Her kural: oyuncu koşulları (hepsi sağlanmalı),
@@ -244,9 +245,9 @@ DENGE = {"rb": 0.6, "as": 1.0}
 # kaybı, ribaund, top kullanımı, şut verimi ve VP (oyuncu gücü) kendi kurallarında; uyum yalnız blok, üçlük ve mevkiye bakar.
 # Çıkanlar: "Oyun kurucu var" (asist), "Yıldız ikilisi" (VP). "Boyalı alan kalabalık" ribaund yerine mevkiye bakar.
 UYUM = [
-    {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,2 blok", "kosul": [["bl", ">=", 1.2]], "en_az": 1, "puan": 2},
+    {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,3 blok", "kosul": [["bl", ">=", 1.3]], "en_az": 1, "puan": 2},  # 2026-11-20 kullanıcı: 1,2 → 1,3
     {"ad": "Pota boş", "aciklama": "kimse ≥0,5 blok yapmıyor", "kosul": [["bl", ">=", 0.5]], "en_cok": 0, "puan": -2},  # 2026-11-20 kullanıcı: 0,6 → 0,5
-    {"ad": "Dış şut bol", "aciklama": "en az 3 kişi ≥1,2 üçlük", "kosul": [["u3", ">=", 1.2]], "en_az": 3, "puan": 2},
+    {"ad": "Dış şut bol", "aciklama": "en az 3 kişi ≥1,35 üçlük", "kosul": [["u3", ">=", 1.35]], "en_az": 3, "puan": 2},  # 2026-11-20 kullanıcı: 1,2 → 1,35
     {"ad": "Şutör yok", "aciklama": "kimse ≥1,2 üçlük atmıyor", "kosul": [["u3", ">=", 1.2]], "en_cok": 0, "puan": -3},
     {"ad": "Boyalı alan kalabalık", "aciklama": "en az 3 uzun (mevki 4-5) üçlük atmıyor (<0,3)", "kosul": [["uz", ">=", 1], ["u3", "<", 0.3]], "en_az": 3, "puan": -3},
 ]
@@ -294,7 +295,7 @@ def denge(oyuncular, esik):
         d += max(-EKSEN_SINIR, min(EKSEN_SINIR, EKSEN_KATSAYI * z))
     d -= sum(max(0.0, esik["rol"][k] - toplam(oyuncular, k)) * c for k, c in DENGE.items())
     kul = toplam(oyuncular, "kul")
-    d -= min(KULLANIM_SINIR, max(0.0, kul - esik["kullanim"] * KULLANIM_UST_ORAN) * KULLANIM_KATSAYI)
+    d -= min(KULLANIM_SINIR, max(0.0, kul - esik["kullanim"] * KULLANIM_UST_ORAN) * KULLANIM_UST_KATSAYI)
     d -= min(KULLANIM_SINIR, max(0.0, esik["kullanim"] * KULLANIM_ALT_ORAN - kul) * KULLANIM_KATSAYI)
     return d + uyum_kurallari(oyuncular)[1]
 
@@ -658,7 +659,7 @@ def main():
                                                                    ortaGercek=parametreler[lig]["orta"], kolay=KLASIK_KOLAY[lig], ligEk=KLASIK_LIG_EK[lig],
                                                                    orta=round(parametreler[lig]["orta"] - KLASIK_KOLAY[lig], 2)), "esik": esik[lig], "denge": DENGE,
                 "eksenler": EKSENLER, "eksenKatsayi": EKSEN_KATSAYI, "eksenSinir": EKSEN_SINIR,
-                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "kullanimAlt": round(esik[lig]["kullanim"] * KULLANIM_ALT_ORAN, 1), "kullanimUst": round(esik[lig]["kullanim"] * KULLANIM_UST_ORAN, 1),
+                "uyum": UYUM, "uyumSinir": UYUM_SINIR, "kullanimKatsayi": KULLANIM_KATSAYI, "kullanimUstKatsayi": KULLANIM_UST_KATSAYI, "kullanimSinir": KULLANIM_SINIR, "kullanimAlt": round(esik[lig]["kullanim"] * KULLANIM_ALT_ORAN, 1), "kullanimUst": round(esik[lig]["kullanim"] * KULLANIM_UST_ORAN, 1),
                 "motor": motor_lig[lig], "takimlar": takimlar}
         (SITE / f"{lig}.js").write_text("window.VERI=window.VERI||{};window.VERI." + lig + "=" + json.dumps(veri, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")
         oy = sum(len(t["oyuncular"]) for t in takimlar)
