@@ -237,6 +237,9 @@ EKSEN_KATSAYI, EKSEN_SINIR = 3.0, 4.0
 # Rol eksikliği: beşin TOPLAMI gerçek ilk beşlerin alt %10'unun altındaysa eksik birim başına ceza. Asist toplamdan bakılır:
 # topu birden çok oyuncu paylaşabilir (2026-11-18, kullanıcı önerisi; eski "kimse ≥3 asist yapmıyor −3" kuralının yerine).
 DENGE = {"rb": 0.6, "as": 1.5}  # 2026-11-20 kullanıcı: Top paylaşımı zayıf 1,0 → 1,5
+# Sabit rol eşikleri (alt %10 yerine): 2026-11-20 kullanıcı: "Ribaund alan yok" 23'ten başlasın (önce BSL 17,1 / TBL 18,4;
+# oyunda kurulan beşler hiç o kadar düşmüyordu), az da olsa cezalandırsın.
+ROL_ESIK_SABIT = {"rb": 23.0}
 
 # Uyum kuralları (oyun tasarımı; 2026-11-17'de gerçek ilk beşlerle sınandı: güç sabitken hiçbiri galibiyeti artırmadı,
 # bazıları ters yönde çıktı; NBA'deki benzer oyunlar gibi oyun hissi için). Her kural: oyuncu koşulları (hepsi sağlanmalı),
@@ -292,7 +295,7 @@ def esikler(takimlar):
     e["kullanim"] = round(v[3 * len(v) // 4], 1)
     for k in DENGE:
         v = sorted(toplam(b, k) for b in ilk5)
-        e["rol"][k] = round(v[len(v) // 10], 1)
+        e["rol"][k] = ROL_ESIK_SABIT.get(k, round(v[len(v) // 10], 1))
     for ad in EKSENLER:
         v = sorted(eksen_degeri(b, ad) for b in ilk5)
         e["eksen"][ad] = {"med": round(v[len(v) // 2], 2), "iqr": round(v[3 * len(v) // 4] - v[len(v) // 4], 2)}

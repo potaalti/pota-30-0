@@ -468,7 +468,8 @@
   // Gerçek ilk beşlerde güç sabitken 1 TS puanı ~1,2 güce denk; oyunda daha küçük tutuldu: +0,5 + 0,5 × fark, en çok +2.
   // Efektif şut: en çok ±1,5 (2026-11-20 kullanıcı; önce ±2)
   function isabetArtisi(ts, barem) { const f = Math.max(0, ts - barem); return { guc: Math.min(1.5, 0.5 + 0.5 * f), oran: Math.min(0.012, 0.003 + 0.003 * f) }; }
-  function asistArtisi(as, barem) { const f = Math.max(0, as - barem); return { guc: Math.min(3, 1 + 0.5 * f), oran: Math.min(0.01, 0.003 + 0.0015 * f) }; }
+  // Asist baremi: +1'den başlar, fazla her asist +0,5, en çok +2,5 (2026-11-20 kullanıcı; önce en çok +3)
+  function asistArtisi(as, barem) { const f = Math.max(0, as - barem); return { guc: Math.min(2.5, 1 + 0.5 * f), oran: Math.min(0.01, 0.003 + 0.0015 * f) }; }
   function calmaArtisi(st, barem) { // baremin üstündeki beşe artı (Klasik güç, motor: rakibin top kaybı oranı)
     const f = Math.max(0, st - barem);
     return { guc: Math.min(4, 1 + 1.5 * f), tov: Math.min(0.03, 0.008 + 0.008 * f) };

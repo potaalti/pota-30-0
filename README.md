@@ -296,3 +296,5 @@ python veri/isle.py    # site/veri/bsl.js ve tbl.js
 546 gerçek ilk beşte güç sabitken her kuralın etkisi ölçüldü (`veri/` dışında, betik oturum notlarında). Kullanıcının kararıyla:
 Top paylaşımı zayıf eksik her asist −1 → −1,5; Top yetmiyor her birim −0,5 → −0,75 (Şut yaratan yok −0,5 kaldı);
 efektif şut en çok ±2 → ±1,5; Pota koruyucu var ≥1,3 blok; Dış şut bol 3 kişi ≥1,35 üçlük; Yerli omurga +2; Pota boş ≥0,5 blok.
+Asist baremi +1'den başlar, fazla her asist +0,5, en çok +2,5 (önce +3). Ribaund alan yok eşiği sabit 23 ribaund (önce gerçek ilk
+beşlerin alt %10'u: BSL 17,1 / TBL 18,4; oyunda kurulan beşlerde hiç tutmuyordu).
