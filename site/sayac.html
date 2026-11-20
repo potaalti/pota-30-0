@@ -117,6 +117,7 @@ details[open]>summary::before{content:"▾ "}
   const TUR_AD = { sezon: "Sezon", lig: "Lig + play-off" };
   const LIG_AD = { bsl: "BSL", tbl: "TBL" };
   const MAC = { bsl: 30, tbl: 32 };
+  const BASLANGIC = ORNEK ? "2000-01-01" : "2026-11-20"; // sayacın canlıya çıktığı gün (örnek veride sınır yok)
   const CIHAZ_AD = { tel_tarayici: "Telefon · tarayıcı", tel_uygulama: "Telefon · yüklü uygulama", pc_tarayici: "Bilgisayar · tarayıcı", pc_uygulama: "Bilgisayar · yüklü uygulama" };
   let veri = null, aralik = 30;
   try { aralik = +(localStorage.getItem("p300:sayacAralik") ?? 30); } catch (e) { /* yok */ }
@@ -140,9 +141,10 @@ details[open]>summary::before{content:"▾ "}
     const g = (veri && veri.gun) || {}, bugun = gunAnahtar(new Date());
     let bas;
     if (aralik) { const d = new Date(); d.setUTCDate(d.getUTCDate() - (aralik - 1)); bas = gunAnahtar(d); }
-    else bas = Object.keys(g).sort()[0] || bugun;
+    else bas = Object.keys(g).filter((k) => k >= BASLANGIC).sort()[0] || bugun;
+    if (bas < BASLANGIC) bas = BASLANGIC; // sayaçtan önceki günler (ve eski deneme kayıtları) yok sayılır
     const l = [], d = new Date(bas + "T12:00:00Z");
-    for (let i = 0; i < 4000; i++) {
+    for (let i = 0; i < 40000; i++) {
       const k = d.toISOString().slice(0, 10); if (k > bugun) break;
       const x = g[k] || {};
       l.push({ k: k, kisi: x.tekil || 0, yeni: x.yeni || 0, acilis: x.acilis || 0, oyna: x.oyna || 0, otuz: x.otuz || 0, sampiyon: x.sampiyon || 0, ham: x });
@@ -291,6 +293,7 @@ details[open]>summary::before{content:"▾ "}
     seriler.forEach(([k, renk]) => {
       const d = l.map((x, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(x[k]).toFixed(1)).join(" ");
       svg.append(s("path", { d: d, fill: "none", stroke: renk, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+      if (l.length < 8) l.forEach((x, i) => svg.append(s("circle", { cx: X(i), cy: Y(x[k]), r: 4, fill: renk, stroke: "#111d20", "stroke-width": 2 }))); // az günde çizgi görünmez: nokta
     });
     // son değerler çizgi sonunda; birbirine 13 pikselden yakınsa aralanır
     const son = l[l.length - 1] || {}, et = seriler.map(([k]) => ({ v: son[k] || 0, y: Y(son[k] || 0) })).sort((a, b) => a.y - b.y);
