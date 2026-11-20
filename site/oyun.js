@@ -540,7 +540,10 @@
     let uyumTop = 0;
     (V.uyum || []).forEach((k) => {
       const n = os.filter((o) => k.kosul.every((c) => (c[1] === ">=" ? (o[c[0]] || 0) >= c[2] : (o[c[0]] || 0) < c[2]))).length;
-      if ((k.en_az !== undefined && n >= k.en_az) || (k.en_cok !== undefined && n <= k.en_cok)) { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.puan, uyum: true }); uyumTop += k.puan; }
+      if ((k.en_az !== undefined && n >= k.en_az) || (k.en_cok !== undefined && n <= k.en_cok)) {
+        let d = k.puan; (k.kademe || []).forEach((x) => { if (n >= x[0]) d = x[1]; }); // kademeli kural (Dış şut bol: 3 → +2, 4 → +3, 5 → +4)
+        etkiler.push({ ad: k.ad, aciklama: k.aciklama + (k.kademe ? " · beşte " + n + " kişi" : ""), d: d, uyum: true }); uyumTop += d;
+      }
     });
     if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.d, uyum: true }); uyumTop += k.d; });
     if (Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop, uyum: true, sinir: true });

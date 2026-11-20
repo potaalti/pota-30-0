@@ -247,7 +247,9 @@ DENGE = {"rb": 0.6, "as": 1.5}  # 2026-11-20 kullanıcı: Top paylaşımı zayı
 UYUM = [
     {"ad": "Pota koruyucu var", "aciklama": "biri ≥1,3 blok", "kosul": [["bl", ">=", 1.3]], "en_az": 1, "puan": 2},  # 2026-11-20 kullanıcı: 1,2 → 1,3
     {"ad": "Pota boş", "aciklama": "kimse ≥0,5 blok yapmıyor", "kosul": [["bl", ">=", 0.5]], "en_cok": 0, "puan": -2},  # 2026-11-20 kullanıcı: 0,6 → 0,5
-    {"ad": "Dış şut bol", "aciklama": "en az 3 kişi ≥1,35 üçlük", "kosul": [["u3", ">=", 1.35]], "en_az": 3, "puan": 2},  # 2026-11-20 kullanıcı: 1,2 → 1,35
+    # 2026-11-20 kullanıcı: eşik 1,2 → 1,35 üçlük; kademeli: 3 şutör +2, 4 şutör +3, 5 şutör +4
+    {"ad": "Dış şut bol", "aciklama": "≥1,35 üçlük atan 3 kişi +2, 4 kişi +3, 5 kişi +4", "kosul": [["u3", ">=", 1.35]], "en_az": 3, "puan": 2,
+     "kademe": [[3, 2], [4, 3], [5, 4]]},
     {"ad": "Şutör yok", "aciklama": "kimse ≥1,2 üçlük atmıyor", "kosul": [["u3", ">=", 1.2]], "en_cok": 0, "puan": -3},
     {"ad": "Boyalı alan kalabalık", "aciklama": "en az 3 uzun (mevki 4-5) üçlük atmıyor (<0,3)", "kosul": [["uz", ">=", 1], ["u3", "<", 0.3]], "en_az": 3, "puan": -3},
 ]
@@ -256,12 +258,22 @@ UYUM_SINIR = 5.0
 
 def uyum_kurallari(oyuncular):
     """Sağlanan uyum kuralları ve toplam etkisi (±UYUM_SINIR)."""
-    tutan = []
+    tutan, toplam_ = [], 0
     for k in UYUM:
         n = sum(1 for o in oyuncular if all((o.get(a) or 0) >= e if op == ">=" else (o.get(a) or 0) < e for a, op, e in k["kosul"]))
         if ("en_az" in k and n >= k["en_az"]) or ("en_cok" in k and n <= k["en_cok"]):
             tutan.append(k)
-    return tutan, max(-UYUM_SINIR, min(UYUM_SINIR, sum(k["puan"] for k in tutan)))
+            toplam_ += kademe_puani(k, n)
+    return tutan, max(-UYUM_SINIR, min(UYUM_SINIR, toplam_))
+
+
+def kademe_puani(k, n):
+    """Kademeli kuralda (ör. Dış şut bol) n oyuncuya düşen puan; kademesizde sabit puan."""
+    p = k["puan"]
+    for esik, puan in k.get("kademe", []):
+        if n >= esik:
+            p = puan
+    return p
 
 
 def toplam(oyuncular, k):

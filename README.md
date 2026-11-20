@@ -148,7 +148,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
     TBL 10,3 / 18,4) eksik her asist −1, her ribaund −0,6 güç ("Top paylaşımı zayıf", "Ribaund alan yok"). Asiste toplamdan
     bakılır: topu birden çok oyuncu paylaşabilir (eski "kimse ≥3 asist yapmıyor −3" kuralı kaldırıldı).
 - Uyum kuralları (oyun hissi için; toplam ±5): pota koruyucu var (biri ≥1,3 blok; 2026-11-20'ye kadar 1,2) +2, pota boş (kimse ≥0,5 blok yapmıyor; 2026-11-20'ye kadar 0,6) −2,
-  dış şut bol (en az 3 kişi ≥1,35 üçlük; 2026-11-20'ye kadar 1,2) +2, şutör yok (kimse ≥1,2 üçlük atmıyor) −3, boyalı alan kalabalık (en az 3 uzun —
+  dış şut bol (≥1,35 üçlük atan 3 kişi +2, 4 kişi +3, 5 kişi +4; 2026-11-20'ye kadar 3 kişi ≥1,2 üçlük, sabit +2), şutör yok (kimse ≥1,2 üçlük atmıyor) −3, boyalı alan kalabalık (en az 3 uzun —
   mevki 4-5 — üçlük atmıyor, <0,3) −3. 2026-11-20 (kullanıcı: uyum kuralları tekil kurallarla çakışmasın): yalnız tek tek
   oyunculara bakan, başka hiçbir kuralın ölçmediği şeyler kaldı. "Oyun kurucu var" (asist baremi ve "Top paylaşımı zayıf"
   zaten ölçüyor) ve "Yıldız ikilisi" (VP zaten güçte) çıktı; "boyalı alan kalabalık" ribaund yerine mevkiye bakıyor (ribaund
