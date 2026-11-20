@@ -878,8 +878,8 @@
         : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
       (klasik() ?
       '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimUst + "'ün üstündeki her birim −" + (S.veri.kullanimUstKatsayi || S.veri.kullanimKatsayi) +
-      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu, oyun için biraz kolaylaştırıldı. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
+      ". Her barem bir kez sayılır; top kullanımı " + S.veri.kullanimUst + "'i aşınca her " + (S.veri.kullanimBasamak || 1) + " birimde −" + (S.veri.kullanimUstKatsayi || S.veri.kullanimKatsayi) + " (en çok −" + (S.veri.kullanimSinir || 99) + ")" +
+      "; uyum kuralları oyun hissi için (toplam en çok ±" + S.veri.uyumSinir + "). Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu. Maç maç motor için üstten Maç motoru seçilebilir.</p>"
       :
       '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
       "iki ya da üç sayılık şut (isabeti rakibin bloğu düşürür, asistli oyun artırır), kaçan şutta hücum ribaundu ile savunma ribaundunun çekişmesi. " +
