@@ -1484,7 +1484,21 @@
   $("cevir").onclick = () => cevir(false);
   $("atlaTakim").onclick = () => cevir("takim");
   $("atlaSezon").onclick = () => cevir("sezon");
-  $("oyna").onclick = () => sezonuOyna(false);
+  // ---- sayaç (2026-11-20, kullanıcı): kaç kez açıldı / "Sezonu oyna"ya basıldı. Yalnız sayılar yazılır (kim olduğu yok);
+  // veritabanında okuma herkese kapalı, sayılar yalnız Firebase konsolunda görülür. Kural yalnız +1 yazmaya izin verir.
+  // Yerel deneme (localhost / 127.0.0.1) sayılmaz.
+  function say(olay) {
+    try {
+      const a = window.FIREBASE_AYAR, h = location.hostname;
+      if (!a || !a.databaseURL || h === "localhost" || h === "127.0.0.1" || !window.fetch) return;
+      const gun = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Istanbul" }), art = { ".sv": { increment: 1 } };
+      const yol = {}; yol["toplam/" + olay] = art; yol["gun/" + gun + "/" + olay] = art;
+      if (olay === "oyna") yol["kirilim/" + ayar.lig + "_" + (S.cevrim ? "oda" : ayar.mod) + "_" + (S.format === "lig" ? "lig" : "sezon")] = art;
+      fetch(a.databaseURL + "/sayac.json", { method: "PATCH", body: JSON.stringify(yol), keepalive: true }).catch(() => {});
+    } catch (e) { /* sayaç oyunu asla bozmasın */ }
+  }
+  try { if (!sessionStorage.getItem("p300:acildi")) { sessionStorage.setItem("p300:acildi", "1"); say("acilis"); } } catch (e) { say("acilis"); }
+  $("oyna").onclick = () => { say("oyna"); sezonuOyna(false); };
   // ---- uygulama (PWA): kendi servis çalışanı (kapsam yalnız bu klasör) ve yükle düğmesi ----
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js", { scope: "./" }).catch(() => {});
   const kurulu = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;

@@ -308,3 +308,12 @@ Maç motoru seçeneği kaldırıldı (2026-11-20, kullanıcı): oyun yalnız Kla
 kurulmuş eski odalar da Klasik'e döner. `site/motor.js` kodda duruyor ama hiçbir yerden açılmıyor.
 Değiştirme hakkı (2026-11-20, kullanıcı): tek oyuncuda da başka takım / başka sezon toplam 1 hak (önce ayrı ayrı 1'er); beşin
 altında "Değiştirme hakkı N" çipi.
+
+## Sayaç (2026-11-20, kullanıcı)
+
+Oyun kaç kez açıldı ve "Sezonu oyna"ya kaç kez basıldı, Firebase Realtime Database'de `sayac/` altında tutulur:
+`toplam/{oyna,acilis}`, `gun/YYYY-MM-DD/{oyna,acilis}` (İstanbul saati), `kirilim/<lig>_<mod>_<tür>` (mod: serbest, yz, iki = aynı cihaz,
+oda = ayrı telefonlar; tür: sezon, lig). Yalnız sayılar yazılır; kim olduğu, IP ya da cihaz bilgisi yok. Açılış oturum başına bir kez.
+Okuma herkese kapalı: sayılar yalnız Firebase konsolunda (Realtime Database → Veri) görülür. Kural yalnız eski değerin 1 fazlasının
+yazılmasına izin verir (`firebase-kurallar.json`). Yerel deneme (localhost / 127.0.0.1) sayılmaz. Kurallar yayın akışıyla gitmez:
+değişince Firebase konsolunda Realtime Database → Kurallar'a elle yapıştırılır.
