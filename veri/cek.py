@@ -1,5 +1,7 @@
 """TBF resmi API'sinden oyun verisini çeker. Ham yanıtlar önbelleğe (varsayılan: veri/ham) yazılır, tekrar çalıştırınca
-çekilmiş istekler atlanır. Kullanım: python veri/cek.py [ham_klasor]"""
+çekilmiş istekler atlanır. Devam eden sezonun (GUNCEL) puan tablosu, takım listesi ve takım istatistikleri her çalıştırmada
+yeniden çekilir (haftalık güncelleme); yalnız onu yenilemek için: GUNCEL_YALNIZ=1 python veri/cek.py
+Kullanım: python veri/cek.py [ham_klasor]"""
 import json, os, sys, time, hashlib, urllib.request, urllib.error
 from pathlib import Path
 
@@ -9,12 +11,14 @@ HAM.mkdir(parents=True, exist_ok=True)
 API = "https://www.tbf.org.tr/api"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 BEKLE = 0.3
-SEZONLAR = {"bsl": [f"{y}-{y+1}" for y in range(2001, 2026)], "tbl": [f"{y}-{y+1}" for y in range(2015, 2026)]}
+SEZONLAR = {"bsl": [f"{y}-{y+1}" for y in range(2001, 2027)], "tbl": [f"{y}-{y+1}" for y in range(2015, 2027)]}
+GUNCEL = "2026-2027"  # devam eden sezon (2026-11-20 kullanıcı: oyuna katıldı, haftalık güncellenir)
 
 
-def getir(yol):
+def getir(yol, taze=False):
+    """taze: önbellekte olsa da yeniden çek (devam eden sezon; CEVRIMDISI'nda önbellek kullanılır)."""
     dosya = HAM / (hashlib.md5(yol.encode()).hexdigest() + ".json")
-    if dosya.exists():
+    if dosya.exists() and not (taze and not os.environ.get("CEVRIMDISI")):
         return json.loads(dosya.read_text(encoding="utf-8"))
     if os.environ.get("CEVRIMDISI"):  # yalnız önbellek: eksik istek boş döner
         return {"yol": yol, "yanit": None}
@@ -37,8 +41,8 @@ def getir(yol):
     return {"yol": yol, "yanit": None}
 
 
-def veri(yol):
-    y = getir(yol)["yanit"]
+def veri(yol, taze=False):
+    y = getir(yol, taze)["yanit"]
     return (y or {}).get("data") if isinstance(y, dict) else None
 
 
@@ -47,12 +51,15 @@ def main():
     for lig, sezonlar in SEZONLAR.items():
         ligler = {x["sezon"]: x for x in json.loads((KOK / f"{lig}_ligler.json").read_text(encoding="utf-8"))}
         for s in sezonlar:
+            if os.environ.get("GUNCEL_YALNIZ") and s != GUNCEL:
+                continue
             L = ligler[s]
             fid, sid = L["faaliyet_ID"], L["sezon_ID"]
-            veri(f"/League/get-standings-table?LeagueId={fid}&SeasonId={sid}&prefix={lig}")
-            takimlar = veri(f"/Team/get-teams-by-leauge?leaugeId={fid}") or []
+            taze = s == GUNCEL
+            veri(f"/League/get-standings-table?LeagueId={fid}&SeasonId={sid}&prefix={lig}", taze)
+            takimlar = veri(f"/Team/get-teams-by-leauge?leaugeId={fid}", taze) or []
             for t in takimlar:
-                st = veri(f"/Team/get-team-detail-statistic?TeamProcessId={t['teamProcessId']}&SeasonId={sid}&LeagueId={fid}&prefix={lig}") or {}
+                st = veri(f"/Team/get-team-detail-statistic?TeamProcessId={t['teamProcessId']}&SeasonId={sid}&LeagueId={fid}&prefix={lig}", taze) or {}
                 for p in st.get("playersAverage") or []:
                     oyuncular.add(p["code"])
             print(lig, s, len(takimlar), "takım; toplam oyuncu", len(oyuncular), flush=True)

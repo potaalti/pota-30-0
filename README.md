@@ -336,3 +336,20 @@ kişi #8f7ae8, açılış #2fa4ab, oyun #df7128.
 
 **Önbellek:** sayfalar (`/`, `*.html`) `no-cache` gider; tarayıcı her açılışta güncel mi diye sorar (değişmediyse 304). Önceden
 Firebase varsayılanı 1 saatti ve yayından sonra eski sayfa bir saate kadar görünebiliyordu.
+
+## Dönem, başka takım, 2026-27 (2026-11-20, kullanıcı)
+
+- **Dönem seçimi:** BSL'de 2000'ler / 2010'lar / 2020'ler, TBL'de 2010'lar / 2020'ler; birden çoğu birlikte seçilebilir, en az
+  biri açık kalır (`donem:<lig>` tarayıcıda saklanır). Çark (ve başka takım / başka sezon) yalnız seçili dönemlerin
+  takım-sezonlarından çeker; lig tablosundaki rakipler ve "tek takım-sezon" listesi bütün yıllardan. Odada dönemi odayı kuran
+  seçer (`odalar/<kod>/ayar/donem`; eski odalarda yok → hepsi).
+- **Başka takım** artık aynı sezondan başka bir kulüp getirir (önce bütün takım-sezonlardan rastgele çekiyordu); **başka
+  sezon** aynı kulübün başka sezonu. AI'nın atlama kararı da buna göre.
+- **2026-27 (devam eden sezon):** `veri/cek.py`'de `GUNCEL = "2026-2027"`; bu sezonun puan tablosu, takım listesi ve takım
+  istatistikleri her çalıştırmada TBF'den yeniden çekilir. Haftalık güncelleme: `GUNCEL_YALNIZ=1 python veri/cek.py` sonra
+  `CEVRIMDISI=1 python veri/isle.py`. Takım-sezonlar `devam: 1` ile işaretli; çarkta "devam ediyor", derece "şu ana kadar".
+  Devam eden sezon galibiyet eğrisine, denge eşiklerine, sezon ölçeği hedefine, lig ortalamalarına, geri teste ve lig +
+  play-off tablosuna girmez (değerler biten sezonlardan; zorluk değişmez). Az maç oynayanlar güvenle kısılır (en az 6 maç).
+- **Kullanım çipi:** beşin altında "Kullanım N" (beşteki oyuncuların top kullanımı toplamı; Gizli modda yok). Eşik yazılmaz;
+  sonuçta "Top yetmiyor" yalnız değeriyle görünür, sebebi (kullanım, 71, basamak) hiçbir yerde yazılmaz.
+

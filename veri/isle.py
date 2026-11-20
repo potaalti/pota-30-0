@@ -334,10 +334,12 @@ def mevki_tutarla(cikti):
     """Tahmini mevkiyi oyuncu başına teke indirir (iki ligin bütün sezonlarının dakika × maç ağırlıklı ortalamasından),
     sonra veri/mevki_duzeltme.json'daki elle düzeltmeleri uygular (kaynak 'e')."""
     toplam_ = {}
+    # devam eden sezon yalnız başka sezonu olmayan oyuncuların tahmininde kullanılır (eski sezonlardaki mevkiler kaymasın)
+    eskiden = {o["k"] for takimlar in cikti.values() for t in takimlar if not t.get("devam") for o in t["oyuncular"]}
     for takimlar in cikti.values():
         for t in takimlar:
             for o in t["oyuncular"]:
-                if o["pk"] == "w":
+                if o["pk"] == "w" or (t.get("devam") and o["k"] in eskiden):
                     continue
                 a = toplam_.setdefault(o["k"], {"w": 0.0, "rb": 0.0, "as": 0.0, "bl": 0.0, "u3": 0.0, "dk": 0.0, "boy": None})
                 w = o["dk"] * o["mac"]
@@ -471,7 +473,7 @@ def geri_test(cikti, esik=None):
         for ad, transfer in (("herkes", False), ("transfer", True)):
             x, y = [], []
             for t in takimlar:
-                if t["sezon"] not in onceki or not t["gercek"]:
+                if t["sezon"] not in onceki or not t["gercek"] or t.get("devam"):
                     continue
                 v = []
                 for o in t["oyuncular"][:5]:
@@ -486,7 +488,7 @@ def geri_test(cikti, esik=None):
         if esik:  # tam takım gücü (denge, uyum, kullanım dahil): ilk beşin beşi de önceki sezonda bulunan takımlar
             x, y = [], []
             for t in takimlar:
-                if t["sezon"] not in onceki or not t["gercek"]:
+                if t["sezon"] not in onceki or not t["gercek"] or t.get("devam"):
                     continue
                 d = [deger.get((o["k"], onceki[t["sezon"]])) for o in t["oyuncular"][:5]]
                 if not all(d):
@@ -574,6 +576,7 @@ def main():
                 oyuncular.sort(key=lambda o: -o["dk"] * o["mac"])
                 d = derece.get(t["teamProcessId"])
                 sezon_kayit.append({"id": f"{lig}{s[2:4]}{s[7:9]}-{t['teamProcessId']}", "lig": lig, "sezon": f"{s[:4]}-{s[7:9]}", "kulup": t.get("teamId"),
+                                    **({"devam": 1} if s == cek.GUNCEL else {}),
                                     "ad": buyuk(t["teamName"]), "logo": t.get("teamLogoUrl") or "",
                                     "gercek": f"{d['g']}-{d['m']}" if d else None, "sira": d["sira"] if d else None,
                                     "net": round(d["net"], 1) if d else 0,
@@ -595,14 +598,16 @@ def main():
             ilk5 = [sum(o["_ham"] for o in tk["oyuncular"][:5]) for tk in sezon_kayit]
             if sezon_kayit:
                 Ls = {k: sezon_top[k] / max(1e-9, sezon_top["dk"]) for k in MOTOR_SIRA if k != "dk"}
-                for k in MOTOR_SIRA:
-                    lig_top[k] += sezon_top[k]
+                if s != cek.GUNCEL:  # devam eden sezon lig ortalamalarına girmez
+                    for k in MOTOR_SIRA:
+                        lig_top[k] += sezon_top[k]
                 kayitlar.append((s, sezon_kayit, sum(ilk5) / len(ilk5), Ls))
             print(lig, s, len(sezon_kayit), "takım", flush=True)
 
         if not kayitlar:
             continue
-        genel = sum(k[2] for k in kayitlar) / len(kayitlar)
+        biten = [k for k in kayitlar if k[0] != cek.GUNCEL] or kayitlar
+        genel = sum(k[2] for k in biten) / len(biten)  # sezon ölçeğinin hedefi biten sezonlardan (değerler değişmesin)
         La = {k: lig_top[k] / max(1e-9, lig_top["dk"]) for k in MOTOR_SIRA if k != "dk"}
         dk_or = sum(sum(o["dk"] * o["mac"] for tk in sk for o in tk["oyuncular"]) for _, sk, _, L_ in kayitlar if L_["or"] > 1e-6)
         if dk_or:  # hücum ribaundu ortalaması yalnız onu tutan sezonlardan
@@ -611,7 +616,7 @@ def main():
                             for _, sk, _, L_ in kayitlar if L_["or"] > 1e-6) / dk_or
         motor_lig[lig] = {"sira": MOTOR_SIRA, "L": {k: round(v, 5) for k, v in La.items()}, "diklik": MOTOR_GERCEK[lig], "oyunDiklik": MOTOR_OYUN[lig],
                           "oyunDakika": MOTOR_OYUN_DAKIKA, "oyunSinerji": MOTOR_OYUN_SINERJI}
-        esik[lig] = esikler([tk for _, sk, _, _ in kayitlar for tk in sk])
+        esik[lig] = esikler([tk for s_, sk, _, _ in kayitlar if s_ != cek.GUNCEL for tk in sk])  # devam eden sezon eşiklere girmez
         print(lig, "denge eşikleri", esik[lig], flush=True)
         takimlar_hepsi = []
         for s, sezon_kayit, ort, Ls in kayitlar:
@@ -624,7 +629,7 @@ def main():
                     o["g"] = round(o.pop("_ham") * olcek + (BETA * averaj_sayilan(lig, tk["net"]) * o["dk"] / 40 + GAMMA * o["verim"]) * guven, 2)
                 bes = tk["oyuncular"][:5]
                 R = sum(o["g"] for o in bes) + denge(bes, esik[lig])
-                if tk["gercek"]:
+                if tk["gercek"] and not tk.get("devam"):  # galibiyet eğrisi yalnız biten sezonlardan
                     g, m = map(int, tk["gercek"].split("-"))
                     if g + m >= 10:
                         kalibrasyon.append((lig, R, g / (g + m)))
