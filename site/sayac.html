@@ -141,8 +141,11 @@ details[open]>summary::before{content:"▾ "}
     const g = (veri && veri.gun) || {}, bugun = gunAnahtar(new Date());
     let bas;
     if (aralik) { const d = new Date(); d.setUTCDate(d.getUTCDate() - (aralik - 1)); bas = gunAnahtar(d); }
-    else bas = Object.keys(g).filter((k) => k >= BASLANGIC).sort()[0] || bugun;
-    if (bas < BASLANGIC) bas = BASLANGIC; // sayaçtan önceki günler (ve eski deneme kayıtları) yok sayılır
+    else { // "Hepsi": sayaçtan önceki tarihler (eski deneme kaydı) yok sayılır; çizgi görünsün diye en az 7 gün
+      const d7 = new Date(); d7.setUTCDate(d7.getUTCDate() - 6);
+      const ilk = Object.keys(g).filter((k) => k >= BASLANGIC).sort()[0] || bugun;
+      bas = ilk < gunAnahtar(d7) ? ilk : gunAnahtar(d7);
+    }
     const l = [], d = new Date(bas + "T12:00:00Z");
     for (let i = 0; i < 40000; i++) {
       const k = d.toISOString().slice(0, 10); if (k > bugun) break;
@@ -239,16 +242,17 @@ details[open]>summary::before{content:"▾ "}
     Object.keys(hist).forEach((lg) => { const n = hist[lg].reduce((a, b) => a + b, 0); ort[lg] = n ? hist[lg].reduce((a, b, i) => a + b * i, 0) / n : null; ort[lg + "n"] = n; });
     if (!ort.bsln && !ort.tbln) so.append(el("div", { class: "bos" }, "Bu aralıkta sonuç kaydı yok."));
     else {
-      const sampiyon = (lg) => { const n = t.sp[lg] || 0;
-        return el("div", {}, el("b", {}, bicim(n) + (ligOyun[lg] ? " · " + yuzde(n, ligOyun[lg]) : "")), LIG_AD[lg] + " şampiyonluk · " + bicim(ligOyun[lg]) + " lig + play-off oyunundan"); };
+      // şampiyonluk: toplam her zaman; lig ayrımı 20 Kasım akşamından beri (sp). Aralıkta ligsiz kayıt varsa lig oranı
+      // yanlış çıkacağı için yalnız sayı gösterilir.
+      const ligToplam = ligOyun.bsl + ligOyun.tbl, ligsiz = t.sampiyon - (t.sp.bsl || 0) - (t.sp.tbl || 0);
+      const ligDetay = ["bsl", "tbl"].map((lg) => LIG_AD[lg] + " " + bicim(t.sp[lg] || 0) + (ligsiz > 0 || !ligOyun[lg] ? "" : " (" + yuzde(t.sp[lg] || 0, ligOyun[lg]) + ")")).join(" · ");
       so.append(el("div", { class: "ozetler" },
         el("div", {}, el("b", {}, bicim(t.otuz)), "30-0 (TBL'de 32-0)"),
-        sampiyon("bsl"), sampiyon("tbl"),
+        el("div", {}, el("b", {}, bicim(t.sampiyon) + (ligToplam ? " · " + yuzde(t.sampiyon, ligToplam) : "")),
+          "şampiyonluk · " + bicim(ligToplam) + " lig + play-off oyunundan", el("br"), ligDetay + (ligsiz > 0 ? " · " + bicim(ligsiz) + " lig bilgisi olmadan" : "")),
         el("div", {}, el("b", {}, ort.bsl == null ? "–" : ondalik(ort.bsl) + " / 30"), "BSL ortalama galibiyet"),
         el("div", {}, el("b", {}, ort.tbl == null ? "–" : ondalik(ort.tbl) + " / 32"), "TBL ortalama galibiyet")));
-      // lig ayrımı eklenmeden önceki şampiyonluklar (yalnız toplamda var)
-      const ligsiz = t.sampiyon - (t.sp.bsl || 0) - (t.sp.tbl || 0);
-      if (ligsiz > 0) so.append(el("div", { class: "not", style: "margin-top:6px" }, "+" + bicim(ligsiz) + " şampiyonluk lig bilgisi olmadan (lig ayrımı 20 Kasım akşamı eklendi; oranlar o güne kadar biraz düşük görünür)."));
+      if (ligsiz > 0) so.append(el("div", { class: "not", style: "margin-top:6px" }, "Şampiyonluğun hangi ligde geldiği 20 Kasım akşamından beri tutuluyor; o günden önceki kayıtlar aralıkta kaldıkça lig lig oran gösterilmez."));
       const ikili = el("div", { class: "ikili" });
       ["bsl", "tbl"].forEach((lg) => {
         const k = el("div", { class: "grafik" });
