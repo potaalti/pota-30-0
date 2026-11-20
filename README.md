@@ -300,6 +300,6 @@ Asist baremi +1'den başlar, fazla her asist +0,5, en çok +2,5 (önce +3). Riba
 beşlerin alt %10'u: BSL 17,1 / TBL 18,4; oyunda kurulan beşlerde hiç tutmuyordu).
 "Şut yaratan yok" (top kullanımı alt sınırı) kaldırıldı (2026-11-20, kullanıcı): oyunda neredeyse hiç tutmuyordu, gerçek takımların
 yarısını cezalandırıp ters çalışıyordu. Kaldırınca ilk beş gücü ~ galibiyet korelasyonu BSL 0,77 → 0,84, TBL 0,72 → 0,77.
-Top yetmiyor basamaklı (2026-11-20, kullanıcı): iki lig için aynı, 67,5'ten başlar, her 1,5 birimlik basamak −0,75
+Top yetmiyor basamaklı (2026-11-20, kullanıcı): iki lig için aynı, 70'ten başlar (önce 67,5), her 1,5 birimlik basamak −0,75
 (67,5–69 −0,75, 69–70,5 −1,5, 70,5–72 −2,25 …). En çok −5. Oyunda kurulan beşlerin ~%58'inde çıkar, çıkınca ortalama −3,2.
 Ayrı bir kolaylık kaydırması yok (2026-11-20, kullanıcı): kolaylık yalnız kuralların değerlerinden gelir.
