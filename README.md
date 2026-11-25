@@ -159,7 +159,7 @@ veri `site/veri/*.js` içinde gömülü. Ham TBF önbelleği (`veri/ham/`, 44 MB
   **Hücum** (asist baremi, top paylaşımı zayıf, top kaybı baremi, top yetmiyor, şut yaratan yok, dış şut bol, şutör yok,
   boyalı alan kalabalık), **Savunma** (top çalma baremi, ribaund alan yok, pota koruyucu var, pota boş), **Takım uyumu**
   (yerli omurga, kulüp ruhu, eski takım arkadaşları).
-- Kadro kimyası (2026-11-20, kullanıcı; takım uyumunun içinde, eksisi yok): yerli omurga +2 (BSL en az 3, TBL en az 4
+- Kadro kimyası (2026-11-20, kullanıcı; takım uyumunun içinde, eksisi yok): yerli omurga +2 (BSL en az 2 — 2026-11-25 kullanıcı, önce 3 —, TBL en az 4
   Türk; önce +1), kulüp ruhu +1, eski takım arkadaşları +1; kulüp ruhu (aynı kulübün farklı sezonlarından üç seçim),
   eski takım arkadaşları (üç oyuncu kariyerlerinin bir sezonunda aynı kadroda oynamış; hangi takımdan seçildikleri fark
   etmez). Yalnız kurulan beşlere işler; gerçek takımlar ve galibiyet eğrisi bunlarsız. Tek takım-sezon havuzunda kulüp ruhu

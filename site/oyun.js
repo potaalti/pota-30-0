@@ -526,7 +526,7 @@
   }
   function kimyaUyumu(os, takimlar) {
     const c = [];
-    const enAzTr = S.veri.lig === "tbl" ? 4 : 3;
+    const enAzTr = S.veri.lig === "tbl" ? 4 : 2; // 2026-11-25 kullanıcı: BSL'de 2 Türk'e artı (önce 3)
     if (os.filter((o) => o.tr).length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2 }); // 2026-11-20 kullanıcı: +1 → +2
     if (S.kaynak !== "sabit") { // tek takım-sezon havuzunda herkes zaten aynı kadrodan
       const kulup = {};
