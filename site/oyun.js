@@ -1157,9 +1157,7 @@
       '<span class="cip">' + DZ()[taraf.dizilis].ad + "</span>" +
       // değiştirme hakkı (başka takım / başka sezon, toplam): 2026-11-20 kullanıcı
       (S.cift && S.kaynak === "sabit" ? "" : '<span class="cip ' + (taraf.atlaHak > 0 ? "" : "eksik") + '" title="Başka takım ya da başka sezon, oyun başına toplam 1">Değiştirme hakkı ' + taraf.atlaHak + "</span>") +
-      // beşin toplam top kullanımı (2026-11-20 kullanıcı; eşik yazılmaz; Gizli modda yok)
-      (!ayar.zor && bosSayisi(taraf) < 5 ? '<span class="cip" title="' + BASLIK_UZUN.kul + ' · beşteki oyuncuların toplamı">Kullanım ' +
-        taraf.bes.reduce((a, p) => a + (p ? p.o.kul || 0 : 0), 0).toLocaleString("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "</span>" : "") +
+      // beşin toplam top kullanımı çipi 2026-11-26'da kaldırıldı (kullanıcı); sınır aşılınca "Top yetmiyor" çipi çıkar
       canliCipler(taraf) +
       (S.cift && !S.bitti && S.takim && !S.cevriliyor && sira !== null ? '<span class="cip sira">Sıra: ' + kac(S.taraflar[sira].ad) + "</span>" : "") +
       (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" + '<button class="cip birak" data-birak="1">✕ Vazgeç</button>' : "") +
