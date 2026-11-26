@@ -546,14 +546,17 @@
   function kimyaUyumu(os, takimlar) {
     const c = [], d = denge(), kisi = d ? KIMYA.kisi : 3, puan = d ? KIMYA.puan : 1; // 2026-11-26 denge: 3 → 2 oyuncu, +1 → +2
     const enAzTr = S.veri.lig === "tbl" ? 4 : 2; // 2026-11-25 kullanıcı: BSL'de 2 Türk'e artı (önce 3)
-    if (os.filter((o) => o.tr).length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2 }); // 2026-11-20 kullanıcı: +1 → +2
+    const trler = os.map((o, i) => (o.tr ? i : -1)).filter((i) => i >= 0);
+    if (trler.length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2, kim: trler }); // 2026-11-20 kullanıcı: +1 → +2
     if (S.kaynak !== "sabit") { // tek takım-sezon havuzunda herkes zaten aynı kadrodan
       const kulup = {};
-      takimlar.forEach((t) => { if (t && t.kulup) (kulup[t.kulup] = kulup[t.kulup] || []).push(t.id); });
-      if (Object.values(kulup).some((l) => l.length >= kisi && new Set(l).size >= 2)) c.push({ ad: "Kulüp ruhu", aciklama: "aynı kulübün farklı sezonlarından " + kisi + " oyuncu", d: puan });
+      takimlar.forEach((t, i) => { if (t && t.kulup) (kulup[t.kulup] = kulup[t.kulup] || []).push(i); });
+      const kg = Object.values(kulup).filter((l) => l.length >= kisi && new Set(l.map((i) => takimlar[i].id)).size >= 2).sort((a, b) => b.length - a.length)[0];
+      if (kg) c.push({ ad: "Kulüp ruhu", aciklama: "aynı kulübün farklı sezonlarından " + kisi + " oyuncu", d: puan, kim: kg, sezonlu: true });
       const birlikte = {};
-      os.forEach((o) => { if (o.k) new Set(kariyer(o.k)).forEach((id) => { birlikte[id] = (birlikte[id] || 0) + 1; }); });
-      if (Object.values(birlikte).some((n) => n >= kisi)) c.push({ ad: "Eski takım arkadaşları", aciklama: kisi + " oyuncu kariyerlerinin bir sezonunda aynı kadroda oynamış", d: puan });
+      os.forEach((o, i) => { if (o.k) new Set(kariyer(o.k)).forEach((id) => { (birlikte[id] = birlikte[id] || []).push(i); }); });
+      const bg = Object.keys(birlikte).filter((id) => birlikte[id].length >= kisi).sort((a, b) => birlikte[b].length - birlikte[a].length)[0];
+      if (bg) c.push({ ad: "Eski takım arkadaşları", aciklama: kisi + " oyuncu kariyerlerinin bir sezonunda aynı kadroda oynamış", d: puan, kim: birlikte[bg], takim: bg });
     }
     return c;
   }
@@ -589,13 +592,13 @@
     });
     let uyumTop = 0;
     uyumKurallari().forEach((k) => {
-      const n = os.filter((o) => k.kosul.every((c) => (c[1] === ">=" ? (o[c[0]] || 0) >= c[2] : (o[c[0]] || 0) < c[2]))).length;
+      const kim = os.map((o, i) => (k.kosul.every((c) => (c[1] === ">=" ? (o[c[0]] || 0) >= c[2] : (o[c[0]] || 0) < c[2])) ? i : -1)).filter((i) => i >= 0), n = kim.length;
       if ((k.en_az !== undefined && n >= k.en_az) || (k.en_cok !== undefined && n <= k.en_cok)) {
         let d = k.puan; (k.kademe || []).forEach((x) => { if (n >= x[0]) d = x[1]; }); // kademeli kural (Dış şut bol: 3 → +2, 4 → +3, 5 → +4)
-        etkiler.push({ ad: k.ad, aciklama: k.aciklama + (k.kademe ? " · beşte " + n + " kişi" : ""), d: d, uyum: true }); uyumTop += d;
+        etkiler.push({ ad: k.ad, aciklama: k.aciklama + (k.kademe ? " · beşte " + n + " kişi" : ""), d: d, uyum: true, kim: k.en_az !== undefined ? kim : null }); uyumTop += d;
       }
     });
-    if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.d, uyum: true }); uyumTop += k.d; });
+    if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.d, uyum: true, kim: k.kim, sezonlu: k.sezonlu, takim: k.takim }); uyumTop += k.d; });
     if (V.uyumSinir && Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop, uyum: true, sinir: true });
     const ROL_AD = { rb: ["Ribaund alan yok", "beşin ribaundu"], as: ["Top paylaşımı zayıf", "beşin toplam asisti"] };
     const dg = denge(), rol = dg ? { rb: dg.esik.rb, as: dg.esik.asAlt } : V.esik.rol;
@@ -924,9 +927,19 @@
       ? ETKI_BASLIK.map((b) => etkiSatir(r, b)).join("")
       : rolSatir(r));
     // Artı/eksiler üç başlıkta, hepsi puanıyla (2026-11-20, kullanıcı); efektif şut görünmez
-    const etkiCip = (e) => '<span class="' + (e.d >= 0 ? "arti" : "eksi") + '" title="' + kac(e.aciklama) + '">' + kac(e.ad) + " " + (e.d > 0 ? "+" : "") + e.d.toFixed(1) + "</span>";
+    // Oyuncusu belli artı/eksiye dokununca altında kimlerin sağladığı görünür (2026-11-26, kullanıcı)
+    const etkiKim = (e, r) => {
+      if (!e.kim || !e.kim.length) return "";
+      const ps = e.kim.map((i) => r.taraf.bes[i]).filter(Boolean);
+      const t = e.takim && S.veri.takimlar.filter((x) => x.id === e.takim)[0];
+      return e.ad + ": " + ps.map((p) => soyad(p.o.ad) + (e.sezonlu ? " (" + p.t.sezon + ")" : "")).join(", ") +
+        (e.sezonlu && ps[0] ? " · " + ps[0].t.ad : "") + (t ? " · " + t.ad + " " + t.sezon : "");
+    };
+    const etkiCip = (e, r) => { const kim = r ? etkiKim(e, r) : "";
+      return '<span class="' + (e.d >= 0 ? "arti" : "eksi") + (kim ? " kimli" : "") + '" title="' + kac(e.aciklama) + '"' + (kim ? ' data-kim="' + kac(kim) + '" role="button" tabindex="0"' : "") + ">" +
+        kac(e.ad) + " " + (e.d > 0 ? "+" : "") + e.d.toFixed(1) + (kim ? " ▾" : "") + "</span>"; };
     const etkiSatir = (r, b) => { const l = r.h.etkiler.filter((e) => etkiBasligi(e) === b);
-      return '<div class="etkiler rol-satir"><b>' + b + "</b>" + (l.length ? l.map(etkiCip).join("") : '<span class="ipucu" style="margin:0">Dengeli</span>') + "</div>"; };
+      return '<div class="etkiler rol-satir"><b>' + b + "</b>" + (l.length ? l.map((e) => etkiCip(e, r)).join("") : '<span class="ipucu" style="margin:0">Dengeli</span>') + "</div>"; };
     const rolSatir = (r) => { // beşin rolleri ve sinerjinin sayı katkısı
       const sin = r.h.etkiler.filter((e) => /sinerjisi$/.test(e.ad)), top = sin.reduce((x, e) => x + e.d, 0);
       return '<div class="etkiler rol-satir"><b>Roller</b>' + rolCipleri(r.taraf) + "</div>" +
@@ -1003,6 +1016,19 @@
       "Roller (şutör, oyun kurucu, içeri skorer, pota koruyucu, top çalan, ribaundçu) sinerji verir: her rolün ilk oyuncusu çok, sonrakiler daha az değerli; eksik rol isabeti ve ribaundu düşürür. " +
       "Motor gerçek takımlarla sınandı. Oyun ayarı: kurduğun beşin oyuncuları en az " + S.veri.motor.oyunDakika + " dakika oynar, rol sinerjisi ×" + S.veri.motor.oyunSinerji + ", fark ×" + String(S.veri.motor.oyunDiklik).replace(".", ",") + ".</p>");
     el.innerHTML = html;
+    if (!el.kimDinle) { // artı/eksi çipine dokununca satırın altında oyuncular açılır, aynı çipe yeniden dokununca kapanır
+      el.kimDinle = true;
+      const ac = (c) => {
+        const satir = c.parentElement; let d = satir.nextElementSibling;
+        if (!d || !d.classList.contains("etki-detay")) { d = document.createElement("div"); d.className = "etki-detay gizli"; satir.after(d); }
+        const acik = !d.classList.contains("gizli") && d.dataset.ac === c.dataset.kim;
+        satir.querySelectorAll(".kimli").forEach((x) => x.classList.remove("acik"));
+        d.classList.toggle("gizli", acik); d.dataset.ac = acik ? "" : c.dataset.kim; d.textContent = c.dataset.kim;
+        c.classList.toggle("acik", !acik);
+      };
+      el.addEventListener("click", (ev) => { const c = ev.target.closest("[data-kim]"); if (c) ac(c); });
+      el.addEventListener("keydown", (ev) => { const c = ev.target.closest && ev.target.closest("[data-kim]"); if (c && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); ac(c); } });
+    }
     const cizim = (S.sonucCizim = (S.sonucCizim || 0) + 1); // yeniden çizilince (ör. simülasyon değişti) eski canlandırma durur
     sonuclar.forEach((r, j) => {
       let i = 0, gs = 0;
