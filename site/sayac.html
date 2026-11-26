@@ -121,6 +121,9 @@ details[open]>summary::before{content:"▾ "}
   const LIG_AD = { bsl: "BSL", tbl: "TBL" };
   const MAC = { bsl: 30, tbl: 32 };
   const BASLANGIC = ORNEK ? "2000-01-01" : "2026-11-20"; // sayacın canlıya çıktığı gün (örnek veride sınır yok)
+  // Milat (2026-11-26 kullanıcı: "bugüne bir milat koyalım, bundan sonra oyun başarısı nasıl ilerliyor gözlemleyelim"):
+  // yeni denge (kolay artılar, seyrek eksiler, lig = sezon, play-off'ta kimya) bu günden itibaren canlıda
+  const MILAT = { gun: "2026-11-27", ad: "Yeni denge" };
   const CIHAZ_AD = { tel_tarayici: "Telefon · tarayıcı", tel_uygulama: "Telefon · yüklü uygulama", pc_tarayici: "Bilgisayar · tarayıcı", pc_uygulama: "Bilgisayar · yüklü uygulama" };
   let veri = null, aralik = 30;
   try { aralik = +(localStorage.getItem("p300:sayacAralik") ?? 30); } catch (e) { /* yok */ }
@@ -143,7 +146,8 @@ details[open]>summary::before{content:"▾ "}
   function gunler() {
     const g = (veri && veri.gun) || {}, bugun = gunAnahtar(new Date());
     let bas;
-    if (aralik) { const d = new Date(); d.setUTCDate(d.getUTCDate() - (aralik - 1)); bas = gunAnahtar(d); }
+    if (aralik === -1) bas = MILAT.gun < bugun ? MILAT.gun : bugun; // milattan beri
+    else if (aralik) { const d = new Date(); d.setUTCDate(d.getUTCDate() - (aralik - 1)); bas = gunAnahtar(d); }
     else { // "Hepsi": sayaçtan önceki tarihler (eski deneme kaydı) yok sayılır; çizgi görünsün diye en az 7 gün
       const d7 = new Date(); d7.setUTCDate(d7.getUTCDate() - 6);
       const ilk = Object.keys(g).filter((k) => k >= BASLANGIC).sort()[0] || bugun;
@@ -180,7 +184,7 @@ details[open]>summary::before{content:"▾ "}
   function ciz() {
     const ic = $("icerik"); ic.textContent = ""; ic.classList.remove("yukleniyor");
     const sec = el("div", { class: "secici", role: "group", "aria-label": "Tarih aralığı" });
-    [[7, "Son 7 gün"], [30, "Son 30 gün"], [90, "Son 90 gün"], [0, "Hepsi"]].forEach(([n, ad]) => {
+    [[-1, MILAT.ad], [7, "Son 7 gün"], [30, "Son 30 gün"], [90, "Son 90 gün"], [0, "Hepsi"]].forEach(([n, ad]) => {
       const b = el("button", { class: n === aralik ? "aktif" : "" }, ad);
       b.onclick = () => { aralik = n; try { localStorage.setItem("p300:sayacAralik", String(n)); } catch (e) { /* yok */ } ciz(); };
       sec.append(b);
@@ -188,7 +192,7 @@ details[open]>summary::before{content:"▾ "}
     ic.append(sec);
 
     const l = gunler(), t = topla(l), bugun = l[l.length - 1] || { kisi: 0, acilis: 0, oyna: 0 };
-    const aralikAd = aralik ? "son " + aralik + " gün" : "tüm zamanlar";
+    const aralikAd = aralik === -1 ? gunEtiket(MILAT.gun) + "'den beri" : aralik ? "son " + aralik + " gün" : "tüm zamanlar";
 
     // ---- kutucuklar ----
     const kutu = (ad, sayi, alt) => el("div", { class: "kutu" }, el("div", { class: "ad" }, ad), el("div", { class: "sayi" }, sayi), el("div", { class: "alt" }, alt));
@@ -264,6 +268,9 @@ details[open]>summary::before{content:"▾ "}
       so.append(ikili);
     }
 
+    // ---- milat: önce / sonra (aynı ölçülerle) ----
+    milatKarti(ic);
+
     // ---- günlük tablo ----
     const det = el("details", { class: "kart" }, el("summary", {}, "Günlük tablo"));
     const tb = el("table", {}, el("thead", {}, el("tr", {}, ["Gün", "Kişi", "Yeni", "Açılış", "Oyun", "30-0"].map((x, i) => el("th", { class: i ? "s" : "" }, x)))));
@@ -278,6 +285,44 @@ details[open]>summary::before{content:"▾ "}
       "Kişi: o gün oyunu açan farklı tarayıcı (kimlik tutulmaz; aynı kişinin telefonu ve bilgisayarı iki sayılır). Yeni kişi: ilk kez açan. " +
       "Açılış her tarayıcı oturumunda bir kez sayılır; oyun her \"Sezonu oyna\"da bir. Kişi, cihaz, mod ve sonuçlar 20 Kasım 2026 akşamından beri tutuluyor." +
       (ORNEK ? " (Örnek veri.)" : "")));
+  }
+
+  // ---- milat karşılaştırması: sayacın başından milata kadar / milattan bugüne ----
+  function aralikGunleri(bas, son) {
+    const g = (veri && veri.gun) || {}, l = [], d = new Date(bas + "T12:00:00Z");
+    for (let i = 0; i < 40000; i++) { const k = d.toISOString().slice(0, 10); if (k > son) break; const x = g[k] || {};
+      l.push({ k: k, kisi: x.tekil || 0, yeni: x.yeni || 0, acilis: x.acilis || 0, oyna: x.oyna || 0, otuz: x.otuz || 0, sampiyon: x.sampiyon || 0, ham: x }); d.setUTCDate(d.getUTCDate() + 1); }
+    return l;
+  }
+  function istat(l) {
+    const t = topla(l), o = { oyun: t.oyna, otuz: t.otuz };
+    ["bsl", "tbl"].forEach((lg) => {
+      let n = 0, top = 0, lig = 0, kus = 0;
+      Object.entries(t.s).forEach(([k, v]) => { const [l2, tur, g] = k.split("_"); if (l2 !== lg) return; n += v; top += v * +g; if (tur === "lig") lig += v; if (+g === MAC[lg]) kus += v; });
+      o[lg] = { n: n, ort: n ? top / n : null, lig: lig, samp: t.sp[lg] || 0, kus: kus };
+    });
+    return o;
+  }
+  function milatKarti(ic) {
+    const bugun = gunAnahtar(new Date()), d = new Date(MILAT.gun + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1);
+    const once = istat(aralikGunleri(BASLANGIC, d.toISOString().slice(0, 10))), sonra = MILAT.gun <= bugun ? istat(aralikGunleri(MILAT.gun, bugun)) : null;
+    const kart = el("div", { class: "kart" }, el("h2", {}, MILAT.ad + ": önce / sonra", el("small", {}, gunEtiket(MILAT.gun, true) + " milat · oyuncu başına")));
+    const hucre = (x, f) => (x ? f(x) : "–");
+    const satirlar = [
+      ["BSL ortalama", (x) => (x.bsl.ort == null ? "–" : ondalik(x.bsl.ort) + " / 30")],
+      ["TBL ortalama", (x) => (x.tbl.ort == null ? "–" : ondalik(x.tbl.ort) + " / 32")],
+      ["BSL şampiyonluk", (x) => (x.bsl.lig ? yuzde(x.bsl.samp, x.bsl.lig) + " · " + bicim(x.bsl.samp) + " / " + bicim(x.bsl.lig) : "–")],
+      ["TBL şampiyonluk", (x) => (x.tbl.lig ? yuzde(x.tbl.samp, x.tbl.lig) + " · " + bicim(x.tbl.samp) + " / " + bicim(x.tbl.lig) : "–")],
+      ["BSL 30-0", (x) => bicim(x.bsl.kus) + (x.bsl.n ? " · " + (100 * x.bsl.kus / x.bsl.n).toLocaleString("tr-TR", { maximumFractionDigits: 2 }) + "%" : "")],
+      ["TBL 32-0", (x) => bicim(x.tbl.kus) + (x.tbl.n ? " · " + (100 * x.tbl.kus / x.tbl.n).toLocaleString("tr-TR", { maximumFractionDigits: 2 }) + "%" : "")],
+      ["Sezon (BSL · TBL)", (x) => bicim(x.bsl.n) + " · " + bicim(x.tbl.n)],
+    ];
+    const tb = el("table", {}, el("thead", {}, el("tr", {}, el("th", {}, ""), el("th", { class: "s" }, "Önce"), el("th", { class: "s" }, "Sonra"))));
+    const gov = el("tbody");
+    satirlar.forEach(([ad, f]) => gov.append(el("tr", {}, el("td", {}, ad), el("td", { class: "s" }, hucre(once, f)), el("td", { class: "s" }, sonra ? hucre(sonra, f) : "henüz yok"))));
+    tb.append(gov); kart.append(el("div", { class: "tablo" }, tb));
+    kart.append(el("p", { class: "not", style: "margin:8px 0 0" }, "Önce: sayacın başından (" + gunEtiket(BASLANGIC) + ") milattan önceki güne. 30-0 oranı: o ligde oynanan sezonların yüzde kaçı kayıpsız. Şampiyonluk: lig + play-off oyunlarının yüzde kaçı."));
+    ic.append(kart);
   }
 
   // ---- SVG çizgi grafik: tek eksen, çarpı çizgisi + ipucu ----
@@ -301,6 +346,11 @@ details[open]>summary::before{content:"▾ "}
     l.forEach((x, i) => { if (i % adimX && i !== l.length - 1) return; if (i !== l.length - 1 && X(l.length - 1) - X(i) < 70) return;
       const tx = s("text", { x: X(i), y: H - 8, "text-anchor": i === l.length - 1 ? "end" : i === 0 ? "start" : "middle", fill: "#5f7478", "font-size": 11, "font-family": "Barlow" });
       tx.textContent = gunEtiket(x.k); svg.append(tx); });
+    const mi = l.findIndex((x) => x.k === MILAT.gun); // milat çizgisi
+    if (mi > 0) {
+      svg.append(s("line", { x1: X(mi), x2: X(mi), y1: ust, y2: ust + gh, stroke: "#f5c451", "stroke-width": 1.5, "stroke-dasharray": "4 4", opacity: 0.8 }));
+      const mt = s("text", { x: X(mi) + 5, y: ust + 12, fill: "#f5c451", "font-size": 11, "font-weight": 600, "font-family": "Barlow" }); mt.textContent = MILAT.ad; svg.append(mt);
+    }
     seriler.forEach(([k, renk]) => {
       const d = l.map((x, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(x[k]).toFixed(1)).join(" ");
       svg.append(s("path", { d: d, fill: "none", stroke: renk, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
