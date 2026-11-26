@@ -37,11 +37,11 @@ AVERAJ_EGRI = {"bsl": {"c": 1.5, "p": 0.55, "q": 0.5, "k": 4, "s": 0.35},
 # (averaj eğrisinde 0,67, tepe 11 / 9,2 ve 9.-16. sıfır iken 0,62).
 # TBL (2026-11-26, kullanıcının basamakları): 1-2 şampiyonluk yarışı, 3 plase / şampiyonluk adayı, 4-5 play-off iç saha,
 # 6-7 play-off, 8-9 play-in iç saha, 10-11 play-in dış saha, 12-14 orta, sondan 3-4 küme düşme yarışı, son ikisi düştü.
-# 16 takımlı sezonlarda 10-11 de 0 ("boyut"). Kullanıcıyla gerçeğe uyum 0,52'ye ayarlandı (averaj eğrisinde 0,507; TBL'nin
+# 16 takımlı sezonlarda 10-11 0,25 ("boyut"). Kullanıcıyla gerçeğe uyum 0,52'ye ayarlandı (averaj eğrisinde 0,507; TBL'nin
 # sıralı tablolarla tavanı ~0,55-0,57, ama tepe büyüdükçe şampiyonluk düşüyor ve şans artıyor).
 SIRA_PAYI = {"bsl": {"tablo": {1: 11.5, 2: 9.6, 3: 6.0, 4: 5.5, 5: 3.0, 6: 2.0, 7: 1.5, 8: 1.0}, "diger": -1.25, "son": (-2.0, -1.5)},
              "tbl": {"tablo": {1: 7.25, 2: 6.0, 3: 4.0, 4: 3.0, 5: 3.0, 6: 2.0, 7: 2.0, 8: 1.0, 9: 1.0, 10: 0.5, 11: 0.5}, "diger": 0.0,
-                     "son": (-2.0, -1.25, -0.75, -0.5), "boyut": {16: {10: 0.0, 11: 0.0}}}}
+                     "son": (-2.0, -1.25, -0.75, -0.5), "boyut": {16: {10: 0.25, 11: 0.25}}}}
 
 
 def takim_payi(lig, tk, son_sira):
