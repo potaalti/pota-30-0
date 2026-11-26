@@ -1154,7 +1154,7 @@
     $("cubuklar").innerHTML = [0, 1, 2, 3, 4].map((i) => '<i class="' + (i < secilen ? "dolu" : "") + '"></i>').join("");
     const tr = trSayisi(taraf), sira = siradaki();
     $("durum").innerHTML = '<span class="cip ' + (tr >= minTr() ? "tamam" : "eksik") + '">Türk ' + tr + "/" + minTr() + "</span>" + rolCipleri(taraf) +
-      '<span class="cip">' + DZ()[taraf.dizilis].ad + "</span>" +
+      // diziliş çipi 2026-11-26'da kaldırıldı (kullanıcı: sahanın üstünde zaten yazıyor)
       // değiştirme hakkı (başka takım / başka sezon, toplam): 2026-11-20 kullanıcı
       (S.cift && S.kaynak === "sabit" ? "" : '<span class="cip ' + (taraf.atlaHak > 0 ? "" : "eksik") + '" title="Başka takım ya da başka sezon, oyun başına toplam 1">Değiştirme hakkı ' + taraf.atlaHak + "</span>") +
       // beşin toplam top kullanımı çipi 2026-11-26'da kaldırıldı (kullanıcı); sınır aşılınca "Top yetmiyor" çipi çıkar
