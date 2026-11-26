@@ -1125,17 +1125,27 @@
     });
   }
 
-  // Seçim sırasında canlı artı/eksi (2026-11-26 kullanıcı: "insanlar neyi neden seçeceğini bilsin"): yalnız istatistiğe dayanan,
-  // seçim ilerledikçe geri dönmeyen kurallar adıyla gösterilir; eşik yazılmaz. Beşten önce bilinemeyenler (Şutör yok, Pota boş,
-  // Ribaund alan yok, Top paylaşımı zayıf) beş dolunca görünür. Kadro kimyası ve Sıcak / Soğuk eller sonuca kalır. Gizli modda yok.
-  const ANLIK_ETKI = ["Dış şut bol", "Pota koruyucu var", "Asist baremi", "Top çalma baremi", "Top kaybı baremi", "Top yetmiyor", "Boyalı alan kalabalık"];
+  // Seçim sırasında canlı artı/eksi (2026-11-26 kullanıcı: "insanlar neyi neden seçeceğini bilsin"; "her şey ekside görünür,
+  // pick yaptıkça artıya döner"). Yalnız istatistik kuralları, adıyla; eşik yazılmaz. Artılar ve ihtiyaçlar (şutör, blok,
+  // ribaund, pas) baştan kırmızı, tutunca yeşile döner; taşmalar (top kaybı, top kullanımı, üçlüksüz uzunlar) yalnız olunca
+  // kırmızı görünür. Kadro kimyası ve Sıcak / Soğuk eller sonuca kalır. Gizli modda ve maç motorunda yok.
   function canliCipler(taraf) {
-    if (!klasik() || ayar.zor) return "";
-    const os = taraf.bes.filter(Boolean).map((p) => p.o); if (!os.length) return "";
-    const tam = os.length === 5, gizle = KIMYA.adlar.concat(["Sıcak eller", "Soğuk eller", "Uyum sınırı"]);
-    return klasikDeger(os, os.map(() => 1)).etkiler
-      .filter((x) => gizle.indexOf(x.ad) < 0 && (tam || ANLIK_ETKI.indexOf(x.ad) >= 0) && Math.abs(x.d) > 0.05)
-      .map((x) => '<span class="cip ' + (x.d > 0 ? "arti" : "eksi") + '">' + (x.d > 0 ? "+ " : "− ") + kac(x.ad) + "</span>").join("");
+    const d = denge(); if (!d || ayar.zor) return "";
+    const os = taraf.bes.filter(Boolean).map((p) => p.o), e = d.esik;
+    const top = (k) => os.reduce((a, o) => a + (o[k] || 0), 0), say = (f) => os.filter(f).length;
+    const cip = (iyi, iyiAd, kotuAd) => '<span class="cip ' + (iyi ? "arti" : "eksi") + '">' + (iyi ? "+ " + iyiAd : "− " + kotuAd) + "</span>";
+    let h = cip(say((o) => (o.u3 || 0) >= e.dis) >= 3, "Dış şut bol", "Dış şut bol") +
+      cip(say((o) => (o.bl || 0) >= e.pota) >= 1, "Pota koruyucu var", "Pota koruyucu var") +
+      cip(top("as") >= e.as, "Asist baremi", "Asist baremi") +
+      cip(top("st") >= e.st, "Top çalma baremi", "Top çalma baremi") +
+      cip(say((o) => (o.u3 || 0) >= e.sutor) >= 1, "Şutör var", "Şutör yok") +
+      cip(say((o) => (o.bl || 0) >= e.potaBos) >= 1, "Pota korunuyor", "Pota boş") +
+      cip(top("rb") >= e.rb, "Ribaund tamam", "Ribaund alan yok") +
+      cip(top("as") >= e.asAlt, "Top paylaşımı iyi", "Top paylaşımı zayıf");
+    if (top("tk") >= e.tk) h += cip(false, "", "Top kaybı baremi");
+    if (top("kul") > e.kul) h += cip(false, "", "Top yetmiyor");
+    if (say((o) => o.uz && (o.u3 || 0) < e.boyali) >= 3) h += cip(false, "", "Boyalı alan kalabalık");
+    return h;
   }
   function ustCiz() {
     const g = S.gorunen, taraf = S.taraflar[g], secilen = 5 - bosSayisi(taraf);
