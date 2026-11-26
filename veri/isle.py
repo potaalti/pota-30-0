@@ -30,6 +30,28 @@ AVERAJ_EGRI = {"bsl": {"c": 1.5, "p": 0.55, "q": 0.5, "k": 4, "s": 0.35},
                "tbl": {"c": 1.8, "p": 0.2, "q": 1.1, "k": 6, "s": 0.3}}
 
 
+# Lig sırası payı (2026-11-26, kullanıcı): BSL'de takımın gücü averaj yerine doğrudan lig sırasından gelir; Avrupa kupası
+# seviyesi gibi düşünüldü (1-2 Euroleague, 3-4 Eurocup, 5-8 Champions League / Europe Cup). Değerler 40 dakikaya düşen pay;
+# oyuncu dakika/40 × güven kadarını alır. Tablodan sonraki sıralar "diger"; her sezonun son iki sırası (ligde kaç takım olursa
+# olsun, küme hattı) "son_iki" (sondan ikinci, sonuncu). Kullanıcıyla geri teste (gerçeğe uyum) göre ~0,65'e ayarlandı
+# (averaj eğrisinde 0,67, tepe 11 / 9,2 ve 9.-16. sıfır iken 0,62). TBL henüz averaj eğrisinde.
+SIRA_PAYI = {"bsl": {"tablo": {1: 11.5, 2: 9.6, 3: 6.0, 4: 5.5, 5: 3.0, 6: 2.0, 7: 1.5, 8: 1.0}, "diger": -1.25, "son_iki": (-1.5, -2.0)}}
+
+
+def takim_payi(lig, tk, son_sira):
+    """Takımın 40 dakikaya düşen güç payı: SIRA_PAYI'nda lig varsa sıradan (son_sira: o sezonun son sırası), yoksa averaj eğrisinden."""
+    if lig not in SIRA_PAYI:
+        return averaj_sayilan(lig, tk["net"])
+    e, s = SIRA_PAYI[lig], tk.get("sira")
+    if not s:
+        return 0.0
+    if s == son_sira:
+        return e["son_iki"][1]
+    if s == son_sira - 1:
+        return e["son_iki"][0]
+    return e["tablo"].get(s, e["diger"])
+
+
 def averaj_sayilan(lig, net):
     e = AVERAJ_EGRI[lig]
     if net >= 0:
@@ -621,12 +643,13 @@ def main():
         takimlar_hepsi = []
         for s, sezon_kayit, ort, Ls in kayitlar:
             olcek = genel / ort
+            son_sira = max((t_.get("sira") or 0) for t_ in sezon_kayit)
             for tk in sezon_kayit:
                 for o in tk["oyuncular"]:
                     guven = o["mac"] / (o["mac"] + GUVEN_MAC)
                     o["m"] = motor_vektor(o, Ls, La)
                     o["nt"] = round(max(-8.0, tk["net"]) * o["dk"] / 40 * guven, 2)  # takım averajından dakika payı (sayı/maç)
-                    o["g"] = round(o.pop("_ham") * olcek + (BETA * averaj_sayilan(lig, tk["net"]) * o["dk"] / 40 + GAMMA * o["verim"]) * guven, 2)
+                    o["g"] = round(o.pop("_ham") * olcek + (BETA * takim_payi(lig, tk, son_sira) * o["dk"] / 40 + GAMMA * o["verim"]) * guven, 2)
                 bes = tk["oyuncular"][:5]
                 R = sum(o["g"] for o in bes) + denge(bes, esik[lig])
                 if tk["gercek"] and not tk.get("devam"):  # galibiyet eğrisi yalnız biten sezonlardan
