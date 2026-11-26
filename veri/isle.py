@@ -32,10 +32,10 @@ AVERAJ_EGRI = {"bsl": {"c": 1.5, "p": 0.55, "q": 0.5, "k": 4, "s": 0.35},
 
 # Lig sırası payı (2026-11-26, kullanıcı): BSL'de takımın gücü averaj yerine doğrudan lig sırasından gelir; Avrupa kupası
 # seviyesi gibi düşünüldü (1-2 Euroleague, 3-4 Eurocup, 5-8 Champions League / Europe Cup). Değerler 40 dakikaya düşen pay;
-# oyuncu dakika/40 × güven kadarını alır. Tablodan sonraki sıralar "diger"; her sezonun son iki sırası (ligde kaç takım olursa
-# olsun, küme hattı) "son_iki" (sondan ikinci, sonuncu). Kullanıcıyla geri teste (gerçeğe uyum) göre ~0,65'e ayarlandı
+# oyuncu dakika/40 × güven kadarını alır. Tablodan sonraki sıralar "diger"; "son" sondan sayılan sıralar (sonuncu, sondan ikinci,
+# ...; ligde kaç takım olursa olsun küme hattı) ve sıra tablosunun önüne geçer. Kullanıcıyla geri teste (gerçeğe uyum) göre ~0,65'e ayarlandı
 # (averaj eğrisinde 0,67, tepe 11 / 9,2 ve 9.-16. sıfır iken 0,62). TBL henüz averaj eğrisinde.
-SIRA_PAYI = {"bsl": {"tablo": {1: 11.5, 2: 9.6, 3: 6.0, 4: 5.5, 5: 3.0, 6: 2.0, 7: 1.5, 8: 1.0}, "diger": -1.25, "son_iki": (-1.5, -2.0)}}
+SIRA_PAYI = {"bsl": {"tablo": {1: 11.5, 2: 9.6, 3: 6.0, 4: 5.5, 5: 3.0, 6: 2.0, 7: 1.5, 8: 1.0}, "diger": -1.25, "son": (-2.0, -1.5)}}
 
 
 def takim_payi(lig, tk, son_sira):
@@ -45,10 +45,9 @@ def takim_payi(lig, tk, son_sira):
     e, s = SIRA_PAYI[lig], tk.get("sira")
     if not s:
         return 0.0
-    if s == son_sira:
-        return e["son_iki"][1]
-    if s == son_sira - 1:
-        return e["son_iki"][0]
+    alt = son_sira - s  # 0: sonuncu
+    if 0 <= alt < len(e.get("son", ())):
+        return e["son"][alt]
     return e["tablo"].get(s, e["diger"])
 
 
