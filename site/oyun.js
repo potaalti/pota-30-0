@@ -1125,6 +1125,18 @@
     });
   }
 
+  // Seçim sırasında canlı artı/eksi (2026-11-26 kullanıcı: "insanlar neyi neden seçeceğini bilsin"): yalnız istatistiğe dayanan,
+  // seçim ilerledikçe geri dönmeyen kurallar adıyla gösterilir; eşik yazılmaz. Beşten önce bilinemeyenler (Şutör yok, Pota boş,
+  // Ribaund alan yok, Top paylaşımı zayıf) beş dolunca görünür. Kadro kimyası ve Sıcak / Soğuk eller sonuca kalır. Gizli modda yok.
+  const ANLIK_ETKI = ["Dış şut bol", "Pota koruyucu var", "Asist baremi", "Top çalma baremi", "Top kaybı baremi", "Top yetmiyor", "Boyalı alan kalabalık"];
+  function canliCipler(taraf) {
+    if (!klasik() || ayar.zor) return "";
+    const os = taraf.bes.filter(Boolean).map((p) => p.o); if (!os.length) return "";
+    const tam = os.length === 5, gizle = KIMYA.adlar.concat(["Sıcak eller", "Soğuk eller", "Uyum sınırı"]);
+    return klasikDeger(os, os.map(() => 1)).etkiler
+      .filter((x) => gizle.indexOf(x.ad) < 0 && (tam || ANLIK_ETKI.indexOf(x.ad) >= 0) && Math.abs(x.d) > 0.05)
+      .map((x) => '<span class="cip ' + (x.d > 0 ? "arti" : "eksi") + '">' + (x.d > 0 ? "+ " : "− ") + kac(x.ad) + "</span>").join("");
+  }
   function ustCiz() {
     const g = S.gorunen, taraf = S.taraflar[g], secilen = 5 - bosSayisi(taraf);
     const tur = Math.min(5, secilen + (S.bitti || secilen === 5 ? 0 : 1));
@@ -1138,6 +1150,7 @@
       // beşin toplam top kullanımı (2026-11-20 kullanıcı; eşik yazılmaz; Gizli modda yok)
       (!ayar.zor && bosSayisi(taraf) < 5 ? '<span class="cip" title="' + BASLIK_UZUN.kul + ' · beşteki oyuncuların toplamı">Kullanım ' +
         taraf.bes.reduce((a, p) => a + (p ? p.o.kul || 0 : 0), 0).toLocaleString("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + "</span>" : "") +
+      canliCipler(taraf) +
       (S.cift && !S.bitti && S.takim && !S.cevriliyor && sira !== null ? '<span class="cip sira">Sıra: ' + kac(S.taraflar[sira].ad) + "</span>" : "") +
       (S.secili ? '<span class="cip sira">Seçili: ' + kac(soyad(S.secili.ad)) + " → sahada bir yere dokun</span>" + '<button class="cip birak" data-birak="1">✕ Vazgeç</button>' : "") +
       (S.cevrim && S.rakipBakiyor && sira === 1 - S.cevrim.ben && S.takim && S.takim.oyuncular.some((x) => x.k === S.rakipBakiyor)
