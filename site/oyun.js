@@ -49,6 +49,9 @@
   };
   // Kadro kimyası (yalnız kurulan beşe; gerçek takımlara gelmez): 2 oyuncuyla, +2; play-off maçlarında ×2,5 sayılır
   const KIMYA = { kisi: 2, puan: 2, poKat: 2.5, adlar: ["Yerli omurga", "Kulüp ruhu", "Eski takım arkadaşları"] };
+  const BALKAN = ["SIRBİSTAN", "HIRVATİSTAN", "SLOVENYA", "BOSNA HERSEK", "KUZEY MAKEDONYA", "MAKEDONYA", "KARADAĞ", "YUGOSLAVYA", "SIRBİSTAN KARADAĞ",
+    "YUNANİSTAN", "BULGARİSTAN", "ARNAVUTLUK", "ROMANYA"];
+  const TEK_KISI = 0.335; // Topu tek kişi tutuyor: bir oyuncu beşin top kullanımının %33,5'inden fazlası (2026-11-27, kullanıcı), −2
   function denge() { return klasik() ? DENGE[S.veri.lig] : null; }
   function egriOlcek() { const d = denge(); return S.veri.egri.olcek / (d ? d.dik : 1); }
   function egriOrta() { const d = denge(); return S.veri.egri.orta - (d ? d.kaydir : 0); }
@@ -554,7 +557,10 @@
     const c = [], d = denge(), kisi = d ? KIMYA.kisi : 3, puan = d ? KIMYA.puan : 1; // 2026-11-26 denge: 3 → 2 oyuncu, +1 → +2
     const enAzTr = S.veri.lig === "tbl" ? 4 : 2; // 2026-11-25 kullanıcı: BSL'de 2 Türk'e artı (önce 3)
     const trler = os.map((o, i) => (o.tr ? i : -1)).filter((i) => i >= 0);
-    if (trler.length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2, kim: trler }); // 2026-11-20 kullanıcı: +1 → +2
+    if (trler.length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2, kim: trler });
+    // Balkan (2026-11-27, kullanıcı): yabancılardan en az 2'si eski Yugoslavya, Yunanistan, Bulgaristan, Arnavutluk ya da Romanya'dan, +2
+    const balkan = os.map((o, i) => (!o.tr && BALKAN.indexOf(o.ulke) >= 0 ? i : -1)).filter((i) => i >= 0);
+    if (d && balkan.length >= 2) c.push({ ad: "Balkan", aciklama: "Balkan ülkelerinden en az 2 yabancı", d: 2, kim: balkan }); // 2026-11-20 kullanıcı: +1 → +2
     if (S.kaynak !== "sabit") { // tek takım-sezon havuzunda herkes zaten aynı kadrodan
       const kulup = {};
       takimlar.forEach((t, i) => { if (t && t.kulup) (kulup[t.kulup] = kulup[t.kulup] || []).push(i); });
@@ -568,7 +574,7 @@
     return c;
   }
   const ETKI_BASLIK = ["Hücum", "Savunma", "Takım uyumu"];
-  const ETKI_GRUP = { "Asist baremi": "Hücum", "Top paylaşımı zayıf": "Hücum", "Top kaybı baremi": "Hücum", "Top yetmiyor": "Hücum",
+  const ETKI_GRUP = { "Asist baremi": "Hücum", "Top paylaşımı zayıf": "Hücum", "Top kaybı baremi": "Hücum", "Top yetmiyor": "Hücum", "Topu tek kişi tutuyor": "Hücum",
     "Şut yaratan yok": "Hücum", "Dış şut bol": "Hücum", "Şutör yok": "Hücum", "Boyalı alan kalabalık": "Hücum",
     "Sıcak eller": "Hücum", "Soğuk eller": "Hücum",
     "Top çalma baremi": "Savunma", "Ribaund alan yok": "Savunma", "Pota koruyucu var": "Savunma", "Pota boş": "Savunma" };
@@ -642,6 +648,10 @@
       const n = bas ? Math.ceil((kul - ust) / bas - 1e-9) : kul - ust;
       // 2026-11-20 kullanıcı: değer görünür, sebebi (kullanım, eşik, basamak) yazılmaz
       etkiler.push({ ad: "Top yetmiyor", aciklama: "topu isteyen oyuncu çok", d: -Math.min(V.kullanimSinir || 99, n * kat) });
+    }
+    if (dg && kul > 0) { // Topu tek kişi tutuyor (2026-11-27, kullanıcı)
+      const enK = os.reduce((a, o, i) => ((o.kul || 0) > (os[a].kul || 0) ? i : a), 0);
+      if ((os[enK].kul || 0) / kul > TEK_KISI) etkiler.push({ ad: "Topu tek kişi tutuyor", aciklama: "en çok top kullananın beşteki payı %" + Math.round(100 * (os[enK].kul || 0) / kul), d: -2, kim: [enK] });
     }
     const R = os.reduce((a, o, i) => a + o.g * uyumlar[i], 0) + etkiler.reduce((a, e) => a + e.d, 0) + gizli;
     return { etkiler: etkiler, R: R };
@@ -1193,6 +1203,7 @@
       cip(top("as") >= e.asAlt, "Top paylaşımı iyi", "Top paylaşımı zayıf");
     if (top("tk") >= e.tk) h += cip(false, "", "Top kaybı baremi");
     if (top("kul") > e.kul) h += cip(false, "", "Top yetmiyor");
+    if (os.length === 5 && top("kul") > 0 && Math.max.apply(null, os.map((o) => o.kul || 0)) / top("kul") > TEK_KISI) h += cip(false, "", "Topu tek kişi tutuyor");
     if (say((o) => o.uz && (o.u3 || 0) < e.boyali) >= 3) h += cip(false, "", "Boyalı alan kalabalık");
     return h;
   }
