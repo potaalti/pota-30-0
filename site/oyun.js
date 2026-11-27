@@ -51,6 +51,11 @@
   const KIMYA = { kisi: 2, puan: 2, poKat: 2.5, adlar: ["Yerli omurga", "Kulüp ruhu", "Eski takım arkadaşları"] };
   const BALKAN = ["SIRBİSTAN", "HIRVATİSTAN", "SLOVENYA", "BOSNA HERSEK", "KUZEY MAKEDONYA", "MAKEDONYA", "KARADAĞ", "YUGOSLAVYA", "SIRBİSTAN KARADAĞ",
     "YUNANİSTAN", "BULGARİSTAN", "ARNAVUTLUK", "ROMANYA"];
+  // 2026-11-27 kullanıcıyla (eşikler kullanıcının, puanlar Claude'un önerisi; simülasyonla ölçüldü, toplam etki ~+0,1 galibiyet):
+  // Çizgi sağlam +1,5 (beşin serbest atışı ≥%79), Çizgide titrek −1,5 (<%67 / TBL <%65), İkinci şans +1,5 (hücum ribaundu ≥9,5 / ≥10,5),
+  // Faul sorunu −1,5 (faul ≥14 / ≥14,25), Rotasyon oyuncuları −1,5 (en az 2 oyuncu <20 dk), Yerli yıldız +2 (en yüksek VP'li Türk),
+  // Kazanan kültürü +2 (en az 2 oyuncu o sezon ligi ilk 2'de bitiren takımdan). Kadro kimyası gibi yalnız kurulan beşlere işler.
+  const YENI_ESIK = { bsl: { ftUst: 0.79, ftAlt: 0.67, hr: 9.5, fl: 14 }, tbl: { ftUst: 0.79, ftAlt: 0.65, hr: 10.5, fl: 14.25 } };
   const TEK_KISI = { bsl: 0.33, tbl: 0.34 }; // Topu tek kişi tutuyor: bir oyuncu beşin top kullanımının bu payından fazlası, −2 (2026-11-27, kullanıcı: BSL %33, TBL %34)
   function denge() { return klasik() ? DENGE[S.veri.lig] : null; }
   function egriOlcek() { const d = denge(); return S.veri.egri.olcek / (d ? d.dik : 1); }
@@ -342,7 +347,7 @@
   function ortalamaOyuncu() { // gerçek ilk beşlerin ortalama oyuncusu (boş yerleri doldurmak için)
     const lig = S.veri.lig;
     if (!ortOyuncuOnbellek[lig]) {
-      const alanlar = ["g", "vp", "sy", "rb", "as", "st", "bl", "tk", "u3", "kul", "dk"], o = { p: [1, 2, 3, 4, 5] };
+      const alanlar = ["g", "vp", "sy", "rb", "as", "st", "bl", "tk", "u3", "kul", "dk", "sa", "sd", "hr", "fl"], o = { p: [1, 2, 3, 4, 5] };
       let n = 0; alanlar.forEach((k) => { o[k] = 0; });
       S.veri.takimlar.forEach((t) => t.oyuncular.slice().sort((a, b) => b.dk * b.mac - a.dk * a.mac).slice(0, 5).forEach((x) => { n++; alanlar.forEach((k) => { o[k] += x[k] || 0; }); }));
       alanlar.forEach((k) => { o[k] /= n; });
@@ -557,10 +562,11 @@
     const c = [], d = denge(), kisi = d ? KIMYA.kisi : 3, puan = d ? KIMYA.puan : 1; // 2026-11-26 denge: 3 → 2 oyuncu, +1 → +2
     const enAzTr = S.veri.lig === "tbl" ? 4 : 2; // 2026-11-25 kullanıcı: BSL'de 2 Türk'e artı (önce 3)
     const trler = os.map((o, i) => (o.tr ? i : -1)).filter((i) => i >= 0);
-    if (trler.length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2, kim: trler });
+    if (trler.length >= enAzTr) c.push({ ad: "Yerli omurga", aciklama: "en az " + enAzTr + " Türk oyuncu", d: 2, kim: trler }); // 2026-11-20 kullanıcı: +1 → +2
     // Balkan (2026-11-27, kullanıcı): yabancılardan en az 2'si eski Yugoslavya, Yunanistan, Bulgaristan, Arnavutluk ya da Romanya'dan, +2
     const balkan = os.map((o, i) => (!o.tr && BALKAN.indexOf(o.ulke) >= 0 ? i : -1)).filter((i) => i >= 0);
-    if (d && balkan.length >= 2) c.push({ ad: "Balkan", aciklama: "Balkan ülkelerinden en az 2 yabancı", d: 2, kim: balkan }); // 2026-11-20 kullanıcı: +1 → +2
+    if (d && balkan.length >= 2) c.push({ ad: "Balkan", aciklama: "Balkan ülkelerinden en az 2 yabancı", d: 2, kim: balkan });
+    if (d) yeniKurallar(os, takimlar).forEach((x) => c.push(x));
     if (S.kaynak !== "sabit") { // tek takım-sezon havuzunda herkes zaten aynı kadrodan
       const kulup = {};
       takimlar.forEach((t, i) => { if (t && t.kulup) (kulup[t.kulup] = kulup[t.kulup] || []).push(i); });
@@ -573,10 +579,31 @@
     }
     return c;
   }
+  const takimSiraOnbellek = {};
+  function takimSirasi(id) {
+    const lig = S.veri.lig;
+    if (!takimSiraOnbellek[lig]) { const m = {}; S.veri.takimlar.forEach((t) => { m[t.id] = t.sira; }); takimSiraOnbellek[lig] = m; }
+    return takimSiraOnbellek[lig][id];
+  }
+  function yeniKurallar(os, takimlar) {
+    const c = [], e = YENI_ESIK[S.veri.lig], top = (k) => os.reduce((a, o) => a + (o[k] || 0), 0), yuz = (x) => "%" + Math.round(100 * x);
+    const sd = top("sd"), ft = sd > 0 ? top("sa") / sd : null;
+    if (ft !== null && ft >= e.ftUst) c.push({ ad: "Çizgi sağlam", aciklama: "beşin serbest atışı " + yuz(ft), d: 1.5 });
+    if (ft !== null && ft < e.ftAlt) c.push({ ad: "Çizgide titrek", aciklama: "beşin serbest atışı " + yuz(ft), d: -1.5 });
+    if (top("hr") >= e.hr) c.push({ ad: "İkinci şans", aciklama: "beşin hücum ribaundu " + top("hr").toFixed(1).replace(".", ","), d: 1.5 });
+    if (top("fl") >= e.fl) c.push({ ad: "Faul sorunu", aciklama: "beşin maç başı faulü " + top("fl").toFixed(1).replace(".", ","), d: -1.5 });
+    const az = os.map((o, i) => ((o.dk || 99) < 20 ? i : -1)).filter((i) => i >= 0);
+    if (az.length >= 2) c.push({ ad: "Rotasyon oyuncuları", aciklama: "en az 2 oyuncu maç başı 20 dakikadan az oynamış", d: -1.5, kim: az });
+    const yildiz = os.reduce((a, o, i) => ((o.vp || 0) > (os[a].vp || 0) ? i : a), 0);
+    if (os[yildiz].tr) c.push({ ad: "Yerli yıldız", aciklama: "beşin en yüksek VP'li oyuncusu Türk", d: 2, kim: [yildiz] });
+    const ust = (takimlar || []).map((t, i) => (t && (takimSirasi(t.id) || 99) <= 2 ? i : -1)).filter((i) => i >= 0);
+    if (ust.length >= 2) c.push({ ad: "Kazanan kültürü", aciklama: "en az 2 oyuncu o sezon ligi ilk 2'de bitiren takımlardan", d: 2, kim: ust, takimli: true });
+    return c;
+  }
   const ETKI_BASLIK = ["Hücum", "Savunma", "Takım uyumu"];
   const ETKI_GRUP = { "Asist baremi": "Hücum", "Top paylaşımı zayıf": "Hücum", "Top kaybı baremi": "Hücum", "Top yetmiyor": "Hücum", "Topu tek kişi tutuyor": "Hücum",
     "Şut yaratan yok": "Hücum", "Dış şut bol": "Hücum", "Şutör yok": "Hücum", "Boyalı alan kalabalık": "Hücum",
-    "Sıcak eller": "Hücum", "Soğuk eller": "Hücum",
+    "Sıcak eller": "Hücum", "Soğuk eller": "Hücum", "Çizgi sağlam": "Hücum", "Çizgide titrek": "Hücum", "İkinci şans": "Hücum", "Faul sorunu": "Savunma",
     "Top çalma baremi": "Savunma", "Ribaund alan yok": "Savunma", "Pota koruyucu var": "Savunma", "Pota boş": "Savunma" };
   // 2026-11-26 denge: verideki uyum kurallarının eşikleri DENGE'den (adına göre); açıklama da yeni eşikle
   function uyumKurallari() {
@@ -611,7 +638,7 @@
         etkiler.push({ ad: k.ad, aciklama: k.aciklama + (k.kademe ? " · beşte " + n + " kişi" : ""), d: d, uyum: true, kim: k.en_az !== undefined ? kim : null }); uyumTop += d;
       }
     });
-    if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.d, uyum: true, kim: k.kim, sezonlu: k.sezonlu, takim: k.takim }); uyumTop += k.d; });
+    if (takimlar) kimyaUyumu(os, takimlar).forEach((k) => { etkiler.push({ ad: k.ad, aciklama: k.aciklama, d: k.d, uyum: true, kim: k.kim, sezonlu: k.sezonlu, takimli: k.takimli, takim: k.takim }); uyumTop += k.d; });
     if (V.uyumSinir && Math.abs(uyumTop) > V.uyumSinir) etkiler.push({ ad: "Uyum sınırı", aciklama: "uyum kurallarının toplamı en çok ±" + V.uyumSinir, d: Math.sign(uyumTop) * V.uyumSinir - uyumTop, uyum: true, sinir: true });
     const ROL_AD = { rb: ["Ribaund alan yok", "beşin ribaundu"], as: ["Top paylaşımı zayıf", "beşin toplam asisti"] };
     const dg = denge(), rol = dg ? { rb: dg.esik.rb, as: dg.esik.asAlt } : V.esik.rol;
@@ -975,7 +1002,7 @@
       if (!e.kim || !e.kim.length) return "";
       const ps = e.kim.map((i) => r.taraf.bes[i]).filter(Boolean);
       const t = e.takim && S.veri.takimlar.filter((x) => x.id === e.takim)[0];
-      return e.ad + ": " + ps.map((p) => adParca(p.o.ad).filter(Boolean).join(" ") + (e.sezonlu ? " (" + p.t.sezon + ")" : "")).join(", ") +
+      return e.ad + ": " + ps.map((p) => adParca(p.o.ad).filter(Boolean).join(" ") + (e.takimli ? " (" + p.t.ad + " " + p.t.sezon + ")" : e.sezonlu ? " (" + p.t.sezon + ")" : "")).join(", ") +
         (e.sezonlu && ps[0] ? " · " + ps[0].t.ad : "") + (t ? " · " + t.ad + " " + t.sezon : "");
     };
     const etkiCip = (e, r) => { const kim = r ? etkiKim(e, r) : "";

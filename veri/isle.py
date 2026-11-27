@@ -596,6 +596,9 @@ def main():
                         "st": round(sayi(p.get("topCalmaOrtalama")), 1), "bl": round(sayi(p.get("blokOrtalama")), 1),
                         "tk": round(sayi(p.get("topKaybiOrtalama")), 1),
                         "fga": round(sayi(p.get("agDeneme")), 2), "fta": round(sayi(p.get("sA1Ortalama")), 2),
+                        # serbest atış isabet/deneme, hücum ribaundu, faul (maç başı): Çizgi sağlam / titrek, İkinci şans, Faul sorunu (2026-11-27)
+                        "sa": round(sayi(p.get("sA0Ortalama")), 2), "sd": round(sayi(p.get("sA1Ortalama")), 2),
+                        "hr": round(sayi(p.get("hrOrtalama")), 1), "fl": round(sayi(p.get("faulOrtalama")), 1),
                         "u3": round(sayi(p.get("puan30Ortalama")), 1), "vp": round(sayi(p.get("vpOrtalama")), 1),
                         "p": mk, "pk": mk_kaynak, "_m": ham_m, "uz": 1 if max(mk) >= 4 else 0,
                     })
