@@ -1037,18 +1037,7 @@
     html += '<div class="dugmeler"><button class="ana-btn ikincil" id="paylas">Görseli paylaş</button>' +
       (ayar.mod === "gunluk" ? '<button class="ana-btn" id="serbeste">Serbest oyna</button>'
         : S.cevrim ? '<button class="ana-btn" id="rovans">Rövanş (aynı oda)</button><button class="ana-btn ikincil" id="tekrar">Odadan çık</button>'
-        : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>" +
-      (klasik() ?
-      '<p class="not">Güç: o sezonki VP ortalaması (az maç oynayanlarda kısılır, sezon ölçeğine göre ayarlanır) + takımının sayı averajından dakika payı; mevki uyumu ×' + (S.sistem === "ao" ? "1 / ×" + AO_DISI + " (TBL'de Arka/Ön)" : UYUM_CARPAN.join(" / ×")) +
-      ". Her barem bir kez sayılır; uyum kuralları oyun hissi için" + (S.veri.uyumSinir ? " (toplam en çok ±" + S.veri.uyumSinir + ")" : "") + ". Galibiyet eğrisi " + S.veri.egri.n + " gerçek takımın ilk beşinden uyduruldu.</p>"
-      :
-      '<p class="not">Maçlar sahiplik sahiplik oynanır: top kaybı (rakibin top çalması artırır), serbest atış (rakibin faulü artırır), ' +
-      "iki ya da üç sayılık şut (isabeti rakibin bloğu düşürür, asistli oyun artırır), kaçan şutta hücum ribaundu ile savunma ribaundunun çekişmesi. " +
-      "Her oyuncu o sezonki kutu istatistikleri ve dakikasıyla oynar (dönem farkı giderilir, az maç oynayanlar lig ortalamasına çekilir); kalan dakikayı lig ortalaması yedekler oynar. " +
-      "Takımının sayı averajından dakika payı kutuya yansımayan katkıyı taşır. Mevki dışı ×" + (S.sistem === "ao" ? AO_DISI : UYUM_CARPAN.slice(1).join(" / ×")) +
-      ": ribaund, asist, savunma azalır, top kaybı artar. Rakipler ligin gerçek takımları (en çok süre alan beşleri); iç sahada +" + Motor.AYAR.ev + " sayı. " +
-      "Roller (şutör, oyun kurucu, içeri skorer, pota koruyucu, top çalan, ribaundçu) sinerji verir: her rolün ilk oyuncusu çok, sonrakiler daha az değerli; eksik rol isabeti ve ribaundu düşürür. " +
-      "Motor gerçek takımlarla sınandı. Oyun ayarı: kurduğun beşin oyuncuları en az " + S.veri.motor.oyunDakika + " dakika oynar, rol sinerjisi ×" + S.veri.motor.oyunSinerji + ", fark ×" + String(S.veri.motor.oyunDiklik).replace(".", ",") + ".</p>");
+        : '<button class="ana-btn" id="tekrar">Yeni oyun</button>') + "</div>"; // sonuçtaki uzun "Güç: …" açıklaması 2026-11-27'de kaldırıldı (kullanıcı)
     el.innerHTML = html;
     if (!el.kimDinle) { // artı/eksi çipine dokununca satırın altında oyuncular açılır, aynı çipe yeniden dokununca kapanır
       el.kimDinle = true;
