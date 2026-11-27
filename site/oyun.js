@@ -68,7 +68,7 @@
   // ---- küçük kalıcı tercihler (tarayıcıda) ----
   function oku(k, v) { try { const x = localStorage.getItem("p300:" + k); return x === null ? v : JSON.parse(x); } catch (e) { return v; } }
   function yaz(k, v) { try { localStorage.setItem("p300:" + k, JSON.stringify(v)); } catch (e) { /* yok */ } }
-  const ayar = { lig: oku("lig", "bsl"), mod: oku("mod", "serbest"), zor: +oku("zor", 0), sim: "klasik" /* Maç motoru 2026-11-20'de kaldırıldı (kullanıcı); eski kayıtlı ayar yok sayılır */, format: oku("format", "sezon"), yzZorluk: oku("yzZorluk", "orta"), yzKaynak: oku("yzKaynak", "cark") };
+  const ayar = { lig: oku("lig", "bsl"), mod: oku("mod", "serbest"), zor: 0 /* İstatistik/Gizli seçimi 2026-11-27'de kaldırıldı (kullanıcı: "gizli oynanmaz"); eski kayıtlı Gizli yok sayılır */, sim: "klasik" /* Maç motoru 2026-11-20'de kaldırıldı (kullanıcı); eski kayıtlı ayar yok sayılır */, format: oku("format", "sezon"), yzZorluk: oku("yzZorluk", "orta"), yzKaynak: oku("yzKaynak", "cark") };
   if (!window.VERI || !window.VERI[ayar.lig]) ayar.lig = window.VERI && window.VERI.bsl ? "bsl" : "tbl";
   if (MODLAR.indexOf(ayar.mod) < 0) ayar.mod = "serbest";
 
@@ -1646,7 +1646,7 @@
 
   // ---- ayar düğmeleri ----
   function secicileriBoya() {
-    ["ligSec", "modSec", "zorSec", "formatSec"].forEach((id) => {
+    ["ligSec", "modSec", "formatSec"].forEach((id) => {
       Array.prototype.forEach.call($(id).children, (b) => { const a = Object.keys(b.dataset)[0]; b.classList.toggle("aktif", String(ayar[a]) === b.dataset[a]); });
     });
     donemCiz();
@@ -1672,7 +1672,7 @@
     if (k === "sim" || k === "format") { S[k] = v; if (S.bitti) sezonuOyna(true); else { if (S.takim) listeCiz(); ustCiz(); } return; }
     yeniOyun();
   }
-  ["ligSec", "modSec", "zorSec", "formatSec"].forEach((id) => {
+  ["ligSec", "modSec", "formatSec"].forEach((id) => {
     Array.prototype.forEach.call($(id).children, (b) => { b.onclick = () => { const a = Object.keys(b.dataset)[0]; ayarla(a, a === "zor" ? +b.dataset[a] : b.dataset[a]); }; });
   });
   secicileriBoya();
