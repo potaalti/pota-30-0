@@ -858,6 +858,30 @@
   function enIyiSecim(h) { return klasik() ? enIyiSecimK(h) : enIyiSecimM(h); }
   function enZayif(h) { return klasik() ? enZayifK(h) : enZayifM(h); }
 
+  // ---- kendi rekorların (2026-11-27, kullanıcı): yalnız bu telefonda saklanır, lig lig. Aynı telefonda iki kişi oynanınca tutulmaz;
+  // odada her telefon kendi tarafını kaydeder. Şampiyonluk yalnız Lig + play-off'ta var.
+  function rekorTarafi() { return S.cevrim ? S.cevrim.ben : S.iki ? null : 0; }
+  function rekorKaydet(sonuclar) {
+    const j = rekorTarafi(), r = j === null ? null : sonuclar[j];
+    if (!r) return null;
+    const n = S.veri.mac, hepsi = oku("rekor", {}) || {}, x = hepsi[ayar.lig] || { oyun: 0, top: 0, en: null, otuz: 0, ligOyun: 0, samp: 0 };
+    const onceki = x.en ? x.en.g : null;
+    x.oyun++; x.top += r.g;
+    if (!x.en || r.g > x.en.g) x.en = { g: r.g, m: n - r.g, gun: sayacGun() };
+    if (r.g === n) x.otuz++;
+    if (r.lig) { x.ligOyun++; if (r.lig.deger === 100) x.samp++; }
+    hepsi[ayar.lig] = x; yaz("rekor", hepsi);
+    return { j: j, yeni: onceki !== null && r.g > onceki };
+  }
+  function rekorKarti() {
+    if (rekorTarafi() === null) return "";
+    const x = (oku("rekor", {}) || {})[ayar.lig];
+    if (!x || !x.oyun) return "";
+    const kutu = (ad, deger) => "<div><b>" + ad + "</b>" + deger + "</div>";
+    return '<div class="rekor"><h3>Rekorların <span>' + S.veri.lig.toUpperCase() + " · " + x.oyun + " oyun</span></h3><div class=\"rekor-kutular\">" +
+      kutu("En iyi", x.en.g + "-" + x.en.m) + kutu("Ortalama", (x.top / x.oyun).toFixed(1).replace(".", ",")) +
+      kutu("Şampiyonluk", x.ligOyun ? x.samp + "/" + x.ligOyun : "–") + kutu(S.veri.mac + "-0", x.otuz) + "</div></div>";
+  }
   function harfNotu(g, n) {
     if (g === n) return "A+";
     const w = g / n;
@@ -901,6 +925,7 @@
     const sonuclar = S.taraflar.map((t, j) => { const m = lig ? lig.maclar[j] : simule(t, hesaplar[j]); return { taraf: t, h: hesaplar[j], maclar: m, g: m.filter((x) => x.g).length }; });
     if (lig) sonuclar.forEach((r, j) => { r.lig = ligDurumu(lig.takimlar[j], lig.tablo); });
     if (!hemen) oyunSay(sonuclar); // yeniden çizimler (ayar değişimi, kayıttan dönüş, odaya yeniden bağlanma) sayılmaz
+    S.rekorSon = hemen ? null : rekorKaydet(sonuclar);
     if (ayar.mod === "gunluk") { const b = S.taraflar[0]; yaz("gunluk:" + S.tohum, { bes: b.bes, atla: b.atla, dizilis: b.dizilis }); }
     const sr = S.cift && !lig ? seri(sonuclar[0].h, sonuclar[1].h) : null;
     const ligTablo = !lig ? "" : '<details class="dokum-kap" open><summary>tarihî ' + S.veri.lig.toUpperCase() + " lig tablosu (her sırada o sırayı gerçekten almış bir takım-sezon; " + lig.tablo.length + " takım)</summary><div class=\"yatay\"><table class=\"lig-tablo\"><thead><tr><th>#</th><th>Takım</th><th>G</th><th>M</th><th>Av.</th></tr></thead><tbody>" +
@@ -922,6 +947,7 @@
       '<div class="skorbord">' + (S.cift ? "<h2>" + kac(r.taraf.ad) + "</h2>" : "") +
       '<div class="skor"><span id="sg' + j + '">0</span><span class="tire">-</span><span id="sm' + j + '">0</span></div>' +
       '<div class="not-sat"><span class="harf">' + harfNotu(r.g, n) + '</span><span class="unvan" id="unvan' + j + '">&nbsp;</span></div>' +
+      (S.rekorSon && S.rekorSon.j === j && S.rekorSon.yeni ? '<div class="rekor-yeni">Yeni rekor!</div>' : "") +
       '<div class="skor-alt">' + S.veri.lig.toUpperCase() + " · " + modAdi() + " · " + DZ()[r.taraf.dizilis].ad + (klasik() ? " · maç başı ~%" + Math.round(r.h.p * 100) : " · ortalama rakibe " + isaretli(r.h.R) + " sayı") + " · bu fikstürde beklenen " + (r.maclar.every((m) => m.p != null) ? r.maclar.reduce((x, m) => x + m.p, 0) : r.h.p * r.maclar.length).toFixed(1).replace(".", ",") + " galibiyet</div>" +
       '<div class="isiklar">' + r.maclar.map((m, i) => '<i class="isik" id="m' + j + "_" + i + '" title="' + kac(macYazi(m, i)) + '"></i>').join("") + "</div>" +
       (r.lig ? '<div class="po-sonuc">' + (lig.tablo.indexOf(lig.takimlar[j]) + 1) + ". sırada bitirdi · " + kac(r.lig.soz) + "</div>" : "") + "</div>";
@@ -1007,6 +1033,7 @@
         (S.cevrim ? "<br>Oda skoru: " + kac(a[0]) + " " + S.odaSkor[0] + " – " + S.odaSkor[1] + " " + kac(a[1]) + " · " + (S.oyunNo + 1) + ". oyun" : "") + "</small></div>";
       html += '<div class="iki">' + sonuclar.map((r) => "<div>" + satirlar(r) + (klasik() ? "" : sezonKutu(r)) + (r.maclar[0] && r.maclar[0].rakip ? macListesi(r) : "") + dokum(r) + "</div>").join("") + "</div>";
     } else html = skorbord(sonuclar[0], 0) + satirlar(sonuclar[0]) + ozet(sonuclar[0]) + poAgac + ligTablo + (klasik() ? "" : sezonKutu(sonuclar[0])) + (sonuclar[0].maclar[0] && sonuclar[0].maclar[0].rakip ? macListesi(sonuclar[0]) : "") + dokum(sonuclar[0]);
+    html += rekorKarti();
     html += '<div class="dugmeler"><button class="ana-btn ikincil" id="paylas">Görseli paylaş</button>' +
       (ayar.mod === "gunluk" ? '<button class="ana-btn" id="serbeste">Serbest oyna</button>'
         : S.cevrim ? '<button class="ana-btn" id="rovans">Rövanş (aynı oda)</button><button class="ana-btn ikincil" id="tekrar">Odadan çık</button>'
