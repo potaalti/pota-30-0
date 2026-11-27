@@ -965,7 +965,7 @@
       if (!e.kim || !e.kim.length) return "";
       const ps = e.kim.map((i) => r.taraf.bes[i]).filter(Boolean);
       const t = e.takim && S.veri.takimlar.filter((x) => x.id === e.takim)[0];
-      return e.ad + ": " + ps.map((p) => soyad(p.o.ad) + (e.sezonlu ? " (" + p.t.sezon + ")" : "")).join(", ") +
+      return e.ad + ": " + ps.map((p) => adParca(p.o.ad).filter(Boolean).join(" ") + (e.sezonlu ? " (" + p.t.sezon + ")" : "")).join(", ") +
         (e.sezonlu && ps[0] ? " · " + ps[0].t.ad : "") + (t ? " · " + t.ad + " " + t.sezon : "");
     };
     const etkiCip = (e, r) => { const kim = r ? etkiKim(e, r) : "";
