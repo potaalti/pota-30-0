@@ -8,25 +8,30 @@
 
   // ---- sabitler ----
   const MEVKI_AD = { 1: "Oyun kurucu", 2: "Şutör", 3: "Kısa forvet", 4: "Uzun forvet", 5: "Pivot" };
+  // BSL dizilişleri (2026-11-27, kullanıcı: "hangi beşler kullanılabilir tanımlanmalı"; önce 2 Arka 3 Ön / 3 Arka 2 Ön ve
+  // oyunun kendi seçtiği, sahada yerinden kıpırdamayan esnek gard yeri vardı). Her yerin numarası sabit; yerler sahada
+  // KONUM sırasıyla: alt orta, sağ kanat, sol kanat, sağ üst, sol üst (üç gardlıda üçüncü gard sol kanatta).
   const DIZILISLER = {
-    "2-3": { ad: "2 Arka 3 Ön", yerler: [[1], [2], [3], [4], [5]] },
-    "3-2": { ad: "3 Arka 2 Ön", yerler: [[1], [2], [1, 2], [4], [5]] },
+    "1-2-3-4-5": { ad: "1-2-3-4-5", yerler: [[1], [2], [3], [4], [5]] },
+    "1-1-2-4-5": { ad: "1-1-2-4-5", yerler: [[1], [2], [1], [4], [5]] },
+    "1-2-2-4-5": { ad: "1-2-2-4-5", yerler: [[1], [2], [2], [4], [5]] },
+    "1-1-2-3-5": { ad: "1-1-2-3-5", yerler: [[1], [2], [1], [3], [5]] },
+    "1-2-2-3-5": { ad: "1-2-2-3-5", yerler: [[1], [2], [2], [3], [5]] },
+    "1-2-3-3-5": { ad: "1-2-3-3-5", yerler: [[1], [2], [3], [3], [5]] },
+    "1-2-3-4-4": { ad: "1-2-3-4-4", yerler: [[1], [2], [3], [4], [4]] },
   };
   // TBL'de mevki verisi zayıf (Wikidata kapsamı %31): orada yalnız Arka (1-2-3) / Ön (4-5) kullanılır
   // (2026-11-20, kullanıcı: önce Arka 1-2 / Ön 3-5 idi, kısa forvetler yanlışlıkla öndeydi)
   const DIZILISLER_AO = {
-    "2-3": { ad: "2 Arka 3 Ön", yerler: [["A"], ["A"], ["O"], ["O"], ["O"]] },
-    "3-2": { ad: "3 Arka 2 Ön", yerler: [["A"], ["A"], ["A"], ["O"], ["O"]] },
+    "2-3": { ad: "2 Arka 3 Ön", dugme: "2 Arka · 3 Ön", yerler: [["A"], ["A"], ["O"], ["O"], ["O"]] },
+    "3-2": { ad: "3 Arka 2 Ön", dugme: "3 Arka · 2 Ön", yerler: [["A"], ["A"], ["A"], ["O"], ["O"]] },
   };
   const AO_DISI = 0.7; // Arka/Ön sisteminde mevki dışı (2026-11-20 kullanıcı: 0,88 → 0,7)
+  const dzLig = (lig) => (lig === "tbl" ? DIZILISLER_AO : DIZILISLER);
   const DZ = () => (S && S.sistem === "ao" ? DIZILISLER_AO : DIZILISLER);
-  // 3 Arka 2 Ön'de arkaya dönen ön yeri esnek (2026-11-19, kullanıcı: hep soldaki forvetti, dolunca değiştirilemiyordu):
-  // taraf.esnek = 2, 3 ya da 4 (dizilişteki sıra). Yerler dizisi buna göre kurulur.
-  function yerlerOf(taraf, diz) {
-    const d = diz || taraf.dizilis, y = DZ()["2-3"].yerler.slice();
-    if (d === "3-2") y[taraf.esnek == null ? 2 : taraf.esnek] = DZ()["3-2"].yerler[2];
-    return y;
-  }
+  const dzVarsayilan = (lig) => Object.keys(dzLig(lig))[0];
+  const dzGecerli = (lig, d) => (dzLig(lig)[d] ? d : dzVarsayilan(lig));
+  function yerlerOf(taraf, diz) { const d = DZ()[diz || taraf.dizilis] || DZ()[Object.keys(DZ())[0]]; return d.yerler.slice(); }
   const KONUM = [[50, 80], [83, 58], [17, 58], [68, 33], [32, 33]]; // sahada yerlerin konumu (% x, % y), dizilişteki sırayla
   const UYUM_CARPAN = [1, 0.92, 0.7]; // mevki uzaklığı 0 / 1 / 2+ (2026-11-20 kullanıcı: mevki dışı 0,8 → 0,7)
   // ---- Denge (2026-11-26, kullanıcıyla; Klasik): artılar kolay, eksiler seyrek; akıllı kuran bir tık ödüllenir, yalnız en güçlüyü
@@ -120,7 +125,7 @@
   // taraflar[0] her zaman ilk oyuncu (tek başına "Sen"); iki taraflı modlarda taraflar[1] AI ya da ikinci oyuncu.
   // gorunen: sahada beşi gösterilen taraf; AI seçince birkaç saniye onunki, iki kişide sırası gelenin.
   let S;
-  function yeniTaraf(ad, yz, dizilis) { return { ad: ad, yz: yz, bes: [null, null, null, null, null], dizilis: DIZILISLER[dizilis] ? dizilis : "2-3", atla: { takim: 1, sezon: 1 }, atlaHak: 1 }; }
+  function yeniTaraf(ad, yz, dizilis, lig) { return { ad: ad, yz: yz, bes: [null, null, null, null, null], dizilis: dzGecerli(lig || ayar.lig, dizilis), atla: { takim: 1, sezon: 1 }, atlaHak: 1 }; }
 
   function yeniOyun() {
     const veri = window.VERI[ayar.lig];
@@ -130,12 +135,12 @@
     if (S && S.cevrim && S.cevrim.kapat) S.cevrim.kapat();
     S = {
       veri: veri, tohum: tohum, rng: mulberry(hash(tohum)), cekilen: {}, takim: null, secili: null, bitti: false, cevriliyor: false,
-      taraflar: [yeniTaraf(iki ? oku("ad1", "Oyuncu 1") : "Sen", false, oku("dizilis", "2-3"))], cift: cift, yzMod: yz, iki: iki,
+      taraflar: [yeniTaraf(iki ? oku("ad1", "Oyuncu 1") : "Sen", false, oku("dizilis_" + ayar.lig, null))], cift: cift, yzMod: yz, iki: iki,
       sistem: ayar.lig === "tbl" ? "ao" : "bes", sim: ayar.sim, format: ayar.format, tur: 0, turdaSecen: [], alinan: {}, son: null, bosCevir: 0, gorunen: 0, tut: false, tutZ: null,
       kaynak: ayar.yzKaynak, zorluk: ayar.yzZorluk, sabit: null, basladi: !cift, minTrOzel: null,
       ara: "", suzgec: 0, sirala: "vp", panelElle: null, cevrim: null, ikiTur: oku("ikiTur", "uzak"), donem: donemOku(ayar.lig),
     };
-    if (cift) S.taraflar.push(yz ? yeniTaraf("AI", true, "2-3") : yeniTaraf(oku("ad2", "Oyuncu 2"), false, oku("dizilis2", "2-3")));
+    if (cift) S.taraflar.push(yz ? yeniTaraf("AI", true, null) : yeniTaraf(oku("ad2", "Oyuncu 2"), false, oku("dizilis2_" + ayar.lig, null)));
     $("baslik").textContent = veri.mac + "-0";
     $("yzBes").classList.toggle("gizli", !cift);
     kuralYaz(); donemCiz();
@@ -143,7 +148,7 @@
     makaraCiz(null);
     const kayit = ayar.mod === "gunluk" ? oku("gunluk:" + tohum, null) : null;
     if (kayit && kayit.bes && kayit.bes.every((p) => p && p.o && p.o.p)) { // eski sürümün kaydı yok sayılır
-      S.taraflar[0].bes = kayit.bes; S.taraflar[0].atla = kayit.atla || S.taraflar[0].atla; S.taraflar[0].dizilis = kayit.dizilis || "2-3";
+      S.taraflar[0].bes = kayit.bes; S.taraflar[0].atla = kayit.atla || S.taraflar[0].atla; S.taraflar[0].dizilis = dzGecerli(ayar.lig, kayit.dizilis);
       S.bitti = true; ciz(); sezonuOyna(true); return;
     }
     ciz();
@@ -158,7 +163,7 @@
         (S.iki ? "Aynı cihazda oynanır: sıra kimdeyse saha onun beşini gösterir, telefon ona geçer. " : "")
       : "Her turda " + S.veri.lig.toUpperCase() + " " + sz[0] + " … " + sz[sz.length - 1] + " arasından rastgele bir kulüp ve sezon çıkar; kadrodan <b>bir</b> oyuncu seç, sahada bir yere koy. ") +
       (S.sistem === "ao" ? "Mevki: Arka (oyun kurucu, şutör, kısa forvet) ya da Ön (uzun forvet, pivot); ikisine uyan iki tarafa da konabilir, mevki dışı ×" + AO_DISI + ". "
-        : "Beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot; komşu mevki ×" + UYUM_CARPAN[1] + ", daha uzağı ×" + UYUM_CARPAN[2] + ". ") +
+        : "Beş mevki: 1 oyun kurucu, 2 şutör, 3 kısa forvet, 4 uzun forvet, 5 pivot; komşu mevki ×" + UYUM_CARPAN[1] + ", daha uzağı ×" + UYUM_CARPAN[2] + ". Dizilişler: " + Object.keys(DIZILISLER).join(", ") + ". ") +
       "En az <b>" + minTr() + " Türk</b>, aynı oyuncu bir kez" + (S.cift ? (S.kaynak === "sabit" ? "" : ", herkesin oyun başına 1 <b>atlama</b> hakkı (başka takım ya da sezon; yalnız turun ilk seçimini yaparken)") : ", oyun başına 1 <b>değiştirme</b> hakkı: başka takım (aynı sezondan başka kulüp) ya da başka sezon (aynı kulüp)") + ". Hedef: <b>" + S.veri.mac + "-0</b>.";
   }
 
@@ -322,7 +327,7 @@
   // Üç seviye (2026-11-19, kullanıcı isteğiyle yeniden):
   //  Kolay: yalnız oyuncuya bakar (güç × mevki uyumu), en iyi 5 aday arasından rastgele; diziliş sabit, atlama yok.
   //  Orta: beşin bütününe bakar (adayı beşe koyunca beşin gücü; boş yerler ortalama ilk beş oyuncusu), en iyi 2 arasından;
-  //        iki dizilişi de dener; atlama hakkını yalnız gelen kadro çok kötüyse kullanır.
+  //        bütün dizilişleri dener; atlama hakkını yalnız gelen kadro çok kötüyse kullanır.
   //  Zor: Orta gibi ama hep en iyisini alır ve atlama hakkını gelen kadro beklenenden belirgin kötüyse kullanır.
   // Atlama yalnız turun ilk seçimini yaparken (insanla aynı kural), oyun başına bir kez.
   const YZ_SEVIYE = {
@@ -342,8 +347,8 @@
     }
     return ortOyuncuOnbellek[lig];
   }
-  function besDegeri(bes, diz, esnek) { // boş yerler ortalama oyuncuyla doldurulmuş beşin değeri (Klasik: güç, Motor: sayı farkı)
-    const yerler = yerlerOf({ esnek: esnek }, diz);
+  function besDegeri(bes, diz) { // boş yerler ortalama oyuncuyla doldurulmuş beşin değeri (Klasik: güç, Motor: sayı farkı)
+    const yerler = yerlerOf({}, diz);
     if (klasik()) {
       const ort = ortalamaOyuncu();
       return klasikDeger(bes.map((p) => (p ? p.o : ort)), bes.map((p, i) => (p ? uyumCarpan(p.o, yerler[i]) : 1)), bes.map((p) => (p ? p.t : null))).R;
@@ -351,7 +356,7 @@
     return motorFark(motorKisiler(bes, yerler));
   }
   function yzAdaylar(yz, takim, seviye, kuralli) {
-    const a = [], dizler = seviye.diz ? Object.keys(DIZILISLER) : [yz.dizilis];
+    const a = [], dizler = seviye.diz ? Object.keys(DZ()) : [yz.dizilis];
     const eskiTakim = S.takim; S.takim = takim; // secilebilir() o anki kadroya bakar
     takim.oyuncular.forEach((o) => {
       if (kuralli ? secilebilir(yz, o) : (S.alinan[alinanAnahtar(takim, o)] !== undefined || yz.bes.some((p) => p && p.o.k === o.k))) return;
@@ -361,7 +366,7 @@
           if (p) return;
           let v;
           if (!seviye.bes) v = o.g * uyumCarpan(o, yerler[i]);
-          else { const b = yz.bes.slice(); b[i] = { o: o, t: takim }; v = besDegeri(b, diz, yz.esnek); }
+          else { const b = yz.bes.slice(); b[i] = { o: o, t: takim }; v = besDegeri(b, diz); }
           a.push({ o: o, i: i, diz: diz, v: v });
         });
       });
@@ -374,7 +379,9 @@
   // Atlama: gelen kadronun en iyi seçeneği, rastgele başka bir kadronunkinden (örnekle tahmin) belirgin kötüyse
   function yzAtlamaKarari(yz, seviye) {
     if (!seviye.atla || !S.cift || yz.atlaHak < 1 || S.kaynak === "sabit" || S.turdaSecen.length > 0) return null;
-    const enIyi = (t) => { const a = yzAdaylar(yz, t, seviye, true); return a.length ? a[0].v : -1e9; };
+    // atlama kararında yalnız şimdiki dizilişe bakılır (2026-11-27: BSL'de 7 diziliş × 24 örnek takım telefonda takılıyordu)
+    const tekDiz = Object.assign({}, seviye, { diz: false });
+    const enIyi = (t) => { const a = yzAdaylar(yz, t, tekDiz, true); return a.length ? a[0].v : -1e9; };
     const simdi = enIyi(S.takim), esik = seviye.atla[klasik() ? "klasik" : "motor"];
     const ornek = (liste) => { const x = liste.slice(); const n = Math.min(12, x.length); let t = 0;
       for (let k = 0; k < n; k++) { const j = k + Math.floor(Math.random() * (x.length - k)); const g = x[j]; x[j] = x[k]; x[k] = g; t += enIyi(g); }
@@ -452,7 +459,7 @@
     return { A: A, satirlar: satirlar, etkiler: etkiler, R: R, p: Motor.olasilik(R) };
   }
 
-  function tarafTohumu(taraf) { return S.tohum + "|" + taraf.dizilis + (taraf.dizilis === "3-2" ? ":" + (taraf.esnek == null ? 2 : taraf.esnek) : "") + "|" + taraf.bes.map((p) => p.o.k + "@" + p.t.id).join(","); }
+  function tarafTohumu(taraf) { return S.tohum + "|" + taraf.dizilis + "|" + taraf.bes.map((p) => p.o.k + "@" + p.t.id).join(","); }
   function kutuTopla(kutular, n) { // maç maç kutu → sezon ortalaması
     const t = kutular[0].map(() => ({ sy: 0, rb: 0, as: 0, st: 0, bl: 0, tk: 0 }));
     kutular.forEach((k) => k.forEach((x, i) => { Object.keys(x).forEach((a) => { t[i][a] += x[a] / n; }); }));
@@ -1191,7 +1198,7 @@
         ? '<span class="cip eksik">' + kac(S.taraflar[1 - S.cevrim.ben].ad) + " bakıyor: " + kac(soyad(S.takim.oyuncular.filter((x) => x.k === S.rakipBakiyor)[0].ad)) + "</span>" : "") +
       (S.cevrim && (S.odaSkor[0] + S.odaSkor[1]) > 0 ? '<span class="cip">Oda: ' + S.odaSkor[0] + "-" + S.odaSkor[1] + "</span>" : "");
     Array.prototype.forEach.call(document.querySelectorAll("[data-birak]"), (b) => { b.onclick = secimiBirak; });
-    Array.prototype.forEach.call($("dizSec").children, (b) => { b.classList.toggle("aktif", b.dataset.diz === taraf.dizilis); b.disabled = S.bitti || taraf.yz; });
+    dizCiz(taraf);
     const dolu = hepsiDolu(), sabit = S.cift && S.kaynak === "sabit";
     $("cevir").disabled = !S.basladi || S.cevriliyor || !!S.takim || dolu || S.bitti;
     const cevirenBen = !S.cevrim || sira === S.cevrim.ben;
@@ -1342,7 +1349,7 @@
       (S.yzMod
         ? '<h3>vs AI</h3><div class="ipucu">Sen ve AI sırayla seçersiniz; her tur ilk seçen değişir. AI seçince onun beşi birkaç saniye sahada görünür. Beşler dolunca iki sezon oynanır, sonra 7 maçlık seri.</div>' +
           '<label>AI zorluğu</label><div class="secici" id="yzZorSec">' + ["kolay", "orta", "zor"].map((z) => '<button data-z="' + z + '" class="' + (S.zorluk === z ? "aktif" : "") + '">' + YZ_AD[z] + "</button>").join("") + "</div>" +
-          '<div class="ipucu">Kolay: yalnız oyuncunun gücüne bakar, en iyi 5 arasından rastgele seçer · Orta: beşin bütününe bakar (eksik rol, kullanım, uyum), iki dizilişi dener, kadro çok kötüyse atlar · Zor: hep en iyisini alır, dizilişi seçer, kadro beklenenden kötüyse başka takım/sezon ister.</div>'
+          '<div class="ipucu">Kolay: yalnız oyuncunun gücüne bakar, en iyi 5 arasından rastgele seçer · Orta: beşin bütününe bakar (eksik rol, kullanım, uyum), bütün dizilişleri dener, kadro çok kötüyse atlar · Zor: hep en iyisini alır, dizilişi seçer, kadro beklenenden kötüyse başka takım/sezon ister.</div>'
         : '<h3>2 kişi · bu cihazda</h3><div class="ipucu">Aynı telefonda ya da bilgisayarda sırayla oynarsınız; her tur ilk seçen değişir. Sıra kimdeyse saha onun beşini gösterir, cihazı ona verin. Beşler dolunca iki sezon oynanır, sonra 7 maçlık seri.</div>' +
           '<label>Oyuncular</label><input id="ad1" maxlength="16" value="' + kac(S.taraflar[0].ad) + '" placeholder="1. oyuncu"><input id="ad2" maxlength="16" value="' + kac(S.taraflar[1].ad) + '" placeholder="2. oyuncu">') +
       '<label>Oyuncu havuzu</label><div class="secici" id="yzKaynakSec"><button data-k="cark" class="' + (S.kaynak === "cark" ? "aktif" : "") + '">Her tur çark</button><button data-k="sabit" class="' + (S.kaynak === "sabit" ? "aktif" : "") + '">Tek takım-sezon</button></div>' +
@@ -1598,7 +1605,7 @@
       }
       if (siradaki() === null) { S.tur++; S.turdaSecen = []; if (S.kaynak !== "sabit") S.takim = null; }
     } else if (h.tip === "diz") {
-      if (DZ()[h.d] && S.taraflar[h.kim]) { S.taraflar[h.kim].dizilis = h.d; if (h.e != null) S.taraflar[h.kim].esnek = h.e; }
+      if (DZ()[h.d] && S.taraflar[h.kim]) S.taraflar[h.kim].dizilis = h.d;
     } else if (h.tip === "yeni") { // rövanş: aynı odada yeni oyun (yalnız bitmiş oyundan sonra; çift basış tek sayılır)
       if (!hepsiDolu()) return;
       oyunSifirla();
@@ -1669,26 +1676,24 @@
     Array.prototype.forEach.call($(id).children, (b) => { b.onclick = () => { const a = Object.keys(b.dataset)[0]; ayarla(a, a === "zor" ? +b.dataset[a] : b.dataset[a]); }; });
   });
   secicileriBoya();
-  // 3 Arka 2 Ön'e geçerken arkaya dönecek ön yeri: zaten 3-2'deyse sıradaki ön yer; değilse boş ön yerlerden ilki,
-  // hepsi doluysa arkaya en uygun oyuncunun yeri (önce soldaki forvet)
-  function esnekSec(taraf) {
-    const sira = [2, 3, 4];
-    if (taraf.dizilis === "3-2") { const i = sira.indexOf(taraf.esnek == null ? 2 : taraf.esnek); return sira[(i + 1) % 3]; }
-    const bos = sira.filter((i) => !taraf.bes[i]);
-    if (bos.length) return bos[0];
-    const arka = DZ()["3-2"].yerler[2];
-    return sira.slice().sort((a, c) => uyumCarpan(taraf.bes[c].o, arka) - uyumCarpan(taraf.bes[a].o, arka))[0];
+  // Diziliş seçici (2026-11-27): BSL'de tanımlı beşler, TBL'de 2 Arka 3 Ön / 3 Arka 2 Ön. Yerleşmiş oyuncular yerinde kalır,
+  // yalnız mevki uyumu yeni dizilişe göre hesaplanır.
+  function dizCiz(taraf) {
+    const k = $("dizSec"), anahtar = S.sistem + ":" + Object.keys(DZ()).join(",");
+    if (k.dataset.anahtar !== anahtar) {
+      k.dataset.anahtar = anahtar;
+      k.innerHTML = Object.keys(DZ()).map((d) => '<button data-diz="' + d + '">' + kac(DZ()[d].dugme || DZ()[d].ad) + "</button>").join("");
+      k.classList.toggle("cok", Object.keys(DZ()).length > 2);
+    }
+    Array.prototype.forEach.call(k.children, (b) => { b.classList.toggle("aktif", b.dataset.diz === taraf.dizilis); b.disabled = S.bitti || taraf.yz; });
+    const akt = k.querySelector(".aktif"); if (akt && k.scrollWidth > k.clientWidth) akt.scrollIntoView({ block: "nearest", inline: "nearest" });
   }
-  Array.prototype.forEach.call($("dizSec").children, (b) => {
-    b.onclick = () => {
-      const taraf = S.taraflar[S.gorunen];
-      if (S.bitti || taraf.yz) return;
-      const e = b.dataset.diz === "3-2" ? esnekSec(taraf) : taraf.esnek;
-      if (S.cevrim) { if (S.gorunen === S.cevrim.ben) hamleGonder({ tip: "diz", kim: S.cevrim.ben, d: b.dataset.diz, e: e }); return; }
-      const once = taraf.dizilis === "3-2" ? taraf.esnek : null;
-      taraf.dizilis = b.dataset.diz; taraf.esnek = e; yaz(S.gorunen === 0 ? "dizilis" : "dizilis2", b.dataset.diz); ustCiz(); sahaCiz();
-      if (b.dataset.diz === "3-2" && once !== e) toast((S.sistem === "ao" ? ["Sol kanattaki", "Sağ üstteki", "Sol üstteki"][e - 2] + " ön" : yerAdi(DZ()["2-3"].yerler[e])) + " yeri arkaya döndü" + (once != null ? " (tekrar basınca sıradaki ön yere geçer)" : ""));
-    };
+  $("dizSec").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-diz]"); if (!b || b.disabled) return;
+    const taraf = S.taraflar[S.gorunen];
+    if (S.bitti || taraf.yz || !DZ()[b.dataset.diz] || b.dataset.diz === taraf.dizilis) return;
+    if (S.cevrim) { if (S.gorunen === S.cevrim.ben) hamleGonder({ tip: "diz", kim: S.cevrim.ben, d: b.dataset.diz }); return; }
+    taraf.dizilis = b.dataset.diz; yaz((S.gorunen === 0 ? "dizilis_" : "dizilis2_") + ayar.lig, b.dataset.diz); ustCiz(); sahaCiz();
   });
   $("yzBes").onclick = () => { if (!S.cift) return; tutmayiBitir(); gorunenYap(1 - S.gorunen); ustCiz(); sahaCiz(); panelDurum(); };
   // Telefonda kadro paneli: tutamağa dokun → aç / indir; tutamaktan sürükle → büyüt / küçült (2026-11-19, kullanıcı)
@@ -1792,7 +1797,7 @@
     let top = 0, kus = 0, samp = 0, kare = 0, farkli = 0, kusSampDegil = 0;
     try {
       for (let i = 0; i < n; i++) {
-        const taraf = yeniTaraf("Test", false, "2-3"), yer = yerlerOf(taraf), bos = [0, 1, 2, 3, 4]; let tr = 0;
+        const taraf = yeniTaraf("Test", false, null, lig), yer = yerlerOf(taraf), bos = [0, 1, 2, 3, 4]; let tr = 0;
         for (let tur = 0; tur < 5; tur++) {
           const t = T[Math.floor(rng() * T.length)], gerek = Math.max(0, minTr - tr) >= 5 - tur; let en = null;
           t.oyuncular.forEach((o) => { if (gerek && !o.tr) return; bos.forEach((b) => { const v = o.g * uyumCarpan(o, yer[b]); if (!en || v > en.v) en = { o: o, b: b, v: v }; }); });

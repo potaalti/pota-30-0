@@ -76,6 +76,8 @@ details.kural b{color:var(--yazi)}
 .saha-kap{margin-top:12px;position:relative}
 .dizilis{display:flex;margin:0 0 8px}
 .dizilis button{flex:1}
+.dizilis.cok{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}.dizilis.cok::-webkit-scrollbar{display:none}
+.dizilis.cok button{flex:1 0 auto;font-variant-numeric:tabular-nums;letter-spacing:.3px;padding:6px 10px}
 .saha{position:relative;width:100%;aspect-ratio:300/250;border-radius:16px;background:var(--parke);overflow:hidden;border:1px solid var(--cizgi)}
 .saha svg{position:absolute;inset:0;width:100%;height:100%}
 .pul{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:3px;width:86px}
@@ -327,7 +329,7 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
 
       <div class="saha-kap">
         <div class="saha-bas" id="sahaBaslik"></div>
-        <div class="secici dizilis" id="dizSec" style="display:flex"><button data-diz="2-3">2 Arka · 3 Ön</button><button data-diz="3-2">3 Arka · 2 Ön</button></div>
+        <div class="secici dizilis" id="dizSec" style="display:flex" aria-label="Diziliş"></div>
         <div class="saha" id="saha">
           <svg viewBox="0 0 300 250" aria-hidden="true" preserveAspectRatio="none">
             <g fill="none" stroke="var(--parke-cizgi)" stroke-width="2">
@@ -361,11 +363,11 @@ footer{margin-top:28px;font-size:11.5px;color:var(--soluk)}
   <footer>Veri: Türkiye Basketbol Federasyonu (tbf.org.tr) sezon istatistikleri, normal sezon + play-off ortalamaları. Mevki Wikidata'dan (CC0), yoksa boy ve istatistikten tahmin. BSL 2004-05 ve 2006-07'de TBF yalnız sayı tuttuğu için bu iki sezon yok. Bir hayran oyunu; TBF ile bağlantısı yoktur.</footer>
 </div>
 <div class="toast" id="toast"></div>
-<script src="veri/bsl.js?v=20261127a"></script>
-<script src="veri/tbl.js?v=20261127a"></script>
-<script src="firebase-ayar.js?v=20261127a"></script>
-<script src="baglanti.js?v=20261127a"></script>
-<script src="motor.js?v=20261127a"></script>
-<script src="oyun.js?v=20261127a"></script>
+<script src="veri/bsl.js?v=20261127b"></script>
+<script src="veri/tbl.js?v=20261127b"></script>
+<script src="firebase-ayar.js?v=20261127b"></script>
+<script src="baglanti.js?v=20261127b"></script>
+<script src="motor.js?v=20261127b"></script>
+<script src="oyun.js?v=20261127b"></script>
 </body>
 </html>
