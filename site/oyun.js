@@ -51,7 +51,7 @@
   const KIMYA = { kisi: 2, puan: 2, poKat: 2.5, adlar: ["Yerli omurga", "Kulüp ruhu", "Eski takım arkadaşları"] };
   const BALKAN = ["SIRBİSTAN", "HIRVATİSTAN", "SLOVENYA", "BOSNA HERSEK", "KUZEY MAKEDONYA", "MAKEDONYA", "KARADAĞ", "YUGOSLAVYA", "SIRBİSTAN KARADAĞ",
     "YUNANİSTAN", "BULGARİSTAN", "ARNAVUTLUK", "ROMANYA"];
-  const TEK_KISI = 0.335; // Topu tek kişi tutuyor: bir oyuncu beşin top kullanımının %33,5'inden fazlası (2026-11-27, kullanıcı), −2
+  const TEK_KISI = { bsl: 0.33, tbl: 0.34 }; // Topu tek kişi tutuyor: bir oyuncu beşin top kullanımının bu payından fazlası, −2 (2026-11-27, kullanıcı: BSL %33, TBL %34)
   function denge() { return klasik() ? DENGE[S.veri.lig] : null; }
   function egriOlcek() { const d = denge(); return S.veri.egri.olcek / (d ? d.dik : 1); }
   function egriOrta() { const d = denge(); return S.veri.egri.orta - (d ? d.kaydir : 0); }
@@ -651,7 +651,7 @@
     }
     if (dg && kul > 0) { // Topu tek kişi tutuyor (2026-11-27, kullanıcı)
       const enK = os.reduce((a, o, i) => ((o.kul || 0) > (os[a].kul || 0) ? i : a), 0);
-      if ((os[enK].kul || 0) / kul > TEK_KISI) etkiler.push({ ad: "Topu tek kişi tutuyor", aciklama: "en çok top kullananın beşteki payı %" + Math.round(100 * (os[enK].kul || 0) / kul), d: -2, kim: [enK] });
+      if ((os[enK].kul || 0) / kul > TEK_KISI[S.veri.lig]) etkiler.push({ ad: "Topu tek kişi tutuyor", aciklama: "en çok top kullananın beşteki payı %" + Math.round(100 * (os[enK].kul || 0) / kul), d: -2, kim: [enK] });
     }
     const R = os.reduce((a, o, i) => a + o.g * uyumlar[i], 0) + etkiler.reduce((a, e) => a + e.d, 0) + gizli;
     return { etkiler: etkiler, R: R };
@@ -1203,7 +1203,7 @@
       cip(top("as") >= e.asAlt, "Top paylaşımı iyi", "Top paylaşımı zayıf");
     if (top("tk") >= e.tk) h += cip(false, "", "Top kaybı baremi");
     if (top("kul") > e.kul) h += cip(false, "", "Top yetmiyor");
-    if (os.length === 5 && top("kul") > 0 && Math.max.apply(null, os.map((o) => o.kul || 0)) / top("kul") > TEK_KISI) h += cip(false, "", "Topu tek kişi tutuyor");
+    if (os.length === 5 && top("kul") > 0 && Math.max.apply(null, os.map((o) => o.kul || 0)) / top("kul") > TEK_KISI[S.veri.lig]) h += cip(false, "", "Topu tek kişi tutuyor");
     if (say((o) => o.uz && (o.u3 || 0) < e.boyali) >= 3) h += cip(false, "", "Boyalı alan kalabalık");
     return h;
   }
