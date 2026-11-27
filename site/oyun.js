@@ -1521,6 +1521,9 @@
       Array.prototype.forEach.call($("ligSec").children, (x) => x.classList.toggle("aktif", x.dataset.lig === ayar.lig));
     }
     yeniOyun(); // iki modunda, lig odanınki
+    // İki telefon aynı başlasın (2026-11-27, kullanıcı şikâyeti: aynı odada sonuçlar farklı): yeniOyun dizilişi her telefonun kendi
+    // kaydından alır; odada iki taraf da varsayılan dizilişle başlar, sonraki değişiklikler hamle olarak iki telefona gider.
+    S.taraflar.forEach((t) => { t.dizilis = dzVarsayilan(ayar.lig); });
     S.tohum = oda.ayar.tohum; S.kaynak = oda.ayar.kaynak; S.basladi = false;
     if (oda.ayar.donem) S.donem = String(oda.ayar.donem).split(",").filter((x) => (DONEMLER[ayar.lig] || []).includes(x)); // eski odalarda yok: hepsi
     if (!S.donem.length) S.donem = DONEMLER[ayar.lig].slice();
